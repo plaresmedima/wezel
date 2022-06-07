@@ -1,27 +1,30 @@
-`weasel` is a Python environment for prototyping and deploying 
+`weasel` is a Python toolbox for prototyping  
 quantitative medical imaging applications. 
 
-# How to use `weasel`?
+***CAUTION: weasel is developed in public but is work in progress and backwards compatibility is not guaranteed. It is likely there WILL be breaking changes in future versions***
 
-Standard versions of `weasel` are distributed as [source code](here) 
-or [executables](here). These are mainly provided to demonstrated the 
-basic features and functionality. 
+# How to use `weasel` applications?
 
-The intended use of `weasel` is for developers of new methods 
-to create customized project-specific versions, 
-and then destribute those custom versions in source code or as 
-executables to enable indepent analysis and reproduction of the results.
+You can use `weasel` applications to visualise and analyse medical images, using a standard graphical interface much like any other medical image viewer. 
 
-## Visualing and analysing images
+To try this out, download an example application (coming soon), 
+then double-click the file to start - no software installation required. 
 
-If you are using `weasel` to visualise or analyse medical images, 
-you can download the demo version [here](insert link). 
-The demo version has basic features for visualising 
-DICOM images and performing basic image processing and segmentation tasks. 
+If you are working on a specific project, you may have been given a `weasel` 
+application directly by a collaborator, or perhaps you found one online 
+or as supplementary material with a publication. 
 
-If you need to perform a specific analysis for a specific project, 
-you should request an executable `weasel` version from the 
-developer of the project.
+Some video tutorials are provided (coming soon) to illustrate the use of the graphical interface, 
+but really if this is not almost self-explanatory, it is just not good enough. The rest of this document provides detail for application developers. 
+
+# How to develop `weasel` applications?
+
+If you are a developer of new applications, you can use `weasel` to prototype 
+and test your application. Once you are happy with the result, `weasel` can 
+generate an executable which you can pass on to analysts or other users. 
+`weasel` is distributed under an open license so you can make the executable 
+and/or the source code publicly available, for instance as supplementary material 
+in publications. 
 
 ## Customizing `weasel`: menus and apps
 
@@ -280,7 +283,7 @@ An example of a very simple (and not very useful!) `weasel` app is the
 
 ```python
 from weasel.core import App
-from weasel.wewidgets import ImageLabel
+from weasel.widgets import ImageLabel
 from weasel.actions.about import menu
 
 class WeaselAbout(App):             # Required: subclass core.App
