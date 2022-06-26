@@ -18,17 +18,19 @@ class Windows(wsl.App):
         super().__init__(weasel)
 
         self.treeView = None
-        self.folder = db.Folder(status=self.status, dialog=self.dialog)
+        #self.folder = db.Folder(status=self.status, dialog=self.dialog)
+        self.folder = None
         self.central = widgets.MainMultipleDocumentInterface()
         self.main.setCentralWidget(self.central)
         self.set_menu(actions.demo.menu)
 
     def set_data(self, folder):
 
-        if self.folder.close():
-            self.central.closeAllSubWindows()
-        else:
-            return
+        if self.folder is not None:
+            if self.folder.close():
+                self.central.closeAllSubWindows()
+            else:
+                return
         self.folder = folder
         if self.treeView is None:
             self.display(folder)
@@ -36,15 +38,18 @@ class Windows(wsl.App):
             self.treeView.setFolder(folder)
         self.menubar.enable()
 
-    def open(self, path, message='Opening folder..'):
-        self.folder.open(path, message=message)
+    def open(self, path, message='Opening folder..', attributes=None):
+        self.folder = db.Folder(path=path, attributes=attributes, message=message, status=self.status, dialog=self.dialog)
         self.display(self.folder)
 
     def close(self):
         """Closes the application."""
 
+        if self.folder is None:
+            return True
         accept = self.folder.close()
         if accept:
+            self.folder = None
             self.central.closeAllSubWindows()
             for dockwidget in self.main.findChildren(QDockWidget):
                 self.main.removeDockWidget(dockwidget)
@@ -140,6 +145,7 @@ class Series(wsl.App):
 
         super().__init__(weasel)
 
+        # Needs updating
         self.folder = db.Folder(status=weasel.status, dialog=weasel.dialog)
         self.central = widgets.SeriesViewer()
         self.main.setCentralWidget(self.central)
