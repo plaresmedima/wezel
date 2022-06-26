@@ -97,8 +97,8 @@ class FourDimViewer(QSplitter):
 
         if array is not None: 
             self.array = array
-            self.viewSlider.setMaximum(array.shape[2])
-            self.plotSlider.setMaximum(array.shape[3])
+            self.viewSlider.setMaximum(array.shape[2]-1)
+            self.plotSlider.setMaximum(array.shape[3]-1)
 
         d = self.array.shape
 

@@ -39,6 +39,8 @@ class Close(Action):
 
         if not hasattr(app, 'folder'):
             return False  
+        if app.folder is None:
+            return False
         return app.folder.is_open()
 
     def run(self, app):
@@ -52,8 +54,10 @@ class Read(Action):
 
     def enable(self, app):
 
-        if app.__class__.__name__ != 'DicomWindows':
-            return False   
+        if app.__class__.__name__ != 'Windows':
+            return False 
+        if app.folder is None:
+            return False  
         return app.folder.is_open()
 
     def run(self, app):
@@ -73,6 +77,8 @@ class Restore(Action):
         
         if not hasattr(app, 'folder'):
             return False
+        if app.folder is None:
+            return False
         return app.folder.is_open()
 
     def run(self, app):
@@ -88,7 +94,9 @@ class Save(Action):
     def enable(self, app):
 
         if not hasattr(app, 'folder'):
-            return False   
+            return False 
+        if app.folder is None:
+            return False  
         return app.folder.is_open()
 
     def run(self, app):

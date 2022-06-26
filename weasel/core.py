@@ -1,5 +1,7 @@
 __all__ = ['Main', 'App', 'Action', 'MenuBar', 'Menu']
 
+import sys
+
 from PyQt5.QtWidgets import QMainWindow, QAction, QMenu, QMenuBar
 from PyQt5.QtGui import QIcon
 
@@ -60,7 +62,7 @@ class App:
         try:
             self.main.show()
             self.QApp.exec()
-            #sys.exit(app.exec())
+            #sys.exit(self.QApp.exec())
         except Exception as e:
             self.log.exception('Error: ' + str(e))
 
@@ -170,7 +172,8 @@ class Action(QAction):
         text = None,
         shortcut = None,
         tooltip = None, 
-        icon = None):
+        icon = None, 
+        options = None):
         """parent: App, Menu or MenuBar"""
         super().__init__()
 
@@ -188,6 +191,11 @@ class Action(QAction):
         if icon is not None: self.setIcon(QIcon(icon))
         if shortcut is not None: self.setShortcut(shortcut)
         if tooltip is not None: self.setToolTip(tooltip)
+
+        # Optional set of constants that can be used to customize
+        # the action - can be used to generalise the scope of an action. 
+        # options can be any data type.
+        self.options = options
 
     def enable(self, app):
         return True

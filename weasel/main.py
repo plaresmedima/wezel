@@ -30,9 +30,12 @@ class Weasel:
         self.app = WeaselWelcome(self)
 
 
-def app():
+def app(application=None):
 
-    return Weasel().app
+    wsl = Weasel().app
+    if application is not None:
+        wsl.set_app(application)
+    return wsl
 
 def activate():
     venv_dir = os.path.join(os.getcwd(), ".venv")
