@@ -37,30 +37,6 @@ def app(application=None):
         wsl.set_app(application)
     return wsl
 
-def activate():
-    venv_dir = os.path.join(os.getcwd(), ".venv")
-    os.makedirs(venv_dir, exist_ok=True)
-    venv.create(venv_dir, with_pip=True)
-    windows = (sys.platform == "win32") or (sys.platform == "win64") or (os.name == 'nt')
-    if windows:
-        return os.path.join(venv_dir, "Scripts", "activate")
-    else: # MacOS and Linux
-        return '. "' + os.path.join(venv_dir, "bin", "activate")
-
-
-def install():
-    """Install requirements of weasel and current project"""
-
-    print('Creating virtual environment..')
-    os.system('py -3 -m venv .venv')
-
-    print('Installing weasel requirements..')
-    # When weasel becomes a pip package, run os.system(activate() + ' && ' + 'py -m pip install weasel')
-    os.system(activate() + ' && ' + 'py -m pip install -r weasel\\requirements.txt')
-
-    if os.path.exists(os.path.join(os.getcwd(), 'requirements.txt')):
-        print('Installing project requirements..')
-        os.system(activate() + ' && ' + 'py -m pip install -r requirements.txt')
 
 
 def post_installation_build_cleanup():
@@ -80,24 +56,26 @@ def post_installation_build_cleanup():
         print("Deleting the created Python Virtual Environment for the process...")
         os.system('rm -r .venv/')
 
+def activate():
+    """Active virtual environment"""
 
-def doc(output_directory=None):
-    """Generate weasel documentation"""
+    venv_dir = os.path.join(os.getcwd(), ".venv")
+    os.makedirs(venv_dir, exist_ok=True)
+    venv.create(venv_dir, with_pip=True)
+    windows = (sys.platform == "win32") or (sys.platform == "win64") or (os.name == 'nt')
+    if windows:
+        return os.path.join(venv_dir, "Scripts", "activate")
+    else: # MacOS and Linux
+        return '. "' + os.path.join(venv_dir, "bin", "activate")
 
-    # COMMAND LINE SCRIPT
-    # py -3 -m venv .venv
-    # .venv\\scripts\\activate
-    # py -m pip install -r requirements.txt
-    # pdoc --html -f -c sort_identifiers=False weasel  
+def install():
+    """Install requirements to a virtual environment"""
 
-    install()
+    print('Creating virtual environment..')
+    os.system('py -3 -m venv .venv')
 
-    print('Generating documentation..')
-    if output_directory:
-        os.system(activate() + ' && ' + 'pdoc --html -f -c sort_identifiers=False --output-dir ' + str(output_directory) + ' weasel')
-    else:
-        os.system(activate() + ' && ' + 'pdoc --html -f -c sort_identifiers=False weasel')
-    
+    print('Installing requirements..')
+    os.system(activate() + ' && ' + 'py -m pip install -r requirements.txt')  
 
 def build(project, onefile=True, terminal=False, data_folders=[], hidden_modules=[]):
     """Generate project executable"""
@@ -110,7 +88,7 @@ def build(project, onefile=True, terminal=False, data_folders=[], hidden_modules
 
     # EXAMPLE OF hidden_modules
     # pyinstaller tells the user which packages failed to detect and import during the build and it recommends to add the package to the hidden imports flag
-    # hidden = ['xnat', 'requests', 'dipy', 'dipy.data', 'matplotlib', 'lmfit', 'fpdf', 
+    # hidden = ['xnat', 'dipy', 'dipy.data', 'matplotlib', 'lmfit', 'fpdf', 
     #           'reportlab', 'reportlab.platypus', 'joblib', 'cv2', 'SimpleITK ', 'itk',
     #           'ukat', 'mdreg', 'mdreg.models', 'sklearn.utils._typedefs', 'sklearn.utils._cython_blas',
     #           'sklearn.neighbors.typedefs', 'sklearn.neighbors.quad_tree', 'sklearn.tree._utils',

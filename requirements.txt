@@ -1,9 +1,5 @@
-dbdicom==0.0.6
+PyQt5
+dbdicom
 matplotlib
 numpy
 pandas
-pdoc3
-Pillow
-requests
-scipy
-tqdm
