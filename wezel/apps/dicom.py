@@ -4,18 +4,18 @@ from PyQt5.QtWidgets import QDockWidget
 from PyQt5.QtCore import Qt
 
 import dbdicom as db
-import weasel as wsl
+import wezel as wsl
 
-from weasel import widgets
-from weasel import actions
+from wezel import widgets
+from wezel import actions
 
 
 class Windows(wsl.App):
 
-    def __init__(self, weasel): 
+    def __init__(self, wezel): 
         """Creates the default main window."""
 
-        super().__init__(weasel)
+        super().__init__(wezel)
 
         self.treeView = None
         #self.folder = db.Folder(status=self.status, dialog=self.dialog)
@@ -54,12 +54,12 @@ class Windows(wsl.App):
             for dockwidget in self.main.findChildren(QDockWidget):
                 self.main.removeDockWidget(dockwidget)
             self.menubar.enable()
-        #    self.set_app(apps.WeaselWelcome)
+        #    self.set_app(apps.WezelWelcome)
         return accept
 
     def refresh(self):
         """
-        Refreshes the Weasel display.
+        Refreshes the Wezel display.
         """
         self.status.message('Refreshing display..')
         self.treeView.setFolder()
@@ -140,19 +140,19 @@ class Windows(wsl.App):
 
 class Series(wsl.App):
 
-    def __init__(self, weasel): 
+    def __init__(self, wezel): 
         """Creates a central window showing series only."""
 
-        super().__init__(weasel)
+        super().__init__(wezel)
 
         # Needs updating
-        self.folder = db.Folder(status=weasel.status, dialog=weasel.dialog)
+        self.folder = db.Folder(status=wezel.status, dialog=wezel.dialog)
         self.central = widgets.SeriesViewer()
         self.main.setCentralWidget(self.central)
         self.set_menu(actions.demo.menu) 
 
     def close(self):
-        """Closes the Weasel display"""
+        """Closes the Wezel display"""
 
         accept = self.folder.close()
         if accept:
@@ -163,12 +163,12 @@ class Series(wsl.App):
 
     def refresh(self):
         """
-        Refreshes the Weasel display.
+        Refreshes the Wezel display.
         """
-        self.weasel.status.message('Refreshing display..')
+        self.wezel.status.message('Refreshing display..')
         self.treeView.setFolder()
-        self.weasel.menubar.enable()
-        self.weasel.status.message()
+        self.wezel.menubar.enable()
+        self.wezel.status.message()
 
     def addAsDockWidget(self, widget, title=''):
 
@@ -183,8 +183,8 @@ class Series(wsl.App):
     def display(self, object=None):
 
         if object is None:
-            self.treeView = widgets.DICOMFolderTree(self.folder, self.weasel.status)
-            self.treeView.itemSelectionChanged.connect(self.weasel.menubar.enable)
+            self.treeView = widgets.DICOMFolderTree(self.folder, self.wezel.status)
+            self.treeView.itemSelectionChanged.connect(self.wezel.menubar.enable)
             self.addAsDockWidget(self.treeView, title=self.folder.path)
         elif object.generation == 1: # No Patient Viewer yet
             pass

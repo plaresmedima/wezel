@@ -176,7 +176,7 @@ def inputWindow(paramDict, title="Input Parameters", helpText="", lists=None):
     thresholdDICOM_Image.py as it contains a good example of validation of the input parameters.
 
     This function is a wrap of function "ParameterInputDialog" and you can consult it's detailed documentation
-    in CoreModules/WEASEL/InputDialog.py.
+    in CoreModules/WEZEL/InputDialog.py.
 
     Parameters
     ----------
@@ -206,8 +206,8 @@ def inputWindow(paramDict, title="Input Parameters", helpText="", lists=None):
     outputList: List with the values typed or selected by the user in the prompted window.
                 It returns "None" if the Cancel button or close window are pressed.
                 Eg: if param paramDict = {"Age":"int", "Name":"string"} and the user types 
-                "30" for Age and "Weasel" for Name, then the outputList will be [30, "Weasel"].
-                If "30" and "Weasel" are the default values, then paramDict = {"Age":"int,30", "Name":"string,Weasel"}
+                "30" for Age and "Wezel" for Name, then the outputList will be [30, "Wezel"].
+                If "30" and "Wezel" are the default values, then paramDict = {"Age":"int,30", "Name":"string,Wezel"}
 
     Eg. of paramDict using string:
         paramDict = {"Threshold":"float,0.5", "Age":"int,30"}
@@ -336,7 +336,7 @@ class ParameterInputDialog(QDialog):
                 paramType, value1, value2, value3 = self.getParamData(paramDict[key].lower())
                 if paramType not in ("integer", "float", "string", "dropdownlist", "listview"):
                     #This unit test is for developers who mistype the above 3 parameter 
-                    #types when they are developing new WEASEL tools that need
+                    #types when they are developing new WEZEL tools that need
                     #an input dialog
                     raise IncorrectParameterTypeError
                 if paramType == "integer":

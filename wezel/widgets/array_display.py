@@ -12,7 +12,7 @@ class FourDimViewer(QSplitter):
     """
     GUI for displaying a 4D numpy array
 
-    status : weasel status object
+    status : wezel status object
     array : numpy array with dimensions (x,y,z,t)
     zcoords : numpy array with dimensions (z,t)
     tcoords : numpy array with dimensions (z,t)

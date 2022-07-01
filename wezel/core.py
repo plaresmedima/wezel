@@ -5,22 +5,22 @@ import sys
 from PyQt5.QtWidgets import QMainWindow, QAction, QMenu, QMenuBar
 from PyQt5.QtGui import QIcon
 
-import weasel.widgets as widgets
+import wezel.widgets as widgets
 
 
 class Main(QMainWindow):
 
-    def __init__(self, weasel): 
+    def __init__(self, wezel): 
         """Creates the main window."""
 
         super().__init__()
 
-        self.weasel = weasel
-        self.setWindowTitle("Weasel")
+        self.wezel = wezel
+        self.setWindowTitle("Wezel")
         self.setWindowIcon(QIcon(widgets.icons.favicon))
 
     def closeEvent(self, event): # dummy for now
-        accept = self.weasel.app.close()
+        accept = self.wezel.app.close()
         if accept:
             event.accept()
         else:
@@ -28,26 +28,26 @@ class Main(QMainWindow):
 
 
 class App:
-    """Base class for all Weasel applications"""
+    """Base class for all Wezel applications"""
 
-    def __init__(self, weasel):
-        self.weasel = weasel
+    def __init__(self, wezel):
+        self.wezel = wezel
 
     @property
     def QApp(self):
-        return self.weasel.QApp
+        return self.wezel.QApp
 
     @property
     def main(self):
-        return self.weasel.main
+        return self.wezel.main
 
     @property
     def log(self):
-        return self.weasel.log
+        return self.wezel.log
 
     @property
     def dialog(self):
-        return self.weasel.dialog
+        return self.wezel.dialog
 
     @property
     def menubar(self):
@@ -58,7 +58,7 @@ class App:
         return self.main.statusBar()
 
     def show(self):    
-        self.log.info('Launching Weasel!')
+        self.log.info('Launching Wezel!')
         try:
             self.main.show()
             self.QApp.exec()
@@ -83,11 +83,11 @@ class App:
         pass
 
     def set_app(self, App):
-        weasel = self.weasel
-        weasel.app = App(weasel) 
+        wezel = self.wezel
+        wezel.app = App(wezel) 
         self.__class__ = App 
-        self.__dict__ = weasel.app.__dict__
-        return weasel.app   
+        self.__dict__ = wezel.app.__dict__
+        return wezel.app   
 
     def close(self):
         """
@@ -100,7 +100,7 @@ class App:
 
 class MenuBar(QMenuBar):
     """
-    Programming interfaces for the Weasel menus. 
+    Programming interfaces for the Wezel menus. 
     """
 
     def __init__(self, app, menu):
@@ -166,7 +166,7 @@ class Menu(QMenu):
 
 
 class Action(QAction):
-    """Base class for all weasel actions"""
+    """Base class for all wezel actions"""
 
     def __init__(self, parent,
         text = None,

@@ -1,6 +1,6 @@
-from weasel.core import Action
-import weasel.apps as apps
-import weasel.actions as actions
+from wezel.core import Action
+import wezel.apps as apps
+import wezel.actions as actions
 
 def hello_world(parent):
 
@@ -63,14 +63,14 @@ class HelloWorld(Action):
 class ToggleApp(Action):
 
     def enable(self, app):
-        return app.__class__.__name__ in ['WeaselWelcome', 'DicomSeries', 'DicomWindows']
+        return app.__class__.__name__ in ['WezelWelcome', 'DicomSeries', 'DicomWindows']
 
     def run(self, app):
         
-        weasel = app.weasel
-        if app.__class__.__name__ == 'WeaselWelcome':
-            weasel.app = apps.DicomSeries(weasel)
+        wezel = app.wezel
+        if app.__class__.__name__ == 'WezelWelcome':
+            wezel.app = apps.DicomSeries(wezel)
         elif app.__class__.__name__ == 'DicomSeries':
-            weasel.app = apps.DicomWindows(weasel)
+            wezel.app = apps.DicomWindows(wezel)
         elif app.__class__.__name__ == 'DicomWindows':
-            weasel.app = apps.WeaselWelcome(weasel)
+            wezel.app = apps.WezelWelcome(wezel)

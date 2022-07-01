@@ -17,12 +17,12 @@ import pandas as pd
 #########################################
 
 
-def displayMetaDataSubWindow(weasel, tableTitle, dataset):
+def displayMetaDataSubWindow(wezel, tableTitle, dataset):
     """
     Creates a subwindow that displays a DICOM image's metadata. 
     """
     try:
-        weasel.log.info('ViewMetaData.displayMetaDataSubWindow called.')
+        wezel.log.info('ViewMetaData.displayMetaDataSubWindow called.')
         title = "DICOM Image Metadata"
                     
         widget = QWidget()
@@ -32,8 +32,8 @@ def displayMetaDataSubWindow(weasel, tableTitle, dataset):
         metaDataSubWindow.setWidget(widget)
         metaDataSubWindow.setObjectName("metaData_Window")
         metaDataSubWindow.setWindowTitle(title)
-        height = weasel.central.height()
-        width = weasel.central.width()
+        height = wezel.central.height()
+        width = wezel.central.width()
         metaDataSubWindow.setGeometry(width * 0.4,0,width*0.6,height)
         lblImageName = QLabel('<H4>' + tableTitle + '</H4>')
         widget.layout().addWidget(lblImageName)
@@ -44,8 +44,8 @@ def displayMetaDataSubWindow(weasel, tableTitle, dataset):
         searchField = QLineEdit()
         searchField.textEdited.connect(lambda x=searchField.text(): searchTable(DICOM_Metadata_Table_View, x))
         # Add export to Excel/CSV buttons
-        export_excel_button = QPushButton('&Export To Excel', clicked=lambda: exportToFile(weasel, DICOM_Metadata_Table_View, excel=True))
-        export_csv_button = QPushButton('&Export To CSV', clicked=lambda: exportToFile(weasel, DICOM_Metadata_Table_View, csv=True))
+        export_excel_button = QPushButton('&Export To Excel', clicked=lambda: exportToFile(wezel, DICOM_Metadata_Table_View, excel=True))
+        export_csv_button = QPushButton('&Export To CSV', clicked=lambda: exportToFile(wezel, DICOM_Metadata_Table_View, csv=True))
 
         horizontalBox = QHBoxLayout()
         horizontalBox.addWidget(searchField)
@@ -55,7 +55,7 @@ def displayMetaDataSubWindow(weasel, tableTitle, dataset):
         widget.layout().addLayout(horizontalBox)
         widget.layout().addWidget(DICOM_Metadata_Table_View)
 
-        weasel.addSubWindow(metaDataSubWindow)
+        wezel.addSubWindow(metaDataSubWindow)
         metaDataSubWindow.show()
     except Exception as e:
         print('Error in : ViewMetaData.displayMetaDataSubWindow' + str(e))
@@ -206,7 +206,7 @@ def searchTable(table, expression):
         logger.error('Error in : ViewMetaData.searchTable: ' + str(e))
 
 
-def exportToFile(weasel, table, excel=False, csv=False):
+def exportToFile(wezel, table, excel=False, csv=False):
     try:
         columHeaders = []
         for i in range(table.model().columnCount()):
@@ -216,15 +216,15 @@ def exportToFile(weasel, table, excel=False, csv=False):
             for col in range(table.columnCount()):
                 df.at[row, columHeaders[col]] = table.item(row, col).text()
         if excel:
-            filename, _ = QFileDialog.getSaveFileName(weasel, 'Save Excel file as ...', os.path.join(weasel.data_folder(), 'Metadata.xlsx'), "Excel files (*.xlsx)")
+            filename, _ = QFileDialog.getSaveFileName(wezel, 'Save Excel file as ...', os.path.join(wezel.data_folder(), 'Metadata.xlsx'), "Excel files (*.xlsx)")
             if filename != '':
                 df.to_excel(filename, index=False)
-                QMessageBox.information(weasel, "Export to Excel", "File " + filename + " saved successfully")
+                QMessageBox.information(wezel, "Export to Excel", "File " + filename + " saved successfully")
         if csv:
-            filename, _ = QFileDialog.getSaveFileName(weasel, 'Save CSV file as ...', os.path.join(weasel.data_folder(), 'Metadata.csv'), "CSV files (*.csv)")
+            filename, _ = QFileDialog.getSaveFileName(wezel, 'Save CSV file as ...', os.path.join(wezel.data_folder(), 'Metadata.csv'), "CSV files (*.csv)")
             if filename != '':
                 df.to_csv(filename, index=False)
-                QMessageBox.information(weasel, "Export to CSV", "File " + filename + " saved successfully")
+                QMessageBox.information(wezel, "Export to CSV", "File " + filename + " saved successfully")
     except Exception as e:
         print('Error in : ViewMetaData.exportToFile: ' + str(e))
         logger.error('Error in : ViewMetaData.exportToFile: ' + str(e))

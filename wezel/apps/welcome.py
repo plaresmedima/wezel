@@ -1,30 +1,30 @@
-__all__ = ['WeaselWelcome', 'WeaselAbout']
+__all__ = ['WezelWelcome', 'WezelAbout']
 
-import weasel.widgets as widgets
-import weasel.actions as actions
-from weasel.core import App, Action
+import wezel.widgets as widgets
+import wezel.actions as actions
+from wezel.core import App, Action
 import dbdicom as db
 
 class About(App):
-    """Entry weasel application"""
+    """Entry wezel application"""
 
-    def __init__(self, weasel):
-        super().__init__(weasel)
+    def __init__(self, wezel):
+        super().__init__(wezel)
 
         self.set_central(widgets.ImageLabel())
         self.set_menu(actions.about.menu)
-        self.set_status("Welcome to Weasel!")
+        self.set_status("Welcome to Wezel!")
 
-class Weasel(App):
-    """Entry weasel application"""
+class Wezel(App):
+    """Entry wezel application"""
 
-    def __init__(self, weasel):
-        super().__init__(weasel)
+    def __init__(self, wezel):
+        super().__init__(wezel)
 
         central = widgets.ImageLabel()
         self.main.setCentralWidget(central)
         self.set_menu(menu)
-        self.status.message("Welcome to Weasel!")
+        self.status.message("Welcome to Wezel!")
 
 
 def menu(parent): 
@@ -38,7 +38,7 @@ def menu(parent):
 class DICOM(Action):
 
     def enable(self, app):
-        return app.__class__.__name__ in ['WeaselWelcome']
+        return app.__class__.__name__ in ['WezelWelcome']
 
     def run(self, app):
 

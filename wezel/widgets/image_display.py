@@ -106,7 +106,7 @@ class ImageLabel(QLabel):
         super().__init__()
 
         self.setScaledContents(True)
-        self.setData(icons.weasel)
+        self.setData(icons.wezel)
         
     def setData(self, file):
         self.im = QPixmap(file).scaledToWidth(512)

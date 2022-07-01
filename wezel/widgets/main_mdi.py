@@ -28,7 +28,7 @@ class MainMultipleDocumentInterface(QMdiArea):
     def addWidget(self, widget, title=None, icon=None):
         """This method takes a composite widget created by an external 
         application, makes it the central widget of an MDI subwindow 
-        and displays that subwindow in the Weasel MDI""" 
+        and displays that subwindow in the Wezel MDI""" 
 
         subWindow = QMdiSubWindow()
         subWindow.setWidget(widget)

@@ -9,14 +9,14 @@ from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 
-import weasel.widgets as widgets
-from weasel.core import Main
-from weasel.apps.welcome import Weasel as WeaselWelcome
+import wezel.widgets as widgets
+from wezel.core import Main
+from wezel.apps.welcome import Wezel as WezelWelcome
 
 QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
 QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
 
-class Weasel:
+class Wezel:
 
     def __init__(self):
         self.app = None
@@ -27,12 +27,12 @@ class Weasel:
         self.main = Main(self)
         self.main.setStatusBar(self.status)
         self.dialog = widgets.Dialog(self.main)
-        self.app = WeaselWelcome(self)
+        self.app = WezelWelcome(self)
 
 
 def app(application=None):
 
-    wsl = Weasel().app
+    wsl = Wezel().app
     if application is not None:
         wsl.set_app(application)
     return wsl
@@ -109,18 +109,18 @@ def build(project, onefile=True, terminal=False, data_folders=[], hidden_modules
     
     if windows:
         all_data = [
-            'weasel\\widgets\\icons\\my_icons;.\\weasel\\widgets\\icons\\my_icons',
-            'weasel\\widgets\\icons\\fugue-icons-3.5.6;.\\weasel\\wwidgets\\icons\\fugue-icons-3.5.6',
-            'weasel;.\\weasel'
+            'wezel\\widgets\\icons\\my_icons;.\\wezel\\widgets\\icons\\my_icons',
+            'wezel\\widgets\\icons\\fugue-icons-3.5.6;.\\wezel\\wwidgets\\icons\\fugue-icons-3.5.6',
+            'wezel;.\\wezel'
             ]
         if 'itk' in hidden_modules: all_data.append(itk_path_win+';.\\itk')
         for name in data_folders:
             all_data.append(name+";./"+name) 
     else:
         all_data = [
-            'weasel/widgets/icons/my_icons:./weasel/widgets/icons/my_icons',
-            'weasel/widgets/icons/fugue-icons-3.5.6:./weasel/widgets/icons/fugue-icons-3.5.6',
-            'weasel:./weasel'
+            'wezel/widgets/icons/my_icons:./wezel/widgets/icons/my_icons',
+            'wezel/widgets/icons/fugue-icons-3.5.6:./wezel/widgets/icons/fugue-icons-3.5.6',
+            'wezel:./wezel'
             ]
         if 'itk' in hidden_modules: all_data.append(itk_path_unix+':./itk')
         for name in data_folders:
@@ -134,7 +134,7 @@ def build(project, onefile=True, terminal=False, data_folders=[], hidden_modules
         collect_data += ' --collect-datas dbdicom'
     if 'dipy' in hidden_modules:
         collect_data += ' --collect-datas dipy'
-    # weasel and widgets might be needed at --collect-datas in the future. It's a matter of trying to build with those 2 and see what happens
+    # wezel and widgets might be needed at --collect-datas in the future. It's a matter of trying to build with those 2 and see what happens
 
     print('Creating executable..')
     cmd = activate() + ' && ' + 'pyinstaller --name "myproject" --clean'
@@ -149,7 +149,7 @@ def build(project, onefile=True, terminal=False, data_folders=[], hidden_modules
         cmd += ' ' + project + '.py'
     else:
         # Default option
-        cmd += ' ' + "weasel\\main.py" # This command (and path!) may be different when weasel becomes a pip install package
+        cmd += ' ' + "wezel\\main.py" # This command (and path!) may be different when wezel becomes a pip install package
     os.system(cmd)
 
     post_installation_build_cleanup()
@@ -157,7 +157,7 @@ def build(project, onefile=True, terminal=False, data_folders=[], hidden_modules
 
 def logger():
     
-    LOG_FILE_NAME = "weasel_log.log"
+    LOG_FILE_NAME = "wezel_log.log"
     # creates some sort of conflict with mdreg - commenting out for now
 #    if os.path.exists(LOG_FILE_NAME):
 #        os.remove(LOG_FILE_NAME)
