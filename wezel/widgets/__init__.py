@@ -1,6 +1,6 @@
 """
 `widgets` is a collection of PyQt widgets that can be used as components 
-in `weasel` applications.
+in `wezel` applications.
 
 """
 from .array_display import *

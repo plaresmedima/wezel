@@ -1,4 +1,4 @@
-from weasel.core import Action
+from wezel.core import Action
 
 def menu(parent):
 
@@ -33,7 +33,7 @@ class Open(Action):
 
 class Close(Action):
     """
-    Close weasel.
+    Close wezel.
     """ 
     def enable(self, app):
 

@@ -2,7 +2,7 @@
 # minimal required information
 
 [project]
-name = "weasel"
+name = "wezel"
 version = "0.0.0"
 dependencies = [
   "PyQt5",
@@ -45,10 +45,10 @@ keywords = ['python', "medical imaging", "Graphical User Interface"]
 requires-python = ">=3.6"
 
 [project.urls]
-"Homepage" = "https://github.com/QIB-Sheffield/weasel"
+"Homepage" = "https://github.com/QIB-Sheffield/wezel"
 
 [tool.setuptools]
-packages = ["weasel"]
+packages = ["wezel"]
 
 
 

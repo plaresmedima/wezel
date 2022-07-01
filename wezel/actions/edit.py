@@ -1,5 +1,5 @@
 import dbdicom as db
-from weasel.core import Action
+from wezel.core import Action
 
 def menu(parent):
 

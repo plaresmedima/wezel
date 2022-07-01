@@ -28,14 +28,14 @@ __all__ = [
     'plus',
     'question_mark',
     'spectrum',
-    'weasel', 
+    'wezel', 
 ]
 
 import os
 
 path = os.path.dirname(__file__)
 
-weasel = os.path.join(path, 'images', 'weasel.jpg')
+wezel = os.path.join(path, 'images', 'wezel.jpg')
 
 favicon = os.path.join(path, 'my_icons', 'favicon.ico')
 slider_icon = os.path.join(path, 'my_icons', 'slider_icon.png')
