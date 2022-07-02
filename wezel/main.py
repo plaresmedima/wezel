@@ -1,4 +1,4 @@
-__all__ = ['app', 'doc', 'build', 'install']
+__all__ = ['app', 'build', 'install']
 
 import os
 import sys
