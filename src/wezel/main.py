@@ -9,7 +9,9 @@ from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 
-import wezel.widgets as widgets
+#import wezel.widgets as widgets
+import wezel
+from wezel.widgets import StatusBar, Dialog
 from wezel.core import Main
 from wezel.apps.welcome import Wezel as WezelWelcome
 
@@ -22,11 +24,14 @@ class Wezel:
         self.app = None
         self.log = logger()
         self.QApp = QApplication([])
-        self.QApp.setWindowIcon(QIcon(widgets.icons.favicon))
-        self.status = widgets.StatusBar()
+        #self.QApp.setWindowIcon(QIcon(widgets.icons.favicon))
+        self.QApp.setWindowIcon(QIcon(wezel.widgets.icons.favicon))
+        #self.status = widgets.StatusBar()
+        self.status = StatusBar()
         self.main = Main(self)
         self.main.setStatusBar(self.status)
-        self.dialog = widgets.Dialog(self.main)
+        #self.dialog = widgets.Dialog(self.main)
+        self.dialog = Dialog(self.main)
         self.app = WezelWelcome(self)
 
 

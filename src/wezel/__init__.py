@@ -1,3 +1,2 @@
-
-from wezel.main import *
 from wezel.core import *
+from wezel.main import *
