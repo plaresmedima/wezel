@@ -13,5 +13,5 @@ def menu(parent):
 class About(Action):
 
     def run(self, app):
-        webbrowser.open("wezel.pro")
+        webbrowser.open("weasel.pro")
         #webbrowser.get('chrome').open("Wezel.pro")

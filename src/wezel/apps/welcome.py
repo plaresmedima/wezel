@@ -1,4 +1,4 @@
-__all__ = ['WezelWelcome', 'WezelAbout']
+__all__ = ['Wezel', 'About']
 
 import wezel.widgets as widgets
 import wezel.actions as actions
@@ -50,6 +50,6 @@ class DICOM(Action):
         folder = db.Folder(status=app.status, dialog=app.dialog)
         folder.open(path)
         
-        app = app.set_app(apps.DicomWindows)
+        app = app.set_app(app.DicomWindows)
         app.set_data(folder)
         app.status.cursorToNormal()

@@ -1,4 +1,4 @@
-__all__ = ['DicomWindows', 'DicomSeries']
+__all__ = ['Windows', 'Series']
 
 from PyQt5.QtWidgets import QDockWidget
 from PyQt5.QtCore import Qt

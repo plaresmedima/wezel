@@ -3,7 +3,7 @@
 
 [project]
 name = "wezel"
-version = "0.0.0"
+version = "0.0.3"
 dependencies = [
   "PyQt5",
   "dbdicom",
@@ -48,8 +48,12 @@ requires-python = ">=3.6"
 [project.urls]
 "Homepage" = "https://github.com/QIB-Sheffield/wezel"
 
-[tool.setuptools]
-packages = ["wezel"]
+#[tool.setuptools]
+#packages = ["wezel"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+#include = ["wezel*"] 
 
 
 

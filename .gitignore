@@ -3,6 +3,7 @@
 
 ### mdreg folder structure
 docs/*
+dev/*
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
