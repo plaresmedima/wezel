@@ -1,4 +1,4 @@
-__all__ = ['Windows', 'Series']
+__all__ = ['Windows', 'Series', 'Entry']
 
 from PyQt5.QtWidgets import QDockWidget
 from PyQt5.QtCore import Qt
@@ -8,6 +8,45 @@ import wezel as wsl
 
 from wezel import widgets
 from wezel import actions
+
+
+class Entry(wsl.App):
+    """Entry wezel application"""
+
+    def __init__(self, wezel):
+        super().__init__(wezel)
+
+        central = widgets.ImageLabel()
+        self.main.setCentralWidget(central)
+        self.set_menu(dicom_entry_menu)
+        self.status.message("Welcome to Wezel!")
+
+def dicom_entry_menu(parent): 
+
+    view = parent.menu('Open')
+    view.action(DicomEntry, text='DICOM folder')
+
+    about = parent.menu('About')
+    actions.about.menu(about)
+
+class DicomEntry(wsl.Action):
+
+    def enable(self, app):
+        return app.__class__.__name__ in ['WezelWelcome']
+
+    def run(self, app):
+
+        app.status.message("Opening DICOM folder..")
+        path = app.dialog.directory("Select a DICOM folder")
+        if path == '': return
+
+        app.status.cursorToHourglass()
+        folder = db.Folder(status=app.status, dialog=app.dialog)
+        folder.open(path)
+        
+        app = app.set_app(app.DicomWindows)
+        app.set_data(folder)
+        app.status.cursorToNormal()
 
 
 class Windows(wsl.App):

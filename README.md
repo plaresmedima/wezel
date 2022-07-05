@@ -1,7 +1,7 @@
 `wezel` is a Python toolbox for prototyping  
 quantitative medical imaging applications. 
 
-***CAUTION: wezel is developed in public but is work in progress and backwards compatibility is not guaranteed. It is likely there WILL be breaking changes in future versions***
+***CAUTION: wezel is developed in public but it is work in progress. Some features mentioned in this document are still in development and backwards compatibility is not likely to happen.***
 
 # How to use `wezel` applications?
 
@@ -26,6 +26,10 @@ generate an executable which you can pass on to analysts or other users.
 and/or the source code publicly available, for instance as supplementary material 
 in publications. 
 
+## Installing wezel
+
+Run `pip install wezel`
+
 ## Customizing `wezel`: menus and apps
 
 To run `wezel` in a script, import the package, 
@@ -38,27 +42,26 @@ wsl = wezel.app()      # launch an application
 wsl.show()              # show the application
 ```
 
-This will launch the demo version of `wezel`. 
+This will launch a dummy version of `wezel` without any functionality. 
 
 The easiest way to customize `wezel` is by replacing the menubar 
 at the top of the display with a custom made one. To illustrate this how this works, 
-the `wezel` distribution includes a tutorial that 
+the `wezel` distribution includes a demo that 
 comes with a few customized menubars. One of these is the Hello World menu. 
 To run it (or any other menu), just set a new menu before showing `wezel` to the 
 user:
 
 ```python
 import wezel
-from wezel.tutorial.menu import hello_world
+from wezel.actions.demo import menu_hello_world
 
-wsl = wezel.app()          # launch an application
-wsl.set_menu(hello_world)   # set a custom menu
-wsl.show()                  # show the application
+wsl = wezel.app()                   # launch an application
+wsl.set_menu(menu_hello_world)      # set a custom menu
+wsl.show()                          # show the application
 ```
 
 Of course in practice you will be running your own menus, which you 
-are developing and testing in a separate folder outside the `wezel` 
-distribution:
+are developing and testing in a separate folder:
 
 ```python
 import wezel
@@ -72,30 +75,38 @@ wsl.show()                          # show the application
 In some cases the default displays are not sufficient for your purposes 
 and so you may also want to change the way the graphical 
 interface works. In that case you need to replace the default `wezel' 
-application, a viewer for DICOM databases, and run your own. To see how this 
-works, the tutorial package provides a viewer for multi-dimensional 
-numpy arrays:
+application - a dummy viewer - and run your own. To see how this 
+works, `wezel` includes some viewers for DICOM data. One of those is the dicom.Windows app:
 
 ```python
 import wezel
-from wezel.tutorial.apps import numpyseries
 
 wsl = wezel.app()           # launch an application
-wsl.set_app(numpyseries)     # set a custom app
+wsl.set_app(wezel.apps.dicom.Windows)     # set a custom app
+wsl.show()                   # show the application
+```
+
+Wezel also includes a viewer for multi-dimensional 
+numpy arrays (**coming soon!**):
+
+```python
+import wezel
+
+wsl = wezel.app()           # launch an application
+wsl.set_app(wezel.apps.numpy)     # set a custom app
 wsl.show()                   # show the application
 ```
 
 When launched in this way a window will pop up allowing the 
-user the select a dataset from disk. You can also set data programmatically.
-Try this out by visualising and empty a 4-dimensional array:
+user the select a dataset from disk. You can also set data interactively.
+Try this out by visualising an empty a 4-dimensional array:
 
 ```python
 import numpy as np
 import wezel
-from wezel.tutorial.apps import numpyseries
 
 wsl = wezel.app()           # launch an application
-wsl.set_app(numpyseries)     # set a custom app
+wsl.set_app(wezel.apps.numpy)     # set a custom app
 wsl.set_data(np.empty((10, 20, 5, 12)))
 wsl.show()                   # show the application
 array = wsl.get_data()
@@ -121,7 +132,7 @@ See below for some examples of how apps can be defined.
 
 ## Writing custom `wezel` menus
 
-A menu on the `wezel` menu bar is effectibely a list of menu buttons, 
+A menu on the `wezel` menu bar is effectively a list of menu buttons, 
 or "actions" as they are called. Formally it is defined as a function 
 which takes a parent menu or the menubar itself as argument. For 
 instance, the Hello World menu inserted in the example above is defined as follows:
@@ -171,23 +182,23 @@ The program is paused until the user closes the pop-up.
 The `HelloWorld` action is defied as follows:
 
 ```python
-from wezel.core import Action
+import wezel
 
-class HelloWorld(Action):
+class HelloWorld(wezel.Action):
 
     def run(self, app):
         app.dialog.information("Hello World!", title='My first action!')
 ```
 
 As the example shows, all actions in `wezel` must be defined by 
-subclassing the `Action` class from the `wezel.core` module. There are no 
+subclassing the `wezel.Action` class. There are no 
 other compulsory arguments, so the following creates a functional 
 action which does absolutely nothing when clicked:
 
 ```python
-from wezel.core import Action
+import wezel
 
-class DoNothing(Action):
+class DoNothing(wezel.Action):
     pass
 ```
 
@@ -214,7 +225,7 @@ wsl.show()                        # show the application
 
 In order to generate an executable, save the script in a separate file, 
 for instance "myproject.py". You can generate an executable by calling 
-the `build` function of `wezel`:
+the `build` function of `wezel` (**coming soon!**):
 
 ```python
 import wezel
@@ -278,15 +289,13 @@ dialog class and progress bar which provides a convenient programming
 interface for common interactions with the user.
 
 An example of a very simple (and not very useful!) `wezel` app is the 
-`WezelAbout` app which can be found in the `welcome` module of the default 
+`About` app which can be found in the `welcome` module of the default 
 `wezel.apps`:
 
 ```python
-from wezel.core import App
-from wezel.widgets import ImageLabel
-from wezel.actions.about import menu
+import wezel
 
-class WezelAbout(App):             # Required: subclass core.App
+class WezelAbout(wezel.App):             # Required: subclass core.App
     def __init__(self, wezel):     # Required: initialize core.App                       
         super().__init__(wezel)    #    with instance of `Wezel`
 
