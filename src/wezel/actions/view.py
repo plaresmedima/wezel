@@ -60,7 +60,7 @@ class CloseWindows(Action):
 
     def enable(self, app):
         
-        return app.__class__.__name__ != 'DicomWindows'
+        return app.__class__.__name__ == 'Windows'
 
     def run(self, app):
 
@@ -70,7 +70,7 @@ class TileWindows(Action):
 
     def enable(self, app):
         
-        return app.__class__.__name__ != 'DicomWindows'
+        return app.__class__.__name__ == 'Windows'
 
     def run(self, app):
 
