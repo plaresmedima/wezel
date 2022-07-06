@@ -36,6 +36,7 @@ def menu(parent):
     view.action(actions.view.Image, text='Display image')
     view.action(actions.view.Series, text='Display series')
     view.action(actions.view.Region, text='Draw region')
+    view.action(actions.view.HeaderDICOM, text='DICOM Header')
     view.separator()
     view.action(actions.view.CloseWindows, text='Close windows')
     view.action(actions.view.TileWindows, text='Tile windows')
