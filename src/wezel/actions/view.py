@@ -1,5 +1,6 @@
 from wezel.core import Action
 from wezel.widgets import SeriesViewerROI
+from wezel.widgets import SeriesViewerMetaData
 
 def menu(parent):
    
@@ -7,9 +8,23 @@ def menu(parent):
     parent.action(Series)
     parent.separator()
     parent.action(Region)
+    parent.action(HeaderDICOM, text='DICOM Header')
     parent.separator()
     parent.action(CloseWindows, text='Close windows')
     parent.action(TileWindows, text='Tile windows')
+
+class HeaderDICOM(Action):
+
+    def enable(self, app):
+        if not hasattr(app, 'folder'):
+            return False
+        return app.nr_selected(3) != 0
+
+    def run(self, app):
+       for series in app.get_selected(3):
+
+            viewer = SeriesViewerMetaData(series)
+            app.addAsSubWindow(viewer, title=series.label())
 
 
 class Series(Action):
