@@ -22,7 +22,6 @@ class HeaderDICOM(Action):
 
     def run(self, app):
        for series in app.get_selected(3):
-
             viewer = SeriesViewerMetaData(series)
             app.addAsSubWindow(viewer, title=series.label())
 
