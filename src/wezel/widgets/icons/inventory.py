@@ -31,41 +31,56 @@ __all__ = [
     'wezel', 
 ]
 
-import os
+# filepaths need to be identified with importlib_resources
+# rather than __file__ as the latter does not work at runtime 
+# when the package is installed via pip install
 
-path = os.path.dirname(__file__)
+import sys
 
-wezel = os.path.join(path, 'images', 'wezel.jpg')
+if sys.version_info < (3, 9):
+    # importlib.resources either doesn't exist or lacks the files()
+    # function, so use the PyPI version:
+    import importlib_resources
+else:
+    # importlib.resources has files(), so use that:
+    import importlib.resources as importlib_resources
 
-favicon = os.path.join(path, 'my_icons', 'favicon.ico')
-slider_icon = os.path.join(path, 'my_icons', 'slider_icon.png')
-question_mark = os.path.join(path, 'my_icons', 'question-mark.png')
 
-fugue_icons = os.path.join(path, 'fugue-icons-3.5.6')
+f = importlib_resources.files('wezel.widgets.icons.images')
 
-application_import = os.path.join(fugue_icons, 'application-import.png')
-arrow_curve_180_left = os.path.join(fugue_icons, 'arrow-curve-180-left.png')
-arrow_move = os.path.join(fugue_icons, 'arrow-move.png')
-bin_metal = os.path.join(fugue_icons, 'bin-metal.png')
-blue_document_export = os.path.join(fugue_icons, 'blue-document-export.png')
-brightness = os.path.join(fugue_icons, 'brightness.png')
-contrast = os.path.join(fugue_icons, 'contrast.png')
-cursor = os.path.join(fugue_icons, 'cursor.png')
-cutter = os.path.join(fugue_icons, 'cutter.png')
-disk = os.path.join(fugue_icons, 'disk.png')
-eraser = os.path.join(fugue_icons, 'eraser.png')
-hand = os.path.join(fugue_icons, 'hand.png')
-hand_finger = os.path.join(fugue_icons, 'hand-finger.png')
-hand_point_090 = os.path.join(fugue_icons, 'hand-point-090.png')
-layer_shape = os.path.join(fugue_icons, 'layer-shape.png')
-layer_shape_ellipse = os.path.join(fugue_icons, 'layer-shape-ellipse.png')
-layer_shape_curve = os.path.join(fugue_icons, 'layer-shape-curve.png')
-layer_shape_polygon = os.path.join(fugue_icons, 'layer-shape-polygon.png')
-lock = os.path.join(fugue_icons, 'lock.png')
-lock_unlock = os.path.join(fugue_icons, 'lock-unlock.png')
-magnifier = os.path.join(fugue_icons, 'magnifier.png')
-minus = os.path.join(fugue_icons, 'minus.png')
-paint_brush = os.path.join(fugue_icons, 'paint-brush.png')
-pencil = os.path.join(fugue_icons, 'pencil.png')
-plus = os.path.join(fugue_icons, 'plus.png')
-spectrum = os.path.join(fugue_icons, 'spectrum.png')
+wezel = str(f.joinpath('wezel.jpg'))
+
+f = importlib_resources.files('wezel.widgets.icons.my_icons')
+
+favicon = str(f.joinpath('favicon.ico'))
+slider_icon = str(f.joinpath('slider_icon.png'))
+question_mark = str(f.joinpath('question-mark.png'))
+
+f = importlib_resources.files('wezel.widgets.icons.fugue_icons')
+
+application_import = str(f.joinpath('application-import.png'))
+arrow_curve_180_left = str(f.joinpath('arrow-curve-180-left.png'))
+arrow_move = str(f.joinpath('arrow-move.png'))
+bin_metal = str(f.joinpath('bin-metal.png'))
+blue_document_export = str(f.joinpath('blue-document-export.png'))
+brightness = str(f.joinpath('brightness.png'))
+contrast = str(f.joinpath('contrast.png'))
+cursor = str(f.joinpath('cursor.png'))
+cutter = str(f.joinpath('cutter.png'))
+disk = str(f.joinpath('disk.png'))
+eraser = str(f.joinpath('eraser.png'))
+hand = str(f.joinpath('hand.png'))
+hand_finger = str(f.joinpath('hand-finger.png'))
+hand_point_090 = str(f.joinpath('hand-point-090.png'))
+layer_shape = str(f.joinpath('layer-shape.png'))
+layer_shape_ellipse = str(f.joinpath('layer-shape-ellipse.png'))
+layer_shape_curve = str(f.joinpath('layer-shape-curve.png'))
+layer_shape_polygon = str(f.joinpath('layer-shape-polygon.png'))
+lock = str(f.joinpath('lock.png'))
+lock_unlock = str(f.joinpath('lock-unlock.png'))
+magnifier = str(f.joinpath('magnifier.png'))
+minus = str(f.joinpath('minus.png'))
+paint_brush = str(f.joinpath('paint-brush.png'))
+pencil = str(f.joinpath('pencil.png'))
+plus = str(f.joinpath('plus.png'))
+spectrum = str(f.joinpath('spectrum.png'))

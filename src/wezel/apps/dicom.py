@@ -4,19 +4,16 @@ from PyQt5.QtWidgets import QDockWidget
 from PyQt5.QtCore import Qt
 
 import dbdicom as db
-import wezel as wsl
-
-from wezel import widgets
-from wezel import actions
+import wezel
 
 
-class Entry(wsl.App):
+class Entry(wezel.App):
     """Entry wezel application"""
 
     def __init__(self, wezel):
         super().__init__(wezel)
 
-        central = widgets.ImageLabel()
+        central = wezel.widgets.ImageLabel()
         self.main.setCentralWidget(central)
         self.set_menu(dicom_entry_menu)
         self.status.message("Welcome to Wezel!")
@@ -27,12 +24,12 @@ def dicom_entry_menu(parent):
     view.action(DicomEntry, text='DICOM folder')
 
     about = parent.menu('About')
-    actions.about.menu(about)
+    wezel.actions.about.all(about)
 
-class DicomEntry(wsl.Action):
+class DicomEntry(wezel.Action):
 
     def enable(self, app):
-        return app.__class__.__name__ in ['WezelWelcome']
+        return app.__class__.__name__ in ['Entry']
 
     def run(self, app):
 
@@ -49,19 +46,19 @@ class DicomEntry(wsl.Action):
         app.status.cursorToNormal()
 
 
-class Windows(wsl.App):
+class Windows(wezel.App):
 
-    def __init__(self, wezel): 
+    def __init__(self, wzl): 
         """Creates the default main window."""
 
-        super().__init__(wezel)
+        super().__init__(wzl)
 
         self.treeView = None
         #self.folder = db.Folder(status=self.status, dialog=self.dialog)
         self.folder = None
-        self.central = widgets.MainMultipleDocumentInterface()
+        self.central = wezel.widgets.MainMultipleDocumentInterface()
         self.main.setCentralWidget(self.central)
-        self.set_menu(actions.demo.menu)
+        self.set_menu(wezel.menus.dicom)
 
     def set_data(self, folder):
 
@@ -78,6 +75,7 @@ class Windows(wsl.App):
         self.menubar.enable()
 
     def open(self, path, message='Opening folder..', attributes=None):
+
         self.folder = db.Folder(path=path, attributes=attributes, message=message, status=self.status, dialog=self.dialog)
         self.display(self.folder)
 
@@ -148,7 +146,7 @@ class Windows(wsl.App):
     def display(self, object):
 
         if object.generation == 0:
-            self.treeView = widgets.DICOMFolderTree(object, self.status)
+            self.treeView = wezel.widgets.DICOMFolderTree(object, self.status)
             self.treeView.itemSelectionChanged.connect(self.menubar.enable)
             self.addAsDockWidget(self.treeView, title=object.path)
             self.menubar.enable()
@@ -157,10 +155,10 @@ class Windows(wsl.App):
         elif object.generation == 2: # No Study Viewer yet
             pass
         elif object.generation == 3:
-            viewer = widgets.SeriesViewer(object)
+            viewer = wezel.widgets.SeriesViewer(object)
             self.addAsSubWindow(viewer, title=object.label())
         elif object.generation == 4:
-            viewer = widgets.ImageViewer(object)
+            viewer = wezel.widgets.ImageViewer(object)
             self.addAsSubWindow(viewer, title=object.label())
 
     def get_selected(self, generation):
@@ -177,22 +175,31 @@ class Windows(wsl.App):
         selected = self.treeView.get_selected(generation)
         return len(selected)
 
-class Series(wsl.App):
 
-    def __init__(self, wezel): 
+class Series(wezel.App):
+    """WORK IN PROGRESS"""
+
+    def __init__(self, wzl): 
         """Creates a central window showing series only."""
 
-        super().__init__(wezel)
+        super().__init__(wzl)
 
-        # Needs updating
-        self.folder = db.Folder(status=wezel.status, dialog=wezel.dialog)
-        self.central = widgets.SeriesViewer()
+        self.treeView = None
+        self.folder = None
+        self.central = wezel.widgets.SeriesViewer()
         self.main.setCentralWidget(self.central)
-        self.set_menu(actions.demo.menu) 
+        self.set_menu(wezel.menus.dicom) 
+
+    def open(self, path, message='Opening folder..', attributes=None):
+
+        self.folder = db.Folder(path=path, attributes=attributes, message=message, status=self.status, dialog=self.dialog)
+        self.display(self.folder)
 
     def close(self):
         """Closes the Wezel display"""
 
+        if self.folder is None:
+            return True
         accept = self.folder.close()
         if accept:
             for dockwidget in self.main.findChildren(QDockWidget):
@@ -204,14 +211,14 @@ class Series(wsl.App):
         """
         Refreshes the Wezel display.
         """
-        self.wezel.status.message('Refreshing display..')
+        self.status.message('Refreshing display..')
         self.treeView.setFolder()
-        self.wezel.menubar.enable()
-        self.wezel.status.message()
+        self.menubar.enable()
+        self.status.message()
 
     def addAsDockWidget(self, widget, title=''):
 
-        dockwidget = QDockWidget(title, self, Qt.SubWindow)
+        dockwidget = QDockWidget(title, self.main, Qt.SubWindow)
         dockwidget.setAllowedAreas(Qt.LeftDockWidgetArea)
         dockwidget.setFeatures(QDockWidget.NoDockWidgetFeatures)
         dockwidget.setObjectName(widget.__class__.__name__)
@@ -222,9 +229,10 @@ class Series(wsl.App):
     def display(self, object=None):
 
         if object is None:
-            self.treeView = widgets.DICOMFolderTree(self.folder, self.wezel.status)
-            self.treeView.itemSelectionChanged.connect(self.wezel.menubar.enable)
-            self.addAsDockWidget(self.treeView, title=self.folder.path)
+            self.treeView = wezel.widgets.DICOMFolderTree(object, self.status)
+            self.treeView.itemSelectionChanged.connect(self.menubar.enable)
+            self.addAsDockWidget(self.treeView, title=object.path)
+            self.menubar.enable()
         elif object.generation == 1: # No Patient Viewer yet
             pass
         elif object.generation == 2: # No Study Viewer yet
@@ -233,3 +241,17 @@ class Series(wsl.App):
             self.central.setData(object)
         elif object.generation == 4:
             pass
+
+    def get_selected(self, generation):
+        
+        if self.treeView is None: return []
+        if generation == 4: return []
+        selected = self.treeView.get_selected(generation)
+        return [self.folder.object(row, generation) for row in selected]
+                  
+    def nr_selected(self, generation):
+
+        if self.treeView is None: return 0
+        if generation == 4: return 0
+        selected = self.treeView.get_selected(generation)
+        return len(selected)
