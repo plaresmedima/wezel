@@ -137,7 +137,10 @@ class ImageSliders(QWidget):
             self.slidersButton.setStyleSheet("background-color: red")
             for tag in self.sliderTags:
                 tagValues = self.dataFrame[tag].unique().tolist()
-                tagValues.sort()
+                try:
+                    tagValues.sort()
+                except:
+                    pass
                 slider = widgets.CheckBoxSlider(tag, tagValues)
                 slider.valueChanged.connect(self._sliderValueChanged)
                 slider.stateChanged.connect(self._sliderStateChanged)
