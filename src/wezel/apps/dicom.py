@@ -76,7 +76,11 @@ class Windows(wezel.App):
 
     def open(self, path, message='Opening folder..', attributes=None):
 
-        self.folder = db.Folder(path=path, attributes=attributes, message=message, status=self.status, dialog=self.dialog)
+        self.folder = db.Folder(path=path, 
+            attributes = attributes, 
+            message = message, 
+            status = self.status, 
+            dialog = self.dialog)
         self.display(self.folder)
 
     def close(self):

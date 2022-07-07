@@ -6,14 +6,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "wezel"
-version = "0.0.14"
+version = "0.0.15"
 dependencies = [
-  "PyQt5",
+  "PyQt5<=5.13.1",  # found some resolution issues with later versions
   "dbdicom",
   "matplotlib",
   "numpy",
   "pandas",
-  "pyqtgraph",
+  "pyqtgraph<=0.10.0",  # found some image display issues with later versions
   "importlib-resources>=1.1.0",
 ]
 
