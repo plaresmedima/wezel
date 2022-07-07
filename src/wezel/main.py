@@ -9,11 +9,11 @@ from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 
-#import wezel.widgets as widgets
 import wezel
 
 QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
 QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+
 
 class Wezel:
 
@@ -21,7 +21,7 @@ class Wezel:
         self.app = None
         self.log = logger()
         self.QApp = QApplication([])
-        #self.QApp.setWindowIcon(QIcon(widgets.icons.favicon))
+        #self.QApp.setWindowIcon(QIcon(favicon))
         self.QApp.setWindowIcon(QIcon(wezel.widgets.icons.favicon))
         #self.status = widgets.StatusBar()
         self.status = wezel.widgets.StatusBar()

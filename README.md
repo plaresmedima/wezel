@@ -3,27 +3,21 @@ quantitative medical imaging applications.
 
 ***CAUTION: wezel is developed in public but it is work in progress. Some features mentioned in this document are still in development and backwards compatibility is not likely to happen.***
 
-# How to use `wezel` applications?
+# How can I use existing `wezel` applications?
 
 You can use `wezel` applications to visualise and analyse medical images, using a standard graphical interface much like any other medical image viewer. 
 
-To try this out, download an example application (coming soon), 
-then double-click the file to start - no software installation required. 
+To try this out, download an example application (coming soon), then double-click the file to start - no software installation required. 
 
-If you are working on a specific project, you may have been given a `wezel` 
-application directly by a collaborator, or perhaps you found one online 
-or as supplementary material with a publication. 
+If you are working on a specific project, you may have been given a `wezel` application directly by a collaborator, or perhaps you found one online or as supplementary material with a publication. 
 
-Some video tutorials are provided (coming soon) to illustrate the use of the graphical interface, 
-but really if this is not almost self-explanatory, it is just not good enough. The rest of this document provides detail for application developers. 
+Some video tutorials are provided (**coming soon**) to illustrate the use of the graphical interface. The rest of this document provides detail for application developers. 
 
-# How to develop `wezel` applications?
+# How can I develop new `wezel` applications?
 
-If you are a developer of new applications, you can use `wezel` to prototype 
-and test your application. Once you are happy with the result, `wezel` can 
-generate an executable which you can pass on to analysts or other users. 
-`wezel` is distributed under an open license so you can make the executable 
-and/or the source code publicly available, for instance as supplementary material 
+If you are a developer of new applications, you can use `wezel` to prototype and test your application. Once you are happy with the result, `wezel` can generate an executable which you can pass on to analysts or other users. 
+
+`wezel` is distributed under an open license so you can make the executable and/or the source code publicly available, for instance as supplementary material 
 in publications. 
 
 ## Installing wezel
@@ -44,39 +38,28 @@ wsl.show()              # show the application
 
 This will launch a dummy version of `wezel` without any functionality. 
 
-The easiest way to customize `wezel` is by replacing the menubar 
-at the top of the display with a custom made one. To illustrate this how this works, 
-the `wezel` distribution includes a demo that 
-comes with a few customized menubars. One of these is the Hello World menu. 
-To run it (or any other menu), just set a new menu before showing `wezel` to the 
-user:
+The easiest way to customize `wezel` is by replacing the menubar with a custom made one. For instance, try setting the `hello_world` menu included in the `wezel` distribution: 
 
 ```python
 import wezel
-from wezel.actions.demo import menu_hello_world
 
 wsl = wezel.app()                   # launch an application
-wsl.set_menu(menu_hello_world)      # set a custom menu
+wsl.set_menu(wezel.menus.hello_world)      # set a custom menu
 wsl.show()                          # show the application
 ```
 
-Of course in practice you will be running your own menus, which you 
-are developing and testing in a separate folder:
+Of course in practice you will be running your own menus. For instance, assume you have created a package `foo` which contains a menu definition of your own:
 
 ```python
 import wezel
-import mystuff
+import foo
 
 wsl = wezel.app()                  # launch an application
-wsl.set_menu(mystuff.mymenu)        # set a custom menu
+wsl.set_menu(foo.mymenu)        # set a custom menu
 wsl.show()                          # show the application
 ```
 
-In some cases the default displays are not sufficient for your purposes 
-and so you may also want to change the way the graphical 
-interface works. In that case you need to replace the default `wezel' 
-application - a dummy viewer - and run your own. To see how this 
-works, `wezel` includes some viewers for DICOM data. One of those is the dicom.Windows app:
+A more useful application is the dicom.Windows app included in the `wezel` distribution. To run it, just set a different app:
 
 ```python
 import wezel
@@ -86,8 +69,7 @@ wsl.set_app(wezel.apps.dicom.Windows)     # set a custom app
 wsl.show()                   # show the application
 ```
 
-Wezel also includes a viewer for multi-dimensional 
-numpy arrays (**coming soon!**):
+Wezel also includes an app for visualising and manipulating numpy arrays (**coming soon!**):
 
 ```python
 import wezel
@@ -98,8 +80,7 @@ wsl.show()                   # show the application
 ```
 
 When launched in this way a window will pop up allowing the 
-user the select a dataset from disk. You can also set data interactively.
-Try this out by visualising an empty a 4-dimensional array:
+user the select a dataset from disk. You can also set data interactively. Try this out by visualising an empty a 4-dimensional array:
 
 ```python
 import numpy as np
@@ -112,19 +93,17 @@ wsl.show()                   # show the application
 array = wsl.get_data()
 ```
 
-When calling `show()` the program halts until the user closes the 
-window. Typically the user will have manipulated the array using the app. 
-As shown in the example, the result can be retrieved with `get_data()`.
+When calling `show()` the program halts until the user closes the window. Typically the user will have manipulated the array using the app. As shown in the example, the result can be retrieved with `get_data()`.
 
 The tutorial contains a few other simple applications, 
-but of course you may have written your own:
+but of course you may have written your own. For instance, say you have a package `foo` that contains an app:
 
 ```python
 import wezel
-import mystuff
+import foo
 
 wsl = wezel.app()                # launch an application
-wsl.set_app(mystuff.myapp)        # set a custom app
+wsl.set_app(foo.myapp)        # set a custom app
 wsl.show()                        # show the application
 ```
 
@@ -132,10 +111,7 @@ See below for some examples of how apps can be defined.
 
 ## Writing custom `wezel` menus
 
-A menu on the `wezel` menu bar is effectively a list of menu buttons, 
-or "actions" as they are called. Formally it is defined as a function 
-which takes a parent menu or the menubar itself as argument. For 
-instance, the Hello World menu inserted in the example above is defined as follows:
+A menu on the `wezel` menu bar is effectively a list of menu buttons, or "actions" as they are called. Formally it is defined as a function which takes a parent menu or the menubar itself as argument. For instance, the Hello World menu inserted in the example above is defined as follows:
 
 ```python
 def hello_world(parent):
@@ -143,16 +119,11 @@ def hello_world(parent):
     hello.action(HelloWorld, text="Hello World")
 ```
 
-As the example shows, a submenu of any parent menu can be created
-by calling `parent.menu(label)`, where `label` is the text on the menu button. 
+As the example shows, a submenu of any parent menu can be created by calling `parent.menu(label)`, where `label` is the text on the menu button. 
 
-Then an action can be created in any menu by calling `parent.action()` where the 
-first argument defines the action (see below) and the (optional) `text` argument defines the 
-text that will be shown on the button.  
+Then an action can be created in any menu by calling `parent.action()` where the first argument defines the action (see below) and the (optional) `text` argument defines the text that will be shown on the button.  
 
-More complicated menus including submenus can be created in the same way. 
-For instance the following adds a second `HelloWorld` action and 
-a submenu which has two other `HelloWorld` actions:
+More complicated menus including submenus can be created in the same way. For instance the following adds a second `HelloWorld` action and a submenu which has two other `HelloWorld` actions:
 
 ```python
 def hello_world_sub(parent):
@@ -176,8 +147,7 @@ wsl.show()                      # show the application
 
 ## Writing `wezel` actions
 
-`HelloWorld` as used above is an example of an action. When the user clicks on it,
-a window pops up carrying a title 'My first action!' and saying "Hello World!". 
+`HelloWorld` as used above is an example of an action. When the user clicks on it, a window pops up carrying a title 'My first action!' and saying "Hello World!". 
 The program is paused until the user closes the pop-up. 
 The `HelloWorld` action is defied as follows:
 
@@ -190,10 +160,7 @@ class HelloWorld(wezel.Action):
         app.dialog.information("Hello World!", title='My first action!')
 ```
 
-As the example shows, all actions in `wezel` must be defined by 
-subclassing the `wezel.Action` class. There are no 
-other compulsory arguments, so the following creates a functional 
-action which does absolutely nothing when clicked:
+As the example shows, all actions in `wezel` must be defined by subclassing the `wezel.Action` class. There are no other compulsory arguments, so the following creates a functional action which does absolutely nothing when clicked:
 
 ```python
 import wezel
@@ -202,16 +169,12 @@ class DoNothing(wezel.Action):
     pass
 ```
 
-If the `run()` function is specified, it is executed when the user clickes the 
-menu button corresponding to the action. Apart from `self`, `run()` has a compulsory argument 
-`app` which gives access to other relevant functionality. In the case of `HelloWorld` this is 
+If the `run()` function is specified, it is executed when the user clickes the menu button corresponding to the action. Apart from `self`, `run()` has a compulsory argument `app` which gives access to other relevant functionality. In the case of `HelloWorld` this is 
 the dialog class which has some options for launching pop-up windows. 
 
 ## Creating `wezel` executables
 
-`wezel` applications mean nothing without a simple way of distributing them 
-as an executable, which can be run without the need for other installations
-by a simply mouse click. `wezel` has some built-in functionality for creating 
+`wezel` applications mean nothing without a simple way of distributing them as an executable, which can be run without the need for other installations by a simply mouse click. `wezel` has some built-in functionality for creating 
 executables. As an example, imagine you have created the hello world script above:
 
 ```python
@@ -223,29 +186,20 @@ wsl.set_app(mystuff.myapp)        # set a custom app
 wsl.show()                        # show the application
 ```
 
-In order to generate an executable, save the script in a separate file, 
-for instance "myproject.py". You can generate an executable by calling 
-the `build` function of `wezel` (**coming soon!**):
+In order to generate an executable, save the script in a separate file, for instance "myproject.py". You can generate an executable by calling the `build` function of `wezel` (**coming soon!**):
 
 ```python
 import wezel
 wezel.build('myproject')
 ```
 
-This must be executed from the same folder as myproject.py - as a script 
-or interactively. After completion you will find a single file `wezel.exe` 
-which you can distribute to the users if your applications. They will not 
+This must be executed from the same folder as myproject.py - as a script or interactively. After completion you will find a single file `wezel.exe` which you can distribute to the users if your applications. They will not 
 need to install anything else - just double-click and run. 
 
-If your project contains dependencies on other external packages, then 
-these must be detailed in a text file "requirements.txt" as is customary for 
-Python projects. The build function will install these along with 
-`wezel`'s own dependencies. The requirements.txt file must be located 
-in the same folder as pyproject.py.
+If your project contains dependencies on other external packages, then these must be detailed in a text file "requirements.txt" as is customary for Python projects. The build function will install these along with 
+`wezel`'s own dependencies. The requirements.txt file must be located in the same folder as pyproject.py.
 
-If your project contains additional data such as images, icons or 
-other types of files, the folders that contain these data must be provided
-as an additional argument to `build()`, as a list of one or more paths:
+If your project contains additional data such as images, icons or other types of files, the folders that contain these data must be provided as an additional argument to `build()`, as a list of one or more paths:
 
 ```python
 impor os
@@ -256,11 +210,7 @@ wezel.build('myproject',
     )
 ```
 
-By default the build function generates a single .exe file. As `wezel` is a 
-graphical interface application this will not launch a terminal when the .exe file 
-is opened. These settings are most practical for external users but for debugging 
-purposes the terminal and a multi-file build can be more convenient. These 
-can be created by setting the `onefile` and `terminal` keywords to `False` and `True`, 
+By default the build function generates a single .exe file. As `wezel` is a graphical interface application this will not launch a terminal when the .exe file is opened. These settings are most practical for external users but for debugging purposes the terminal and a multi-file build can be more convenient. These can be created by setting the `onefile` and `terminal` keywords to `False` and `True`, 
 respectively:
 
 ```python
@@ -278,31 +228,44 @@ wezel.build('myproject',
 ## Creating `wezel` apps
 
 The graphical user interface of `wezel` is built on PyQt's 
-[QMainWindow](https://doc.qt.io/qt-5/qmainwindow.html#details), 
-and always has a menu bar (top), a status bar (bottom), and a central widget. 
-Applications may also use toolbars and dockwidgets if appropriate.
+[QMainWindow](https://doc.qt.io/qt-5/qmainwindow.html#details), and always has a menu bar (top), a status bar (bottom), and a central widget. Applications may also use toolbars and dockwidgets if appropriate.
 
-A `wezel` app is a class that manages the content of these different components, 
-coordinates between them and holds the data currently managed by `wezel`. 
-In addition any `wezel` app has access to some convenience classes, such as the 
-dialog class and progress bar which provides a convenient programming
-interface for common interactions with the user.
+A `wezel` app is a class that manages the content of these different components, coordinates between them and holds the data currently managed by `wezel`. In addition any `wezel` app has access to some convenience classes, such as the dialog class and progress bar which provides a convenient programming interface for common interactions with the user.
 
-An example of a very simple (and not very useful!) `wezel` app is the 
-`About` app which can be found in the `welcome` module of the default 
+An example of a very simple (and not very useful!) `wezel` app is the `About` app which can be found in the `welcome` module of the default 
 `wezel.apps`:
 
 ```python
 import wezel
 
 class WezelAbout(wezel.App):             # Required: subclass core.App
-    def __init__(self, wezel):     # Required: initialize core.App                       
-        super().__init__(wezel)    #    with instance of `Wezel`
+    def __init__(self, wzl):     # Required: initialize core.App                       
+        super().__init__(wzl)    #    with instance of `Wezel`
 
         self.set_central(ImageLabel())          # set the central widget
         self.set_menu(menu)                     # set the menu
         self.set_status("Welcome to Wezel!")   # display message in status bar
 ```
+
+Apps can be changed at runtime - for instance the following action will toggle between the About and Windows apps:
+
+```python
+import wezel
+
+class ToggleApp(wezel.Action):
+
+    def run(self, app):
+        
+        wzl = app.wezel
+        if app.__class__.__name__ == 'About':
+            wzl.app = wezel.apps.dicom.Windows(wzl)
+        elif app.__class__.__name__ == 'Windows':
+            wzl.app = wezel.apps.welcome.About(wzl)
+```
+
+# How can I contribute to `wezel`?
+
+**Coming soon**
 
 # About `wezel`
 
