@@ -44,8 +44,6 @@ class SeriesViewerMetaData(QWidget):
         lblImageName = QLabel('<H4>' + tableTitle + '</H4>')
         self.layout().addWidget(lblImageName)
 
-        DICOM_Metadata_Table_View= self.buildTableView()
-
         # Add Search Bar
         self.searchField = QLineEdit()
         self.searchField.textEdited.connect(lambda x=self.searchField.text(): self.searchTable(DICOM_Metadata_Table_View, x))
@@ -60,6 +58,8 @@ class SeriesViewerMetaData(QWidget):
         self.horizontalBox.addWidget(self.export_csv_button)
 
         self.layout().addLayout(self.horizontalBox)
+
+        DICOM_Metadata_Table_View = self.buildTableView()
         self.layout().addWidget(DICOM_Metadata_Table_View) 
         
     
