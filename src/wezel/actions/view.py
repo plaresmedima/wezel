@@ -2,6 +2,11 @@ from wezel.core import Action
 from wezel.widgets import SeriesViewerROI
 from wezel.widgets import SeriesViewerMetaData
 
+#Named constants
+SERIES_VIEWER = 3
+IMAGE_VIEWER = 4
+
+
 def menu(parent):
    
     parent.action(Image)
@@ -18,10 +23,10 @@ class HeaderDICOM(Action):
     def enable(self, app):
         if not hasattr(app, 'folder'):
             return False
-        return app.nr_selected(3) != 0
+        return app.nr_selected(SERIES_VIEWER) != 0
 
     def run(self, app):
-       for series in app.get_selected(3):
+       for series in app.get_selected(SERIES_VIEWER):
             viewer = SeriesViewerMetaData(series)
             app.addAsSubWindow(viewer, title=series.label())
 
@@ -32,11 +37,11 @@ class Series(Action):
         
         if not hasattr(app, 'folder'):
             return False
-        return app.nr_selected(3) != 0
+        return app.nr_selected(SERIES_VIEWER) != 0
 
     def run(self, app):
 
-        for series in app.get_selected(3):
+        for series in app.get_selected(SERIES_VIEWER):
             app.display(series)
       
 
@@ -46,11 +51,11 @@ class Image(Action):
         
         if not hasattr(app, 'folder'):
             return False
-        return app.nr_selected(4) != 0
+        return app.nr_selected(IMAGE_VIEWER) != 0
 
     def run(self, app):
 
-        for image in app.get_selected(4):
+        for image in app.get_selected(IMAGE_VIEWER):
             app.display(image)
 
 
@@ -60,11 +65,11 @@ class Region(Action):
         
         if app.__class__.__name__ != 'DicomWindows':
             return False
-        return app.nr_selected(3) != 0
+        return app.nr_selected(SERIES_VIEWER) != 0
 
     def run(self, app):
 
-        for series in app.get_selected(3):
+        for series in app.get_selected(SERIES_VIEWER):
 
             viewer = SeriesViewerROI(series)
             viewer.dataWritten.connect(app.treeView.setFolder)
