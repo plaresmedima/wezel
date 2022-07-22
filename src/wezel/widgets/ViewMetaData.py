@@ -59,33 +59,33 @@ class SeriesViewerMetaData(QWidget):
 
         self.layout().addLayout(self.horizontalBox)
 
-        DICOM_Metadata_Table_View = self.buildTableView()
-        self.layout().addWidget(DICOM_Metadata_Table_View) 
+        #Add table to display rows of metadata
+        self.tableWidget = QTableWidget()
+        self.tableWidget.setAlternatingRowColors(True)
+        self.tableWidget.setStyleSheet(localStyleSheet) 
+        self.tableWidget.setShowGrid(True)
+        self.tableWidget.setColumnCount(4)
+        self.tableWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.buildTableView()
+        self.layout().addWidget(self.tableWidget) 
         
     
     def buildTableView(self):
         """Builds a Table View displaying DICOM image metadata
         as Tag, name, VR & Value"""
         try:
-            tableWidget = QTableWidget()
-            tableWidget.setAlternatingRowColors(True)
-            tableWidget.setStyleSheet(localStyleSheet) 
-            tableWidget.setShowGrid(True)
-            tableWidget.setColumnCount(4)
-            tableWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)
-
-            self.createHeaderRow(tableWidget)
+            self.createHeaderRow()
             
             if self._objectDICOM:
                 # Loop through the DICOM group (0002, XXXX) first
                 for meta_element in self._objectDICOM.file_meta:
-                    rowPosition = tableWidget.rowCount()
-                    tableWidget.insertRow(rowPosition)
-                    tableWidget.setItem(rowPosition , 0, 
+                    rowPosition = self.tableWidget.rowCount()
+                    self.tableWidget.insertRow(rowPosition)
+                    self.tableWidget.setItem(rowPosition , 0, 
                                     QTableWidgetItem(str(meta_element.tag)))
-                    tableWidget.setItem(rowPosition , 1, 
+                    self.tableWidget.setItem(rowPosition , 1, 
                                     QTableWidgetItem(meta_element.name))
-                    tableWidget.setItem(rowPosition , 2, 
+                    self.tableWidget.setItem(rowPosition , 2, 
                                     QTableWidgetItem(meta_element.VR))
                     if meta_element.VR == "OW" or meta_element.VR == "OB" or meta_element.VR == "UN":
                         try:
@@ -95,22 +95,22 @@ class SeriesViewerMetaData(QWidget):
                     else:
                         valueMetadata = str(meta_element.value)
                     if meta_element.VR == "SQ":
-                        tableWidget.setItem(rowPosition , 3, QTableWidgetItem(""))
-                        tableWidget = self.iterateSequenceTag(tableWidget, meta_element, level=">")
+                        self.tableWidget.setItem(rowPosition , 3, QTableWidgetItem(""))
+                        self.tableWidget = self.iterateSequenceTag(self.tableWidget, meta_element, level=">")
                     else:
-                        tableWidget.setItem(rowPosition , 3, QTableWidgetItem(valueMetadata))
+                        self.tableWidget.setItem(rowPosition , 3, QTableWidgetItem(valueMetadata))
                 
                 for data_element in self._objectDICOM:
                     # Exclude pixel data from metadata listing
                     if data_element.name == 'Pixel Data':
                         continue
-                    rowPosition = tableWidget.rowCount()
-                    tableWidget.insertRow(rowPosition)
-                    tableWidget.setItem(rowPosition , 0, 
+                    rowPosition = self.tableWidget.rowCount()
+                    self.tableWidget.insertRow(rowPosition)
+                    self.tableWidget.setItem(rowPosition , 0, 
                                     QTableWidgetItem(str(data_element.tag)))
-                    tableWidget.setItem(rowPosition , 1, 
+                    self.tableWidget.setItem(rowPosition , 1, 
                                     QTableWidgetItem(data_element.name))
-                    tableWidget.setItem(rowPosition , 2, 
+                    self.tableWidget.setItem(rowPosition , 2, 
                                     QTableWidgetItem(data_element.VR))
                     if data_element.VR == "OW" or data_element.VR == "OB" or data_element.VR == "UN":
                         try:
@@ -125,37 +125,36 @@ class SeriesViewerMetaData(QWidget):
                     else:
                         valueMetadata = str(data_element.value)
                     if data_element.VR == "SQ":
-                        tableWidget.setItem(rowPosition , 3, QTableWidgetItem(""))
-                        tableWidget = self.iterateSequenceTag(tableWidget, data_element, level=">")
+                        self.tableWidget.setItem(rowPosition , 3, QTableWidgetItem(""))
+                        self.tableWidget = self.iterateSequenceTag(self.tableWidget, data_element, level=">")
                     else:
-                        tableWidget.setItem(rowPosition , 3, QTableWidgetItem(valueMetadata))
+                        self.tableWidget.setItem(rowPosition , 3, QTableWidgetItem(valueMetadata))
             
             #Resize columns to fit contents
-            header = tableWidget.horizontalHeader()
+            header = self.tableWidget.horizontalHeader()
             header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
             header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
             header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
             header.setSectionResizeMode(3, QHeaderView.ResizeMode(QHeaderView.AdjustToContentsOnFirstShow))
-            tableWidget.setWordWrap(True)
-            return tableWidget
+            self.tableWidget.setWordWrap(True)
         except Exception as e:
             print('Error in : SeriesViewerMetaData.buildTableView' + str(e))
             logger.error('Error in : SeriesViewerMetaData.buildTableView' + str(e))
 
 
-    def createHeaderRow(self, tableWidget):
+    def createHeaderRow(self):
         headerItem = QTableWidgetItem(QTableWidgetItem("Tag\n")) 
         headerItem.setTextAlignment(Qt.AlignLeft)
-        tableWidget.setHorizontalHeaderItem(0,headerItem)
+        self.tableWidget.setHorizontalHeaderItem(0,headerItem)
         headerItem = QTableWidgetItem(QTableWidgetItem("Name \n")) 
         headerItem.setTextAlignment(Qt.AlignLeft)
-        tableWidget.setHorizontalHeaderItem(1, headerItem)
+        self.tableWidget.setHorizontalHeaderItem(1, headerItem)
         headerItem = QTableWidgetItem(QTableWidgetItem("VR \n")) 
         headerItem.setTextAlignment(Qt.AlignLeft)
-        tableWidget.setHorizontalHeaderItem(2, headerItem)
+        self.tableWidget.setHorizontalHeaderItem(2, headerItem)
         headerItem = QTableWidgetItem(QTableWidgetItem("Value\n")) 
         headerItem.setTextAlignment(Qt.AlignLeft)
-        tableWidget.setHorizontalHeaderItem(3 , headerItem)
+        self.tableWidget.setHorizontalHeaderItem(3 , headerItem)
 
 
     def iterateSequenceTag(self, table, dataset, level=">"):
