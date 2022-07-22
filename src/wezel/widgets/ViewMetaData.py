@@ -66,11 +66,11 @@ class SeriesViewerMetaData(QWidget):
         self.tableWidget.setShowGrid(True)
         self.tableWidget.setColumnCount(4)
         self.tableWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.buildTableView()
+        self.populateTable()
         self.layout().addWidget(self.tableWidget) 
         
     
-    def buildTableView(self):
+    def populateTable(self):
         """Builds a Table View displaying DICOM image metadata
         as Tag, name, VR & Value"""
         try:
@@ -138,8 +138,8 @@ class SeriesViewerMetaData(QWidget):
             header.setSectionResizeMode(3, QHeaderView.ResizeMode(QHeaderView.AdjustToContentsOnFirstShow))
             self.tableWidget.setWordWrap(True)
         except Exception as e:
-            print('Error in : SeriesViewerMetaData.buildTableView' + str(e))
-            logger.error('Error in : SeriesViewerMetaData.buildTableView' + str(e))
+            print('Error in : SeriesViewerMetaData.populateTable' + str(e))
+            logger.error('Error in : SeriesViewerMetaData.populateTable' + str(e))
 
 
     def createHeaderRow(self):
