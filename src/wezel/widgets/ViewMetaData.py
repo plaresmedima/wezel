@@ -24,6 +24,26 @@ localStyleSheet = """
         background-color: rgba(125, 125, 125, 125);
         font-weight: bold;
         font-size: x-large;}
+
+        QPushButton { background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                      stop: 0 #CCCCBB, stop: 1 #FFFFFF);
+                             border-width: 3px;
+                             margin: 1px;
+                             border-style: solid;
+                             border-color: rgb(10, 10, 10);
+                             border-radius: 5px;
+                             text-align: centre;
+                             color: black;
+                             font-weight: bold;
+                             font-size: 9pt;
+                             padding: 3px;} 
+
+                QPushButton:hover {
+                                   background-color: rgb(175, 175, 175);
+                                   border: 1px solid red;
+                                   }
+                                   
+                QPushButton:pressed {background-color: rgb(112, 112, 112);}
             """
 
 class SeriesViewerMetaData(QWidget):
@@ -44,21 +64,6 @@ class SeriesViewerMetaData(QWidget):
         lblImageName = QLabel('<H4>' + tableTitle + '</H4>')
         self.layout().addWidget(lblImageName)
 
-        # Add Search Bar
-        self.searchField = QLineEdit()
-        self.searchField.textEdited.connect(lambda x=self.searchField.text(): self.searchTable(DICOM_Metadata_Table_View, x))
-        
-        # Add export to Excel/CSV buttons
-        self.export_excel_button = QPushButton('&Export To Excel', clicked=lambda: self.exportToFile(self, DICOM_Metadata_Table_View, excel=True))
-        self.export_csv_button = QPushButton('&Export To CSV', clicked=lambda: self.exportToFile(self, DICOM_Metadata_Table_View, csv=True))
-
-        self.horizontalBox = QHBoxLayout()
-        self.horizontalBox.addWidget(self.searchField)
-        self.horizontalBox.addWidget(self.export_excel_button)
-        self.horizontalBox.addWidget(self.export_csv_button)
-
-        self.layout().addLayout(self.horizontalBox)
-
         #Add table to display rows of metadata
         self.tableWidget = QTableWidget()
         self.tableWidget.setAlternatingRowColors(True)
@@ -67,6 +72,21 @@ class SeriesViewerMetaData(QWidget):
         self.tableWidget.setColumnCount(4)
         self.tableWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.populateTable()
+
+        # Add Search Bar
+        self.searchField = QLineEdit()
+        self.searchField.textEdited.connect(lambda x=self.searchField.text(): self.searchTable(self.tableWidget, x))
+        
+        # Add export to Excel/CSV buttons
+        self.export_excel_button = QPushButton('&Export To Excel', clicked=lambda: self.exportToFile(self, self.tableWidget, excel=True))
+        self.export_csv_button = QPushButton('&Export To CSV', clicked=lambda: self.exportToFile(self, self.tableWidget, csv=True))
+
+        self.horizontalBox = QHBoxLayout()
+        self.horizontalBox.addWidget(self.searchField)
+        self.horizontalBox.addWidget(self.export_excel_button)
+        self.horizontalBox.addWidget(self.export_csv_button)
+
+        self.layout().addLayout(self.horizontalBox)
         self.layout().addWidget(self.tableWidget) 
         
     
