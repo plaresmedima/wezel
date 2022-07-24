@@ -75,11 +75,11 @@ class SeriesViewerMetaData(QWidget):
 
         # Add Search Bar
         self.searchField = QLineEdit()
-        self.searchField.textEdited.connect(lambda x=self.searchField.text(): self.searchTable(self.tableWidget, x))
+        self.searchField.textEdited.connect(lambda x=self.searchField.text(): self.searchTable( x))
         
         # Add export to Excel/CSV buttons
-        self.export_excel_button = QPushButton('&Export To Excel', clicked=lambda: self.exportToFile(self, self.tableWidget, excel=True))
-        self.export_csv_button = QPushButton('&Export To CSV', clicked=lambda: self.exportToFile(self, self.tableWidget, csv=True))
+        self.export_excel_button = QPushButton('&Export To Excel', clicked=lambda: self.exportToFile(self,  excel=True))
+        self.export_csv_button = QPushButton('&Export To CSV', clicked=lambda: self.exportToFile(self, csv=True))
 
         self.horizontalBox = QHBoxLayout()
         self.horizontalBox.addWidget(self.searchField)
@@ -210,15 +210,15 @@ class SeriesViewerMetaData(QWidget):
             logger.error('Error in : SeriesViewerMetaData.iterateSequenceTag' + str(e))
 
 
-    def exportToFile(self, parent, table, excel=False, csv=False):
+    def exportToFile(self, parent, excel=False, csv=False):
         try:
             columHeaders = []
-            for i in range(table.model().columnCount()):
-                columHeaders.append(table.horizontalHeaderItem(i).text())
+            for i in range(self.tableWidget.model().columnCount()):
+                columHeaders.append(self.tableWidget.horizontalHeaderItem(i).text())
             df = pd.DataFrame(columns=columHeaders)
-            for row in range(table.rowCount()):
-                for col in range(table.columnCount()):
-                    df.at[row, columHeaders[col]] = table.item(row, col).text()
+            for row in range(self.tableWidget.rowCount()):
+                for col in range(self.tableWidget.columnCount()):
+                    df.at[row, columHeaders[col]] = self.tableWidget.item(row, col).text()
             if excel:
                 filename, _ = QFileDialog.getSaveFileName( parent, 'Save Excel file as ...',  'Metadata.xlsx', "Excel files (*.xlsx)") #os.path.join(wezel.data_folder(),
                 if filename != '':
@@ -234,16 +234,16 @@ class SeriesViewerMetaData(QWidget):
             logger.error('Error in : SeriesViewerMetaData.exportToFile: ' + str(e))
 
 
-    def searchTable(self, table, expression):
+    def searchTable(self, expression):
         try:
-            table.clearSelection()
+            self.tableWidget.clearSelection()
             if expression:
-                items = table.findItems(expression, Qt.MatchContains)
+                items = self.tableWidget.findItems(expression, Qt.MatchContains)
                 if items:  # we have found something
                     for item in items:
                         item.setSelected(True)
-                        #table.item(item).setSelected(True)
-                    table.scrollToItem(items[0])
+                        #self.tableWidget.item(item).setSelected(True)
+                    self.tableWidget.scrollToItem(items[0])
                     #item = items[0]  # take the first
                     #table.table.setCurrentItem(item)
         except Exception as e:
