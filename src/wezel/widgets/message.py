@@ -92,11 +92,11 @@ class Dialog():
         if filename == '': return None
         return filename
 
-    def input(self, *fields, title="User input window"):
+    def input(self, *fields, title="User input window", helpText=""):
         """
         Collect user input of various types.
         """
-        return userInput(*fields, title=title)
+        return userInput.ParameterInputDialog(*fields, title=title, helpText=helpText)
 
 
 

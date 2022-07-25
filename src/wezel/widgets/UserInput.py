@@ -7,242 +7,6 @@ from PyQt5 import QtCore
 
 
 
-################################################
-###       STILL NEEDS REWRITING FOR v0.3     ###
-################################################
-
-
-
-def userInput(*fields, title="User input window"):
-    """Creates a dialog to get user input.
-    
-    Calling sequence
-    ----------------
-    cancel, fields = user_input(fields, title="My title")
-
-    Parameters
-    ----------
-    fields: 
-        a list of dictionaries of one of the following types:
-
-        {"type":"float", "label":"Name of the field", "value":1.0, "minimum": 0.0, "maximum": 1.0}
-        {"type":"integer", "label":"Name of the field", "value":1, "minimum": 0, "maximum": 100}
-        {"type":"string", "label":"Name of the field", "value":"My string"}
-        {"type":"dropdownlist", "label":"Name of the field", "list":["item 1",...,"item n" ], "value":2}
-        {"type":"listview", "label":"Name of the field", "list":["item 1",...,"item n"]}
-
-        The type, label and list keys are required, the others are optional.
-
-    title: 
-        title shown to the user above the pop-up
-
-    Return values
-    -------------
-    cancel: 
-        True (False) if the user clicked Cancel (OK)
-    fields:
-        The same list of fields but the value key now holds
-        the value selected by the user.
-
-    Example
-    -------
-    See Tutorial_UserInput.py
-
-    """
-    
-    # set default values for items that are not provided by the caller
-
-    for field in fields:
-
-        if field["type"] == "listview": 
-            field["value"] = [0]
-
-        elif field["type"] == "dropdownlist":
-            if "value" not in field: field["value"] = 0
-
-        elif field["type"] == "string":
-            if "value" not in field: field["value"] = "Hello"
-
-        elif field["type"] == "integer":
-            if "minimum" not in field: 
-                field["minimum"] = -2147483648
-            if "maximum" not in field: 
-                field["maximum"] = +2147483647
-            if "value" not in field: 
-                field["value"] = field["minimum"] 
-                field["value"] += 0.5*(field["maximum"]-field["minimum"])
-                field["value"] = int(field["value"])
-            if field["value"] < field["minimum"]: 
-                field["value"] = field["minimum"]
-            if field["value"] > field["maximum"]: 
-                field["value"] = field["maximum"]
-
-        elif field["type"] == "float":
-            if "minimum" not in field: 
-                field["minimum"] = -1.0e+18
-            if "maximum" not in field: 
-                field["maximum"] = +1.0e+18
-            if "value" not in field: 
-                field["value"] = field["minimum"] 
-                field["value"] += 0.5*(field["maximum"]-field["minimum"])              
-            if field["value"] < field["minimum"]: 
-                field["value"] = field["minimum"]
-            if field["value"] > field["maximum"]: 
-                field["value"] = field["maximum"]
-
-    # since this function is a wrapper for ui.inputWindow
-    # need to convert to format required in ui.inputWindow
-
-    # first ensure each label is unique 
-
-    for f, field in enumerate(fields):
-        for field_next in fields[f+1:]:
-            if field_next["label"] == field["label"]:
-                field_next["label"] += '_'
-
-    # next build a single dictionary
-
-    Dict = {}
-    for field in fields:
-        Dict[field["label"]] = field["type"]
-
-        if field["type"] == "dropdownlist":
-            Dict[field["label"]] += ", " + str(field["value"])
-
-        elif field["type"] == "string":
-            Dict[field["label"]] += ", " + str(field["value"])
-
-        elif field["type"] == "integer":
-            Dict[field["label"]] += ", " + str(field["value"])
-            Dict[field["label"]] += ", " + str(field["minimum"])
-            Dict[field["label"]] += ", " + str(field["maximum"])
-
-        elif field["type"] == "float":
-            Dict[field["label"]] += ", " + str(field["value"])
-            Dict[field["label"]] += ", " + str(field["minimum"])
-            Dict[field["label"]] += ", " + str(field["maximum"])
-
-    # then build a single list of lists
-                
-    lists = []
-    for field in fields:
-        if field["type"] == "listview":
-            lists.append(field["list"])
-        elif field["type"] == "dropdownlist":
-            lists.append(field["list"])
-
-    # call the inputWindow
-            
-    paramList = inputWindow(Dict, title=title, lists=lists)
-    if paramList is None: 
-        return 1, fields
-
-    # Overwrite the value key with the returned parameter
-
-    for f, field in enumerate(fields):
-
-        if field["type"] == "listview":
-            value_list = paramList[f]
-            for v, value in enumerate(value_list):
-                value_list[v] = field["list"].index(value) 
-            field["value"] = value_list
-            
-        elif field["type"] == "dropdownlist":
-            value = paramList[f]
-            field["value"] = field["list"].index(value) 
-
-        elif field["type"] == "string":
-            field["value"] = paramList[f]
-
-        elif field["type"] == "integer":
-            field["value"] = paramList[f]
-
-        elif field["type"] == "float":
-            field["value"] = paramList[f]
-
-    return 0, fields
-
-
-def inputWindow(paramDict, title="Input Parameters", helpText="", lists=None):
-    """
-    Display a window and prompts the user to insert input values in the fields of the prompted window.
-    The user has the option to choose what fields and variables are present in this input window.
-    The input window variables and respective types are defined in "paramDict". See below for examples.
-    Variable "title" is the title of the window and "helpText" is the text
-    displayed inside the window. It should be used to give important notes or 
-    tips regarding the input process.
-
-    The user may add extra validation of the parameters. Read the file
-    thresholdDICOM_Image.py as it contains a good example of validation of the input parameters.
-
-    This function is a wrap of function "ParameterInputDialog" and you can consult it's detailed documentation
-    in CoreModules/WEZEL/InputDialog.py.
-
-    Parameters
-    ----------
-    paramDict: Dictionary containing the input variables. The key is the field/variable name and the value is the
-                type of the variable. There are 5 possible variable types - [int, float, string, dropdownlist, listview].
-                The dictionary doesn't have any limit of number of fields, the developer can insert as many as wished.
-                The order of the fields displayed in the window is the order set in the dictionary.
-                Eg. paramDict = {"NumberStaff":"int", "Password":"string", "Course":"dropdownlist"}.
-                "NumberStaff" comes first in the window and only accepts integers, then "Password" and then "Course", which is
-                a dropdown where the user can select an option from a set of options, which is given in the parameter "lists".
-                It's possible to assign default values to the input variables. Eg.paramDict = {"NumberStaff":"int,100"} sets the
-                variable "NumberStaff" value to 100.
-                
-    title: String that contains the title of the input window that is prompted.
-
-    helpText: String that contains any text that the developer finds useful. 
-                It's the introductory text that comes before the input fields.
-                This is a good variable to write instructions of what to do and how to fill in the fields.
-
-    lists: If the values "dropdownlist" or/and "listview" are given in paramDict, then the developer provides the list of
-            options to select in this parameter. This becomes a list of lists if there is more than one of "dropdownlist" or/and "listview".
-            The order of the lists in this parameter should be respective to the order of the variables in paramDict. See examples below for
-            more details.
-
-    Output
-    ------
-    outputList: List with the values typed or selected by the user in the prompted window.
-                It returns "None" if the Cancel button or close window are pressed.
-                Eg: if param paramDict = {"Age":"int", "Name":"string"} and the user types 
-                "30" for Age and "Wezel" for Name, then the outputList will be [30, "Wezel"].
-                If "30" and "Wezel" are the default values, then paramDict = {"Age":"int,30", "Name":"string,Wezel"}
-
-    Eg. of paramDict using string:
-        paramDict = {"Threshold":"float,0.5", "Age":"int,30"}
-        The variable types are float and int. "0.5" and "30" are the default values.
-
-    Eg. of paramDict using string:
-        paramDict = {"DicomTag":"string", "TagValue":"string"}
-        This a good example where "helpText" can make a difference. 
-        For eg., "DicomTag" should be written in the format (XXXX,YYYY).
-
-    Eg. of paramDict using dropdownlist and listview:
-        inputDict = {"Algorithm":"dropdownlist", "Nature":"listview"}
-        algorithmList = ["B0", "T2*", "T1 Molli"]
-        natureList = ["Animals", "Plants", "Trees"]
-        inputWindow(paramDict, lists=[algorithmList, natureList])
-    """
-    try:
-        inputDlg = ParameterInputDialog(paramDict, title=title, helpText=helpText, lists=lists)
-        # Return None if the user hits the Cancel button
-        if inputDlg.closeInputDialog() == True:
-            return None
-        listParams = inputDlg.returnListParameterValues()
-        outputList = []
-        # Sometimes the values parsed could be list or hexadecimals in strings
-        for param in listParams:
-            try:
-                outputList.append(literal_eval(param))
-            except:
-                outputList.append(param)
-        return outputList
-    except Exception as e:
-        print('inputWindow: ' + str(e))
-
-
-
 """The ParameterInputDialog class creates a pop-up input dialog that 
 allows the user to input one or more integers, floats or strings.  
 These data items can be returned to the calling program in a list. 
@@ -305,9 +69,10 @@ class ParameterInputDialog(QDialog):
   helpText - optional help text to be displayed above the input widgets.
   """
 class ParameterInputDialog(QDialog):
-    def __init__(self, paramDict, title="Input Parameters", helpText=None, lists=None):
+    def __init__(self, *fields, title="Input Parameters", helpText=None):
         try:
-            super(ParameterInputDialog, self).__init__()
+            super().__init__()
+            self.fields = fields
             self.setWindowTitle(title)
             #Hide ? help button
             #self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
@@ -331,9 +96,9 @@ class ParameterInputDialog(QDialog):
                 self.layout.addRow(self.helpTextLbl)
             self.listWidget = []
             listCounter = 0
+            paramDict, lists = self._processInput(*fields)
             for key in paramDict:
-                #paramType = paramDict[key].lower()
-                paramType, value1, value2, value3 = self.getParamData(paramDict[key].lower())
+                paramType, value1, value2, value3 = self._getParamData(paramDict[key].lower())
                 if paramType not in ("integer", "float", "string", "dropdownlist", "listview"):
                     #This unit test is for developers who mistype the above 3 parameter 
                     #types when they are developing new WEZEL tools that need
@@ -397,14 +162,125 @@ class ParameterInputDialog(QDialog):
             str5 = ' and ' + chr(34) + 'string' + chr(34) + ' input as strings.'
             warningString =  str1 + str2 + str3 + str4 + str5
             print(warningString)
-            logger.info('InputDialog - ' + warningString)
+            #logger.info('InputDialog - ' + warningString)
             QMessageBox().critical( self,  "Parameter Input Dialog", warningString, QMessageBox.Ok)
         except Exception as e:
             print('Error in class ParameterInputDialog.__init__: ' + str(e))
-            logger.error('Error in class ParameterInputDialog.__init__: ' + str(e)) 
+            #logger.error('Error in class ParameterInputDialog.__init__: ' + str(e)) 
 
 
-    def getParamData(self, paramDescription):
+    def _processInput(self, *fields):
+        """Creates a dialog to get user input.
+    
+        Calling sequence
+        ----------------
+        cancel, fields = user_input(fields, title="My title")
+
+        Parameters
+        ----------
+        fields: 
+            a list of dictionaries of one of the following types:
+
+            {"type":"float", "label":"Name of the field", "value":1.0, "minimum": 0.0, "maximum": 1.0}
+            {"type":"integer", "label":"Name of the field", "value":1, "minimum": 0, "maximum": 100}
+            {"type":"string", "label":"Name of the field", "value":"My string"}
+            {"type":"dropdownlist", "label":"Name of the field", "list":["item 1",...,"item n" ], "value":2}
+            {"type":"listview", "label":"Name of the field", "list":["item 1",...,"item n"]}
+
+            The type, label and list keys are required, the others are optional.
+
+        title: 
+            title shown to the user above the pop-up
+
+        Return values
+        -------------
+        cancel: 
+            True (False) if the user clicked Cancel (OK)
+        fields:
+            The same list of fields but the value key now holds
+            the value selected by the user.
+
+        Example
+        -------
+        See Tutorial_UserInput.py
+
+        """
+    
+        # set default values for items that are not provided by the user
+        for field in fields:
+            if field['type'] == "listview": 
+                field['value'] = [0]
+
+            elif field["type"] == "dropdownlist":
+                if "value" not in field: field["value"] = 0
+
+            elif field["type"] == "string":
+                if "value" not in field: field["value"] = "Hello"
+
+            elif field["type"] == "integer":
+                if "minimum" not in field: 
+                    field["minimum"] = -2147483648
+                if "maximum" not in field: 
+                    field["maximum"] = +2147483647
+                if "value" not in field: 
+                    field["value"] = field["minimum"] 
+                    field["value"] += 0.5*(field["maximum"]-field["minimum"])
+                    field["value"] = int(field["value"])
+                if field["value"] < field["minimum"]: 
+                    field["value"] = field["minimum"]
+                if field["value"] > field["maximum"]: 
+                    field["value"] = field["maximum"]
+
+            elif field["type"] == "float":
+                if "minimum" not in field: 
+                    field["minimum"] = -1.0e+18
+                if "maximum" not in field: 
+                    field["maximum"] = +1.0e+18
+                if "value" not in field: 
+                    field["value"] = field["minimum"] 
+                    field["value"] += 0.5*(field["maximum"]-field["minimum"])              
+                if field["value"] < field["minimum"]: 
+                    field["value"] = field["minimum"]
+                if field["value"] > field["maximum"]: 
+                    field["value"] = field["maximum"]
+
+        # first ensure each label is unique 
+        for f, field in enumerate(fields):
+            for field_next in fields[f+1:]:
+                if field_next["label"] == field["label"]:
+                    field_next["label"] += '_'
+
+        # next build a single dictionary
+        Dict = {}
+        for field in fields:
+            Dict[field["label"]] = field["type"]
+
+            if field["type"] == "dropdownlist":
+                Dict[field["label"]] += ", " + str(field["value"])
+
+            elif field["type"] == "string":
+                Dict[field["label"]] += ", " + str(field["value"])
+
+            elif field["type"] == "integer":
+                Dict[field["label"]] += ", " + str(field["value"])
+                Dict[field["label"]] += ", " + str(field["minimum"])
+                Dict[field["label"]] += ", " + str(field["maximum"])
+
+            elif field["type"] == "float":
+                Dict[field["label"]] += ", " + str(field["value"])
+                Dict[field["label"]] += ", " + str(field["minimum"])
+                Dict[field["label"]] += ", " + str(field["maximum"])
+
+        # then build a single list of lists         
+        lists = []
+        for field in fields:
+            if field["type"] == "listview":
+                lists.append(field["list"])
+            elif field["type"] == "dropdownlist":
+                lists.append(field["list"])
+        return Dict, lists
+
+    def _getParamData(self, paramDescription):
         commaCount = paramDescription.count(',')
         if commaCount == 0:
             return paramDescription, None, None, None
@@ -425,8 +301,43 @@ class ParameterInputDialog(QDialog):
         self.accept()
 
 
-    def closeInputDialog(self):
+    def _closeInputDialog(self):
             return self.closeDialog
+
+
+    def _processOutput(self, fields, listParams):
+        outputList = []
+        # Sometimes the values parsed could be list or hexadecimals in strings
+        for param in listParams:
+            try:
+                outputList.append(literal_eval(param))
+            except:
+                outputList.append(param)
+    
+        if outputList is None: 
+            return 1, fields
+        else:
+            # Overwrite the value key with the returned parameter
+            for f, field in enumerate(fields):
+                if field["type"] == "listview":
+                    value_list = outputList[f]
+                    for v, value in enumerate(value_list):
+                        value_list[v] = field["list"].index(value) 
+                    field["value"] = value_list
+        
+                elif field["type"] == "dropdownlist":
+                    value = outputList[f]
+                    field["value"] = field["list"].index(value) 
+    
+                elif field["type"] == "string":
+                    field["value"] = outputList[f]
+    
+                elif field["type"] == "integer":
+                    field["value"] = outputList[f]
+    
+                elif field["type"] == "float":
+                    field["value"] = outputList[f]
+            return 0, fields
 
 
     def returnListParameterValues(self):
@@ -446,10 +357,9 @@ class ParameterInputDialog(QDialog):
                 else:
                     paramList.append(item.value())
 
-            return paramList
+            return self._processOutput(self.fields, paramList)
         except Exception as e:
             print('Error in class ParameterInputDialog.returnListParameterValues: ' + str(e))
-            logger.error('Error in class ParameterInputDialog.returnListParameterValues: ' + str(e)) 
-
+            #logger.error('Error in class ParameterInputDialog.returnListParameterValues: ' + str(e)) 
 
 
