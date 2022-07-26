@@ -17,7 +17,7 @@ localStyleSheet = """
     alternate-background-color: #dce2f2;background-color: #b6bdd1;
                                             }           
     QTableWidget::item {
-        border: 5px solid rgba(68, 119, 170, 150);
+        border: 1px solid rgba(68, 119, 170, 150);
         }
 
     QHeaderView, QHeaderView::section {
