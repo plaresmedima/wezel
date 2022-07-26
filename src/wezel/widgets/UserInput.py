@@ -68,7 +68,6 @@ class ParameterInputDialog(QDialog):
 
   helpText - optional help text to be displayed above the input widgets.
   """
-class ParameterInputDialog(QDialog):
     def __init__(self, *fields, title="Input Parameters", helpText=None):
         try:
             super().__init__()

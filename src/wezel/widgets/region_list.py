@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import (
     QHBoxLayout, 
     QPushButton, 
 )
-from .UserInput import userInput
+from .UserInput import ParameterInputDialog as paramInputDialog
 from . import icons
 
 class RegionList(QWidget):
@@ -201,10 +201,10 @@ class RegionList(QWidget):
         seriesLabels = [series.SeriesDescription for series in seriesList]
 
         # Ask the user to select series to import as regions
-        cancel, input = userInput(
+        dialog = paramInputDialog.ParameterInputDialog(
             {"label":"Series:", "type":"listview", "list": seriesLabels},
-            title = "Please select series to import as Regions", 
-        )
+            title = "Please select series to import as Regions", )
+        cancel, input = dialog.returnListParameterValues()
         if cancel: return
         selectedSeries = [seriesList[i] for i in input[0]["value"]]
         
