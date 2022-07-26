@@ -6,31 +6,6 @@ from PyQt5.QtWidgets import (QDialog, QFormLayout, QDialogButtonBox, QComboBox,
 from PyQt5 import QtCore
 
 
-
-"""The ParameterInputDialog class creates a pop-up input dialog that 
-allows the user to input one or more integers, floats or strings.  
-These data items can be returned to the calling program in a list. 
-
-This class would be imported thus,
-import InputDialog as inputDialog
-and example usage within a while loop to validate the input data could be
-
-paramDict = {"Lower Threshold":"integer", "Upper Threshold":"integer"}
-helpMsg = "Lower threshold must be less than the upper threshold."
-warning = True
-while True:
-    inputDlg = inputDialog.ParameterInputDialog(paramDict,helpText=helpMsg)
-    listParams = inputDlg.returnListParameterValues()
-    if listParams[0] < listParams[1]:
-        break
-    else:
-        if warning:
-            helpMsg = helpMsg + "<H4><font color=\"red\"> Check input parameter values.</font></H4>"
-            warning = False #only show this message once
-"""
-
-
-
 # User-defined exceptions
 class Error(Exception):
    """Base class for other exceptions"""
@@ -42,29 +17,33 @@ class IncorrectParameterTypeError(Error):
    pass
 
 class ParameterInputDialog(QDialog):
-    """This class inherits from the Qt QDialog class and it generates a pop-up dialog
-  window with one or more input widgets that can accept either an integer, float or string. 
-  The order and type of input widgets is defined in the paramDict Python dictionary 
+    """
+    This class  generates a pop-up dialog window with 
+    one or more input widgets that can accept the following data types: 
+        integer - spin box, 
+        float - double spin box
+        string - text box, drop down list or list view. 
+
+  The order and type of input widgets is defined in the *fields
   input parameter in the class initialisation function. 
   
   Input Parameters
   *****************
-  paramDict contains name:value pairs of strings in the form 'parmeter name':'parameter type' 
-  Parameter type can only take the values: 'integer', 'float', 'string', 'dropdownlist'
-  So 'Lower Threshold':'integer' would create a spin box labeled 'Lower Threshold' on the dialog
-  So 'Upper Threshold':'float' would create a double spin box labeled 'Upper Threshold' on the dialog
-  So 'Series Name':'string' would create a textbox labeled 'Series Name' on the dialog
-  Thus,
-  paramDict = {'Lower Threshold':'integer', 'Upper Threshold':'float', 'Series Name':'string', 
-  'label name': 'dropdownlist',
-  'second label name': 'dropdownlist'}
-  list1=['item1', 'item2', 'item3']
-  listOfList =[list1, list2]
-  Widgets are created in the same order on the dialog they occupy in the dictionary; ie., 
-  the first dictionary item is uppermost input widget on the dialog 
-  and the last dictionary item is the last input widget on the dialog.
+  fields: 
+            a list of dictionaries of one of the following types:
+
+            {"type":"float", "label":"Name of the field", "value":1.0, "minimum": 0.0, "maximum": 1.0}
+            {"type":"integer", "label":"Name of the field", "value":1, "minimum": 0, "maximum": 100}
+            {"type":"string", "label":"Name of the field", "value":"My string"}
+            {"type":"dropdownlist", "label":"Name of the field", "list":["item 1",...,"item n" ], "value":2}
+            {"type":"listview", "label":"Name of the field", "list":["item 1",...,"item n"]}
+          
+          Widgets are created in the same order on the dialog they occupy in the dictionary; ie., 
+          the first dictionary item is uppermost input widget on the dialog 
+          and the last dictionary item is the last input widget on the dialog.
   
-  title - optional string containing the input dialog title. Has a default string "Input Parameters"
+  title - optional string containing the input dialog title. 
+          Has a default string "Input Parameters"
 
   helpText - optional help text to be displayed above the input widgets.
   """
@@ -99,7 +78,7 @@ class ParameterInputDialog(QDialog):
             for key in paramDict:
                 paramType, value1, value2, value3 = self._getParamData(paramDict[key].lower())
                 if paramType not in ("integer", "float", "string", "dropdownlist", "listview"):
-                    #This unit test is for developers who mistype the above 3 parameter 
+                    #This unit test is for developers who mistype the above 5 parameter 
                     #types when they are developing new WEZEL tools that need
                     #an input dialog
                     raise IncorrectParameterTypeError
@@ -169,11 +148,8 @@ class ParameterInputDialog(QDialog):
 
 
     def _processInput(self, *fields):
-        """Creates a dialog to get user input.
-    
-        Calling sequence
-        ----------------
-        cancel, fields = user_input(fields, title="My title")
+        """Processes the dictionary objects in *fields into a format that 
+        can be used to create the widgets on the input dialog window.
 
         Parameters
         ----------
@@ -186,23 +162,15 @@ class ParameterInputDialog(QDialog):
             {"type":"dropdownlist", "label":"Name of the field", "list":["item 1",...,"item n" ], "value":2}
             {"type":"listview", "label":"Name of the field", "list":["item 1",...,"item n"]}
 
-            The type, label and list keys are required, the others are optional.
-
-        title: 
-            title shown to the user above the pop-up
+            The type and label keys are required, the others are optional.
 
         Return values
         -------------
-        cancel: 
-            True (False) if the user clicked Cancel (OK)
-        fields:
-            The same list of fields but the value key now holds
-            the value selected by the user.
-
-        Example
-        -------
-        See Tutorial_UserInput.py
-
+        dict: 
+            dictionary describing each widget on the input window
+        lists:
+            List of lists, where each individual list contains the items in drop down list
+            and list view widgets on the input window.
         """
     
         # set default values for items that are not provided by the user
@@ -250,25 +218,25 @@ class ParameterInputDialog(QDialog):
                     field_next["label"] += '_'
 
         # next build a single dictionary
-        Dict = {}
+        dict = {}
         for field in fields:
-            Dict[field["label"]] = field["type"]
+            dict[field["label"]] = field["type"]
 
             if field["type"] == "dropdownlist":
-                Dict[field["label"]] += ", " + str(field["value"])
+                dict[field["label"]] += ", " + str(field["value"])
 
             elif field["type"] == "string":
-                Dict[field["label"]] += ", " + str(field["value"])
+                dict[field["label"]] += ", " + str(field["value"])
 
             elif field["type"] == "integer":
-                Dict[field["label"]] += ", " + str(field["value"])
-                Dict[field["label"]] += ", " + str(field["minimum"])
-                Dict[field["label"]] += ", " + str(field["maximum"])
+                dict[field["label"]] += ", " + str(field["value"])
+                dict[field["label"]] += ", " + str(field["minimum"])
+                dict[field["label"]] += ", " + str(field["maximum"])
 
             elif field["type"] == "float":
-                Dict[field["label"]] += ", " + str(field["value"])
-                Dict[field["label"]] += ", " + str(field["minimum"])
-                Dict[field["label"]] += ", " + str(field["maximum"])
+                dict[field["label"]] += ", " + str(field["value"])
+                dict[field["label"]] += ", " + str(field["minimum"])
+                dict[field["label"]] += ", " + str(field["maximum"])
 
         # then build a single list of lists         
         lists = []
@@ -277,7 +245,8 @@ class ParameterInputDialog(QDialog):
                 lists.append(field["list"])
             elif field["type"] == "dropdownlist":
                 lists.append(field["list"])
-        return Dict, lists
+        return dict, lists
+
 
     def _getParamData(self, paramDescription):
         commaCount = paramDescription.count(',')
