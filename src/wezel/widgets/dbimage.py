@@ -121,37 +121,27 @@ class DeleteImageButton(QPushButton):
 
 class ExportImageButton(QPushButton):
 
-    def __init__(self, object=None):
+    def __init__(self, image=None):
         super().__init__()
-
-    #    self.object = object
  
         self.setFixedSize(24, 24)
         self.setIcon(QIcon(icons.blue_document_export))
         self.setToolTip('Export as .png')
-        self.clicked.connect(self.exportObject)
+        self.clicked.connect(self.export)
+        self.setData(image)
 
-        self.setData(object)
+    def setData(self, image):
+        self.image = image
 
-    def setData(self, object):
-        self.object = object
-
-    def setObject(self, object): # obsolete
-        self.object = object
-
-    def exportObject(self):
+    def export(self):
         """Export as png."""
 
-        if self.object is None: return
-        fileName = self.object.dialog.file_to_save(filter = "*.png")
-        if fileName == None: return
-        fileName = fileName[:-4]
-        instances = self.object.instances()
-        self.object.status.message('Exporting as png..')
-        for i, image in enumerate(instances):
-            image.export_as_png(fileName)
-            self.object.status.progress(i, len(instances))
-        self.object.status.hide()
+        if self.image is None: 
+            return
+        fileName = self.image.dialog.file_to_save(filter = "*.png")
+        if fileName is None: 
+            return
+        self.image.export_as_png(fileName[:-4])
 
 
 class RestoreImageButton(QPushButton):
@@ -160,8 +150,6 @@ class RestoreImageButton(QPushButton):
 
     def __init__(self, image=None):
         super().__init__()
-
-    #    self.image = image
          
         self.setFixedSize(24, 24)
         self.setIcon(QIcon(icons.arrow_curve_180_left))

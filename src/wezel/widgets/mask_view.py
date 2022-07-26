@@ -383,19 +383,24 @@ class MaskViewPenFreehand(widgets.ImageViewCursor):
         buttons = event.buttons()
         if buttons == Qt.LeftButton:
             position = [event.pos().x(), event.pos().y()]
-            if position not in self.path:
+            #if position not in self.path:
+            if position != self.path[-1]:
                 self.path.append(position)
                 self.item.update()
 
     def fillPath(self):
 
-        if len(self.path) == 0: return
-        roiPath = MplPath(self.path, closed=True)
+        if len(self.path) == 0: 
+            return
+
         nx, ny = self.maskItem.bin.shape[0], self.maskItem.bin.shape[1]
-        x, y = np.meshgrid(np.arange(0.5, 0.5+nx), np.arange(0.5, 0.5+ny))
-        points = list(zip(x.flatten(),y.flatten()))
-        bin = roiPath.contains_points(points, radius=0.0).reshape((nx, ny))  
-        bin = np.transpose(bin != 0)
+        x, y = np.meshgrid(np.arange(0.5, 0.5+nx), np.arange(0.5, 0.5+ny), indexing='ij')
+        points = list(zip(x.flatten(), y.flatten()))
+        #points = np.vstack((x.flatten(), y.flatten())).transpose()
+
+        roiPath = MplPath(self.path, closed=True)
+        bin = roiPath.contains_points(points, radius=0.0).reshape((nx, ny))
+        #bin = np.transpose(bin != 0)
         #bin = bin != 0
         if self.mode == "draw":
             self.maskItem.bin = np.logical_or(self.maskItem.bin, bin)
