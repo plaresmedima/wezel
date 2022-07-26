@@ -2,7 +2,7 @@ __all__ = ['ImageSliders']
 
 import pandas as pd
 
-from PyQt5.QtCore import  Qt, pyqtSignal
+from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import (
     QWidget, QHBoxLayout, QPushButton,
     )
@@ -103,17 +103,17 @@ class ImageSliders(QWidget):
         """
         # Add all default tags in the registry and get values
         tags = self.sliderTags.copy()  
-        tags = list(set(tags + list(self.series.folder.dataframe)))
         if self.series is None:
             self.dataFrame = pd.DataFrame([], index=[], columns=tags)
-        else:
-            # If all required tags are in the register,
-            # then just extract the register for the series;
-            # else read the data from disk.
-            if set(tags) == set(self.series.folder.dataframe):
-                self.dataFrame = self.series.data()
-            else: 
-                self.dataFrame = self.series.read_dataframe(tags)  
+            return
+        # If all required tags are in the register,
+        # then just extract the register for the series;
+        # else read the data from disk.
+        tags = list(set(tags + list(self.series.folder.dataframe)))
+        if set(tags) == set(self.series.folder.dataframe):
+            self.dataFrame = self.series.data()
+        else: 
+            self.dataFrame = self.series.read_dataframe(tags)  
         self.dataFrame.sort_values("InstanceNumber", inplace=True)
         self.dataFrame.dropna(axis=1, inplace=True)  
         self.dataFrame.reset_index()
@@ -137,7 +137,10 @@ class ImageSliders(QWidget):
             self.slidersButton.setStyleSheet("background-color: red")
             for tag in self.sliderTags:
                 tagValues = self.dataFrame[tag].unique().tolist()
-                tagValues.sort()
+                try:
+                    tagValues.sort()
+                except:
+                    pass
                 slider = widgets.CheckBoxSlider(tag, tagValues)
                 slider.valueChanged.connect(self._sliderValueChanged)
                 slider.stateChanged.connect(self._sliderStateChanged)

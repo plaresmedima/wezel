@@ -1,14 +1,20 @@
-from wezel.core import Action
+import os
+import wezel
 
-def menu(parent):
+
+def all(parent):
 
     parent.action(Open, shortcut='Ctrl+O')
     parent.action(Read)
     parent.action(Save, shortcut='Ctrl+S')
     parent.action(Restore, shortcut='Ctrl+R')
     parent.action(Close, shortcut='Ctrl+C')
+    parent.separator()
+    parent.action(OpenSubFolders, text='Open subfolders')
+    parent.action(Export, text='Export selections..')
+    
 
-class Open(Action):
+class Open(wezel.Action):
 
     def enable(self, app):
 
@@ -31,7 +37,7 @@ class Open(Action):
         app.status.cursorToNormal()
 
 
-class Close(Action):
+class Close(wezel.Action):
     """
     Close wezel.
     """ 
@@ -50,7 +56,7 @@ class Close(Action):
             app.close()
 
 
-class Read(Action):
+class Read(wezel.Action):
 
     def enable(self, app):
 
@@ -71,7 +77,7 @@ class Read(Action):
         app.refresh()
 
 
-class Restore(Action):
+class Restore(wezel.Action):
 
     def enable(self, app):
         
@@ -89,7 +95,7 @@ class Restore(Action):
         app.refresh()
 
 
-class Save(Action):
+class Save(wezel.Action):
 
     def enable(self, app):
 
@@ -104,3 +110,54 @@ class Save(Action):
         Saves the open DICOM folder.
         """
         app.folder.save()
+
+
+class OpenSubFolders(wezel.Action):
+
+    def enable(self, app):
+
+        if not hasattr(app, 'folder'):
+            return False
+        return True
+
+    def run(self, app):
+        """
+        Open a DICOM folder and update display.
+        """
+        app.status.message("Opening DICOM folder..")
+        path = app.dialog.directory("Select the top folder..")
+        if path == '':
+            app.status.message('') 
+            return
+        subfolders = next(os.walk(path))[1]
+        subfolders = [os.path.join(path, f) for f in subfolders]
+        app.close()
+        app.status.cursorToHourglass()
+        for i, path in enumerate(subfolders):
+            msg = 'Reading folder ' + str(i+1) + ' of ' + str(len(subfolders))
+            app.open(path, attributes=self.options, message=msg)
+            app.folder.save()
+        app.status.cursorToNormal()
+        app.display(app.folder)
+
+
+class Export(wezel.Action):
+    """Export selected series"""
+
+    def enable(self, app):
+
+        if not hasattr(app, 'folder'):
+            return False
+        return app.nr_selected(3) != 0
+
+    def run(self, app):
+
+        series = app.get_selected(3)
+        if series == []:
+            app.dialog.information("Please select at least one series")
+            return
+        path = app.dialog.directory("Where do you want to export the data?")
+        for i, s in enumerate(series):
+            app.status.progress(i, len(series), 'Exporting data..')
+            s.export(path)
+        app.status.hide()

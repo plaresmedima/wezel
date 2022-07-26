@@ -1,17 +1,13 @@
 import webbrowser
-from wezel.core import Action
-
-from wezel.widgets.icons import question_mark
+import wezel
 
 
-def menu(parent):
+def all(parent):
 
-    #menu = parent.menu('About')
-    parent.action(About, text='Wezel', icon=question_mark) 
+    parent.action(About, text='Wezel', icon=wezel.widgets.icons.question_mark) 
 
 
-class About(Action):
+class About(wezel.Action):
 
     def run(self, app):
         webbrowser.open("weasel.pro")
-        #webbrowser.get('chrome').open("Wezel.pro")

@@ -1,0 +1,4 @@
+include src/wezel/widgets/icons/fugue_icons/*.png
+include src/wezel/widgets/icons/images/*.jpg
+include src/wezel/widgets/icons/my_icons/*.ico
+include src/wezel/widgets/icons/my_icons/*.png

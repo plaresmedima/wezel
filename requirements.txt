@@ -1,6 +1,7 @@
-PyQt5
+PyQt5<=5.13.1
 dbdicom
 matplotlib
 numpy
 pandas
-pyqtgraph
+pyqtgraph<=0.10.0
+importlib-resources>=1.1.0

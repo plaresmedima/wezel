@@ -1,16 +1,20 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
 
 # minimal required information
 
 [project]
 name = "wezel"
-version = "0.0.3"
+version = "0.0.15"
 dependencies = [
-  "PyQt5",
+  "PyQt5<=5.13.1",  # found some resolution issues with later versions
   "dbdicom",
   "matplotlib",
   "numpy",
   "pandas",
-  "pyqtgraph",
+  "pyqtgraph<=0.10.0",  # found some image display issues with later versions
+  "importlib-resources>=1.1.0",
 ]
 
 # optional information
@@ -48,12 +52,17 @@ requires-python = ">=3.6"
 [project.urls]
 "Homepage" = "https://github.com/QIB-Sheffield/wezel"
 
-#[tool.setuptools]
-#packages = ["wezel"]
+
+[tool.setuptools]
+# ...
+# By default, include-package-data is true in pyproject.toml, so you do
+# NOT have to specify this line.
+include-package-data = true
+
 
 [tool.setuptools.packages.find]
 where = ["src"]
-#include = ["wezel*"] 
+
 
 
 
