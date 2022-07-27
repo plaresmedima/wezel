@@ -11,7 +11,7 @@ from PyQt5.QtWidgets import (
 )
 
 
-from .UserInput import ParameterInputDialog
+from .UserInput import userInput
 
  
 class Dialog():
@@ -98,8 +98,7 @@ class Dialog():
         Collect user input of various types.
         """
 
-        dialog = ParameterInputDialog(*fields, title=title, helpText=helpText)
-        return dialog.returnListParameterValues()
+        return userInput(*fields, title=title)
 
 
 class StatusBar(QStatusBar):
