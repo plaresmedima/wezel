@@ -10,8 +10,8 @@ from PyQt5.QtWidgets import (
     QMessageBox, 
 )
 
-from .UserInput import userInput
-#from .SteveUserInput import ParameterInputDialog
+
+from .UserInput import ParameterInputDialog
 
  
 class Dialog():
@@ -97,9 +97,9 @@ class Dialog():
         """
         Collect user input of various types.
         """
-        return userInput(*fields, title=title)
-        #return ParameterInputDialog(*fields, title=title, helpText=helpText)
 
+        dialog = ParameterInputDialog(*fields, title=title, helpText=helpText)
+        return dialog.returnListParameterValues()
 
 
 class StatusBar(QStatusBar):
