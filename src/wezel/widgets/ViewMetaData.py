@@ -48,14 +48,19 @@ localStyleSheet = """
             """
 
 class ScrollLabel(QScrollArea):
+    """
+    A custom composite widget, a label with a vertical scrollbar,
+    for the display of long text strings in the metadata table. 
+    """
     def __init__(self):
         QScrollArea.__init__(self)
         self.setWidgetResizable(True)
 
         centralWidget = QWidget(self)
+        self.setWidget(centralWidget)
+
         verticalLayout = QVBoxLayout()
         centralWidget.setLayout(verticalLayout)
-        self.setWidget(centralWidget)
 
         self.label = QLabel()
         self.label.setAlignment(Qt.AlignLeft | Qt.AlignTop)
@@ -177,6 +182,7 @@ class SeriesViewerMetaData(QWidget):
                         scrollableLabel = ScrollLabel()
                         scrollableLabel.setText(valueMetadata)
                         self.tableWidget.setCellWidget(rowPosition , 3, scrollableLabel)
+                        self.tableWidget.resizeRowToContents(rowPosition)
                     else:
                         self.tableWidget.setItem(rowPosition , 3, QTableWidgetItem(valueMetadata))
 
