@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import (
     QHBoxLayout, 
     QPushButton, 
 )
-from .UserInput import ParameterInputDialog as paramInputDialog
+from .UserInput import userInput
 from . import icons
 
 class RegionList(QWidget):
@@ -17,12 +17,17 @@ class RegionList(QWidget):
     currentRegionChanged = pyqtSignal()
     dataWritten = pyqtSignal()
 
-    def __init__(self, series, regions=None):
+    def __init__(self):
         super().__init__()
+
+        self.regions = None
 
         self._defineWidgets()
         self._defineConnections()
         self._defineLayout()
+
+    def setData(self, series, regions=None):
+
         self.setSeries(series)
         self.setRegions(regions)
 
@@ -61,9 +66,13 @@ class RegionList(QWidget):
     def getMask(self, image):
         """Get the mask corresponding to a given image"""
     
-        if image is None: return
+        if image is None: 
+            return
+        if self._currentRegion is None: 
+            return
         maskList = self._currentRegion.children(SliceLocation=image.SliceLocation) # needs to be slice orientation
-        if maskList != []: return maskList[0]
+        if maskList != []: 
+            return maskList[0]
 
 
 #    def remove(self, region_to_remove):
@@ -133,6 +142,8 @@ class RegionList(QWidget):
     @property
     def _currentRegion(self):
 
+        if self.regions is None:
+            return None
         return self.regions[self.comboBox.currentIndex()]
 
     def _items(self):
@@ -201,10 +212,10 @@ class RegionList(QWidget):
         seriesLabels = [series.SeriesDescription for series in seriesList]
 
         # Ask the user to select series to import as regions
-        dialog = paramInputDialog.ParameterInputDialog(
+        cancel, input = userInput(
             {"label":"Series:", "type":"listview", "list": seriesLabels},
-            title = "Please select series to import as Regions", )
-        cancel, input = dialog.returnListParameterValues()
+            title = "Please select series to import as Regions", 
+        )
         if cancel: return
         selectedSeries = [seriesList[i] for i in input[0]["value"]]
         
