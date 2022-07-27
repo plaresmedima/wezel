@@ -1,11 +1,8 @@
 __all__ = ['SeriesViewerMetaData']
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import ( QApplication, QFileDialog, QLineEdit,                            
-        QMdiArea, QMessageBox, QWidget, QGridLayout, QVBoxLayout, QSpinBox,
-        QMdiSubWindow,  QMainWindow, QHBoxLayout, QDoubleSpinBox,
-        QPushButton, QStatusBar, QLabel,  QHeaderView,
-        QTreeWidgetItem, QGridLayout, QSlider, QCheckBox, QLayout, QAbstractItemView,
-        QProgressBar, QComboBox, QTableWidget, QTableWidgetItem, QFrame)
+from PyQt5.QtWidgets import (QFileDialog, QLineEdit,                            
+        QMessageBox, QWidget, QVBoxLayout, QHBoxLayout, QTableWidgetItem,
+        QPushButton, QLabel,  QHeaderView,  QTableWidget,  QAbstractItemView, QScrollArea)
 
 import os
 import pydicom
@@ -44,7 +41,32 @@ localStyleSheet = """
                                    }
                                    
                 QPushButton:pressed {background-color: rgb(112, 112, 112);}
+
+                QLabel {background: transparent;}
+                QScrollArea{background: transparent;}
+                QWidget{background: transparent;}
             """
+
+class ScrollLabel(QScrollArea):
+    def __init__(self):
+        QScrollArea.__init__(self)
+        self.setWidgetResizable(True)
+
+        centralWidget = QWidget(self)
+        verticalLayout = QVBoxLayout()
+        centralWidget.setLayout(verticalLayout)
+        self.setWidget(centralWidget)
+
+        self.label = QLabel()
+        self.label.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        self.label.setWordWrap(True)
+
+        verticalLayout.addWidget(self.label)
+
+   
+    def setText(self, text):
+        self.label.setText(text)
+
 
 class SeriesViewerMetaData(QWidget):
     """Display DICOM Series Metadata in a table."""
@@ -66,6 +88,8 @@ class SeriesViewerMetaData(QWidget):
 
         #Add table to display rows of metadata
         self.tableWidget = QTableWidget()
+        self.tableWidget.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        self.tableWidget.horizontalScrollBar().setEnabled(True)
         self.tableWidget.setAlternatingRowColors(True)
         self.tableWidget.setStyleSheet(localStyleSheet) 
         self.tableWidget.setShowGrid(True)
@@ -115,8 +139,12 @@ class SeriesViewerMetaData(QWidget):
                     else:
                         valueMetadata = str(meta_element.value)
                     if meta_element.VR == "SQ":
-                        self.tableWidget.setItem(rowPosition , 3, QTableWidgetItem(""))
-                        self.tableWidget = self.iterateSequenceTag(self.tableWidget, meta_element, level=">")
+                        #print("1 populateTable meta_element={}".format(meta_element))
+                        #self.tableWidget.setItem(rowPosition , 3, QTableWidgetItem(""))
+                        nestedTableWidget = QTableWidget()
+                        self.tableWidget.setCellWidget(
+                            rowPosition , 3, self.iterateSequenceTag(nestedTableWidget, meta_element, level=">"))
+                        #self.tableWidget = self.iterateSequenceTag(self.tableWidget, meta_element, level=">")
                     else:
                         self.tableWidget.setItem(rowPosition , 3, QTableWidgetItem(valueMetadata))
                 
@@ -144,11 +172,23 @@ class SeriesViewerMetaData(QWidget):
                                 valueMetadata = str(data_element.value)
                     else:
                         valueMetadata = str(data_element.value)
-                    if data_element.VR == "SQ":
-                        self.tableWidget.setItem(rowPosition , 3, QTableWidgetItem(""))
-                        self.tableWidget = self.iterateSequenceTag(self.tableWidget, data_element, level=">")
+
+                    if data_element.VR == "OB":
+                        scrollableLabel = ScrollLabel()
+                        scrollableLabel.setText(valueMetadata)
+                        self.tableWidget.setCellWidget(rowPosition , 3, scrollableLabel)
                     else:
                         self.tableWidget.setItem(rowPosition , 3, QTableWidgetItem(valueMetadata))
+
+                    if data_element.VR == "SQ":
+                        #self.tableWidget.setItem(rowPosition , 3, QTableWidgetItem(""))
+                        #self.tableWidget = self.iterateSequenceTag(self.tableWidget, data_element, level=">")
+                        #print("2 populateTable data_element={}".format(data_element))
+                        nestedTableWidget = QTableWidget()
+                        self.tableWidget.setCellWidget(
+                            rowPosition , 3, self.iterateSequenceTag(nestedTableWidget, data_element, level=">"))
+                    #else:
+                    #    self.tableWidget.setItem(rowPosition , 3, QTableWidgetItem(valueMetadata))
             
             #Resize columns to fit contents
             header = self.tableWidget.horizontalHeader()
@@ -159,7 +199,7 @@ class SeriesViewerMetaData(QWidget):
             self.tableWidget.setWordWrap(True)
         except Exception as e:
             print('Error in : SeriesViewerMetaData.populateTable' + str(e))
-            logger.error('Error in : SeriesViewerMetaData.populateTable' + str(e))
+           # logger.error('Error in : SeriesViewerMetaData.populateTable' + str(e))
 
 
     def createHeaderRow(self):
@@ -199,15 +239,17 @@ class SeriesViewerMetaData(QWidget):
                     else:
                         valueMetadata = str(data_element.value)
                     if data_element.VR == "SQ":
-                        table.setItem(rowPosition , 3, QTableWidgetItem(""))
-                        table = self.iterateSequenceTag(table, data_element, level=level+">")
+                        #table.setItem(rowPosition , 3, QTableWidgetItem(""))
+                        #table = self.iterateSequenceTag(table, data_element, level=level+">")
+                        self.tableWidget.setCellWidget(
+                            rowPosition , 3, self.iterateSequenceTag(self.tableWidget, data_element, level=">"))
                         level = level[:-1]
                     else:
                         table.setItem(rowPosition , 3, QTableWidgetItem(valueMetadata))
             return table
         except Exception as e:
             print('Error in : SeriesViewerMetaData.iterateSequenceTag' + str(e))
-            logger.error('Error in : SeriesViewerMetaData.iterateSequenceTag' + str(e))
+            #logger.error('Error in : SeriesViewerMetaData.iterateSequenceTag' + str(e))
 
 
     def exportToFile(self, parent, excel=False, csv=False):
@@ -231,7 +273,7 @@ class SeriesViewerMetaData(QWidget):
                     QMessageBox.information(parent, "Export to CSV", "File " + filename + " saved successfully")
         except Exception as e:
             print('Error in : SeriesViewerMetaData.exportToFile: ' + str(e))
-            logger.error('Error in : SeriesViewerMetaData.exportToFile: ' + str(e))
+            #logger.error('Error in : SeriesViewerMetaData.exportToFile: ' + str(e))
 
 
     def searchTable(self, expression):
@@ -248,7 +290,7 @@ class SeriesViewerMetaData(QWidget):
                     #table.table.setCurrentItem(item)
         except Exception as e:
             print('Error in : SeriesViewerMetaData.searchTable: ' + str(e))
-            logger.error('Error in : SeriesViewerMetaData.searchTable: ' + str(e))
+            #logger.error('Error in : SeriesViewerMetaData.searchTable: ' + str(e))
 
 
 
