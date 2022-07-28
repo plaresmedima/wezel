@@ -1,6 +1,6 @@
 __all__ = ['SeriesViewerMetaData']
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import (QFileDialog, QLineEdit,                            
+from PyQt5.QtWidgets import (QFileDialog, QLineEdit, QApplication,                           
         QMessageBox, QWidget, QVBoxLayout, QHBoxLayout, QTableWidgetItem,
         QPushButton, QLabel,  QHeaderView,  QTableWidget,  QAbstractItemView, QScrollArea)
 
@@ -119,10 +119,18 @@ class SeriesViewerMetaData(QWidget):
         self.layout().addWidget(self.tableWidget) 
         
     
+    def resizeColumnsToContents(self):
+        header = self.tableWidget.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(3, QHeaderView.ResizeMode(QHeaderView.AdjustToContentsOnFirstShow))
+
     def populateTable(self):
         """Builds a Table View displaying DICOM image metadata
         as Tag, name, VR & Value"""
         try:
+            QApplication.setOverrideCursor(Qt.WaitCursor)
             self.createHeaderRow()
             
             if self._objectDICOM:
@@ -136,6 +144,7 @@ class SeriesViewerMetaData(QWidget):
                                     QTableWidgetItem(meta_element.name))
                     self.tableWidget.setItem(rowPosition , 2, 
                                     QTableWidgetItem(meta_element.VR))
+
                     if meta_element.VR == "OW" or meta_element.VR == "OB" or meta_element.VR == "UN":
                         try:
                             valueMetadata = str(list(meta_element))
@@ -143,15 +152,29 @@ class SeriesViewerMetaData(QWidget):
                             valueMetadata = str(meta_element.value)
                     else:
                         valueMetadata = str(meta_element.value)
+
+                    if meta_element.VR == "OB":
+                        scrollableLabel = ScrollLabel()
+                        scrollableLabel.setText(valueMetadata)
+                        self.tableWidget.setCellWidget(rowPosition , 3, scrollableLabel)
+                        self.tableWidget.resizeRowToContents(rowPosition)
+                    else:
+                        self.tableWidget.setItem(rowPosition , 3, QTableWidgetItem(valueMetadata))
+
                     if meta_element.VR == "SQ":
                         #print("1 populateTable meta_element={}".format(meta_element))
                         #self.tableWidget.setItem(rowPosition , 3, QTableWidgetItem(""))
-                        nestedTableWidget = QTableWidget()
-                        self.tableWidget.setCellWidget(
-                            rowPosition , 3, self.iterateSequenceTag(nestedTableWidget, meta_element, level=">"))
+                        #self.show_dataset(dataset=meta_element, order="1", indent='')
+                        #nestedTableWidget = QTableWidget()
+                        strSQ = ""
+                        temp = self.iterateSequenceTag(meta_element)
+                        if temp is not None:
+                            strSQ += temp
+                        scrollableLabel = ScrollLabel()
+                        scrollableLabel.setText(strSQ)
+                        self.tableWidget.setCellWidget(rowPosition , 3, scrollableLabel)
+                        self.tableWidget.resizeRowToContents(rowPosition)
                         #self.tableWidget = self.iterateSequenceTag(self.tableWidget, meta_element, level=">")
-                    else:
-                        self.tableWidget.setItem(rowPosition , 3, QTableWidgetItem(valueMetadata))
                 
                 for data_element in self._objectDICOM:
                     # Exclude pixel data from metadata listing
@@ -165,6 +188,7 @@ class SeriesViewerMetaData(QWidget):
                                     QTableWidgetItem(data_element.name))
                     self.tableWidget.setItem(rowPosition , 2, 
                                     QTableWidgetItem(data_element.VR))
+
                     if data_element.VR == "OW" or data_element.VR == "OB" or data_element.VR == "UN":
                         try:
                             #valueMetadata = str(data_element.value.decode('utf-8'))
@@ -190,19 +214,24 @@ class SeriesViewerMetaData(QWidget):
                         #self.tableWidget.setItem(rowPosition , 3, QTableWidgetItem(""))
                         #self.tableWidget = self.iterateSequenceTag(self.tableWidget, data_element, level=">")
                         #print("2 populateTable data_element={}".format(data_element))
-                        nestedTableWidget = QTableWidget()
-                        self.tableWidget.setCellWidget(
-                            rowPosition , 3, self.iterateSequenceTag(nestedTableWidget, data_element, level=">"))
-                    #else:
-                    #    self.tableWidget.setItem(rowPosition , 3, QTableWidgetItem(valueMetadata))
-            
-            #Resize columns to fit contents
-            header = self.tableWidget.horizontalHeader()
-            header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
-            header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
-            header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
-            header.setSectionResizeMode(3, QHeaderView.ResizeMode(QHeaderView.AdjustToContentsOnFirstShow))
-            self.tableWidget.setWordWrap(True)
+                        #self.show_dataset(dataset=data_element, order="2", indent='')
+                        #nestedTableWidget = QTableWidget()
+                        #self.tableWidget.setCellWidget(
+                        #    rowPosition , 3, self.iterateSequenceTag(data_element, level=">"))
+               
+                        strSQ = ""
+                        temp = self.iterateSequenceTag(data_element)
+                        if temp is not None:
+                            strSQ += temp
+                        print("start")
+                        print("strSQ={}".format(strSQ))
+                        print("end")
+                        scrollableLabel = ScrollLabel()
+                        scrollableLabel.setText(strSQ)
+                        self.tableWidget.setCellWidget(rowPosition , 3, scrollableLabel)
+                        self.tableWidget.resizeRowToContents(rowPosition)
+            self.resizeColumnsToContents()
+            QApplication.restoreOverrideCursor()
         except Exception as e:
             print('Error in : SeriesViewerMetaData.populateTable' + str(e))
            # logger.error('Error in : SeriesViewerMetaData.populateTable' + str(e))
@@ -223,17 +252,14 @@ class SeriesViewerMetaData(QWidget):
         self.tableWidget.setHorizontalHeaderItem(3 , headerItem)
 
 
-    def iterateSequenceTag(self, table, dataset, level=">"):
+    def iterateSequenceTag(self, dataset, level=0):
+        print("Called\n") 
         try:
             for data_element in dataset:
                 if isinstance(data_element, pydicom.dataset.Dataset):
-                    table = self.iterateSequenceTag(table, data_element, level=level)
+                    #print("isinstance(data_element, pydicom.dataset.Dataset)==True")
+                    self.iterateSequenceTag(data_element, level=1)
                 else:
-                    rowPosition = table.rowCount()
-                    table.insertRow(rowPosition)
-                    table.setItem(rowPosition , 0, QTableWidgetItem(level + str(data_element.tag)))
-                    table.setItem(rowPosition , 1, QTableWidgetItem(data_element.name))
-                    table.setItem(rowPosition , 2, QTableWidgetItem(data_element.VR))
                     if data_element.VR == "OW" or data_element.VR == "OB":
                         try:
                             valueMetadata = str(data_element.value.decode('utf-8'))
@@ -243,20 +269,37 @@ class SeriesViewerMetaData(QWidget):
                             except:
                                 valueMetadata = str(data_element.value)
                     else:
-                        valueMetadata = str(data_element.value)
+                        valueMetadata = "MARKER" + str(data_element.value)
+                    
                     if data_element.VR == "SQ":
-                        #table.setItem(rowPosition , 3, QTableWidgetItem(""))
-                        #table = self.iterateSequenceTag(table, data_element, level=level+">")
-                        self.tableWidget.setCellWidget(
-                            rowPosition , 3, self.iterateSequenceTag(self.tableWidget, data_element, level=">"))
-                        level = level[:-1]
+                        print("recursive function call")
+                        level+=1
+                        self.iterateSequenceTag(data_element, level)
                     else:
-                        table.setItem(rowPosition , 3, QTableWidgetItem(valueMetadata))
-            return table
+                        print("no recursive function call, level={}, tag={}, name={}, VR={}, value={}".format(level,str(data_element.tag),
+                                                                     data_element.name,data_element.VR,
+                                                                    valueMetadata))
+                        return ("{} tag={}, name={}, VR={}, value={} \n".format(str(level*"  "), str(data_element.tag),
+                                                                     data_element.name,data_element.VR,
+                                                                    valueMetadata))
         except Exception as e:
             print('Error in : SeriesViewerMetaData.iterateSequenceTag' + str(e))
             #logger.error('Error in : SeriesViewerMetaData.iterateSequenceTag' + str(e))
 
+
+    def show_dataset(self, dataset, order, indent=""):
+        try:
+            print("order={}".format(order))
+            for data_element in dataset:
+                print("data_element={}".format(data_element))
+                if data_element.VR == "SQ":
+                    indent += 4 * " "
+                    for item in data_element:
+                        show_dataset(item, indent)
+                    indent = indent[4:]
+                print(indent + str(elem))
+        except Exception as e:
+            print('Error in : SeriesViewerMetaData.show_dataset' + str(e))
 
     def exportToFile(self, parent, excel=False, csv=False):
         try:
@@ -302,7 +345,43 @@ class SeriesViewerMetaData(QWidget):
 
 
 
-
+#def iterateSequenceTag(self, table, dataset, level=">"):
+#        try:
+#            for data_element in dataset:
+#                if isinstance(data_element, pydicom.dataset.Dataset):
+#                    print("isinstance(data_element, pydicom.dataset.Dataset)==True")
+#                    table = self.iterateSequenceTag(table, data_element, level=level)
+#                else:
+#                    rowPosition = table.rowCount()
+#                    table.insertRow(rowPosition)
+#                    #print("level={}, tag={}, name={}, VR={}".format(level,str(data_element.tag),
+#                    #                                                 data_element.name,data_element.VR ))
+#                    table.setItem(rowPosition , 0, QTableWidgetItem(level + str(data_element.tag)))
+#                    table.setItem(rowPosition , 1, QTableWidgetItem(data_element.name))
+#                    table.setItem(rowPosition , 2, QTableWidgetItem(data_element.VR))
+#                    if data_element.VR == "OW" or data_element.VR == "OB":
+#                        try:
+#                            valueMetadata = str(data_element.value.decode('utf-8'))
+#                        except:
+#                            try:
+#                                valueMetadata = str(list(data_element))
+#                            except:
+#                                valueMetadata = str(data_element.value)
+#                    else:
+#                        valueMetadata = str(data_element.value)
+#                    #print("value={}".format(valueMetadata))
+#                    if data_element.VR == "SQ":
+#                        #table.setItem(rowPosition , 3, QTableWidgetItem(""))
+#                        #table = self.iterateSequenceTag(table, data_element, level=level+">")
+#                        self.tableWidget.setCellWidget(
+#                            rowPosition , 3, self.iterateSequenceTag(table, data_element, level=">"))
+#                        level = level[:-1]
+#                    else:
+#                        table.setItem(rowPosition , 3, QTableWidgetItem(valueMetadata))
+#            return table
+#        except Exception as e:
+#            print('Error in : SeriesViewerMetaData.iterateSequenceTag' + str(e))
+#            #logger.error('Error in : SeriesViewerMetaData.iterateSequenceTag' + str(e))
 
 
 
