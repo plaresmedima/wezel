@@ -54,8 +54,16 @@ class MaskView(widgets.ImageView):
 #        nrMaskPixels = np.count_nonzero(self.maskItem.bin)
 #        return nrMaskPixels == 0
 
-    def setObject(self, mask):
+    def setObject(self, mask): # obsolete?
         self.maskItem.mask = mask
+
+    def setData(self, image, mask):
+        
+        self.setImage(image)
+        self.setMask(mask)
+
+    def setImage(self, image):
+        super().setData(image)
         
     def setMask(self, mask):
 
@@ -99,11 +107,11 @@ class MaskItem(QGraphicsObject):
 
     newMask = pyqtSignal()
 
-    def __init__(self, mask, shape): 
+    def __init__(self, mask=None, shape=None): 
         super().__init__()
 
         self.mask = mask
-        self._setMaskImage(shape)
+        self._setMaskImage(shape=shape)
 
     def _setMaskImage(self, shape=(128,128)):
 

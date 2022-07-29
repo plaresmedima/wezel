@@ -28,8 +28,9 @@ class ImageView(QGraphicsView):
         eventHandler.setView(self)
         
     def setData(self, image):
-
+  
         self.imageItem.setData(image)
+        self.fitInView(self.imageItem, Qt.KeepAspectRatio)
 
     def getImage(self):
 
@@ -60,7 +61,7 @@ class ImageItem(QGraphicsObject):
         if image is not None:
             self.boundingRectangle = QRectF(0, 0, image.Columns, image.Rows)
         self.image = image
-        self._setPixMap()
+        self.setPixMap()
         self.update()
 
     def boundingRect(self): 
@@ -68,7 +69,7 @@ class ImageItem(QGraphicsObject):
 
         return self.boundingRectangle
 
-    def _setPixMap(self):
+    def setPixMap(self):
 
         if self.image is None:
             width = int(self.boundingRectangle.width())
@@ -296,7 +297,7 @@ class ImageViewCursor():
         image.WindowCenter = newCenter
         image.WindowWidth = newWidth
 #        print(center-width/2, center+width/2)
-        self.item._setPixMap()
+        self.item.setPixMap()
         self.item.update()
         self.view.imageUpdated.emit()
 
