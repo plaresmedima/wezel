@@ -57,10 +57,11 @@ class Region(wezel.Action):
 
         for series in app.get_selected(SERIES_VIEWER):
 
-            viewer = wezel.widgets.SeriesViewerROI(series)
-            viewer.dataWritten.connect(app.treeView.setFolder)
+            viewer = wezel.widgets.SeriesViewerROI()
             app.addAsSubWindow(viewer, title=series.label())
-
+            viewer.dataWritten.connect(app.treeView.setFolder)
+            viewer.setData(series)
+            
 
 class Array4D(wezel.Action):
 

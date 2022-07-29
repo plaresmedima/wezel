@@ -1,9 +1,9 @@
 __all__ = ['SeriesViewerROI']
 
-from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import (QWidget, 
                             QVBoxLayout, 
-                            QHBoxLayout)
+                            QToolBar)
 
 from .. import widgets
 
@@ -14,58 +14,48 @@ class SeriesViewerROI(QWidget):
 
     dataWritten = pyqtSignal()
 
-    def __init__(self, series, dimensions=[]): 
+    def __init__(self, series=None, dimensions=[]): 
         super().__init__()
 
         #Faster access but loading times are prohibitive for large series
         #if series.on_disk(): 
         #    series.read()
 
-        self._defineWidgets(series, dimensions=dimensions)
-        self._defineLayout()
-        self._defineConnections()
+        self._setWidgets(dimensions=dimensions)
+        self._setConnections()
         self._setMaskViewTool()
+        self._setLayout()
+        if series is not None:
+            self.setData(series)
 
-    def _defineWidgets(self, series, dimensions=[]):
+    def _setWidgets(self, dimensions=[]):
 
-        self.imageSliders = widgets.ImageSliders(series, dimensions=dimensions)
-        self.regionList = widgets.RegionList(series)
+        self.imageSliders = widgets.ImageSliders(dimensions=dimensions)
+        self.regionList = widgets.RegionList()
+        self.maskView = widgets.MaskView()
+        self.maskViewToolBox = widgets.MaskViewToolBox()
+        self.pixelValue = widgets.PixelValueLabel()
+        self.colors = widgets.SeriesColors()
+
+    def setData(self, series):
+
+        self.imageSliders.setData(series, blockSignals=True)
+        self.regionList.setData(series)
 
         image = self.imageSliders.getImage()
         mask = self.regionList.getMask(image)
+        self.colors.setData(series, image)
+        self.maskView.setData(image, mask)
+        self.pixelValue.setData(image)
 
-        self.maskView = widgets.MaskView(image, mask)
-        self.maskViewToolBox = widgets.MaskViewToolBox()
-#        self.brightness = widgets.ImageBrightness(image)
-#        self.contrast = widgets.ImageContrast(image)
-        self.pixelValue = widgets.PixelValueLabel(image)
+        #self.maskView.fitInView(self.maskView.imageItem, Qt.KeepAspectRatio)
+        #self.maskView.imageItem.update()
         
-    def _defineLayout(self):
+        # changes are made in memory only until a new image is displayed
+        #image.read() 
+        #self.image = image
 
-        toolBar = QHBoxLayout()
-        toolBar.setContentsMargins(0, 0, 0, 0)
-        toolBar.setSpacing(0)
-        toolBar.setAlignment(Qt.AlignLeft  | Qt.AlignVCenter)
-        toolBar.addWidget(self.maskViewToolBox)
-        toolBar.addWidget(self.regionList)
-#        toolBar.addWidget(self.brightness) 
-#        toolBar.addWidget(self.contrast) 
-        toolBar.addWidget(self.pixelValue)
-
-        self.toolBar = QWidget() 
-        self.toolBar.setStyleSheet("background-color: white")  
-        self.toolBar.setLayout(toolBar)
-
-        layout = QVBoxLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
-        layout.addWidget(self.toolBar)
-        layout.addWidget(self.maskView) 
-        layout.addWidget(self.imageSliders) 
-
-        self.setLayout(layout)
-
-    def _defineConnections(self):
+    def _setConnections(self):
 
         self.maskView.mousePositionMoved.connect(self._mouseMoved)
         self.maskView.newMask.connect(self._newMask)
@@ -73,8 +63,13 @@ class SeriesViewerROI(QWidget):
         self.regionList.currentRegionChanged.connect(self._currentRegionChanged)
         self.regionList.dataWritten.connect(self.dataWritten.emit)
         self.imageSliders.valueChanged.connect(self._currentImageChanged)
-#        self.brightness.valueChanged.connect(self._imageHasChanged)
-#        self.contrast.valueChanged.connect(self._imageHasChanged)
+        self.colors.valueChanged.connect(self._currentImageEdited)
+        self.maskView.imageUpdated.connect(self.colors.setValue)
+
+    def _currentImageEdited(self):
+
+        self.maskView.imageItem.setPixMap()
+        self.maskView.imageItem.update()
 
     def _setMaskViewTool(self):
 
@@ -88,12 +83,16 @@ class SeriesViewerROI(QWidget):
         
     def _currentImageChanged(self):
 
+        #if self.image is not None:
+        #    self.image.write()
         image = self.imageSliders.getImage()
         mask = self.regionList.getMask(image)
-        self.maskView.setData(image)
-        self.maskView.setMask(mask) 
+        self.colors.setImage(image)
+        self.maskView.setData(image, mask)
         self.pixelValue.setData(image)
-
+        #image.read()
+        #self.image = image
+        
     def _currentRegionChanged(self):
 
         image = self.imageSliders.getImage()
@@ -106,3 +105,23 @@ class SeriesViewerROI(QWidget):
         region = self.regionList.getRegion()
         mask = mask.move_to(region)
         self.maskView.setObject(mask)
+
+    def _setLayout(self):
+
+        toolBar = QToolBar()
+        toolBar.addWidget(self.maskViewToolBox)
+        toolBar.addWidget(self.regionList)
+        toolBar.addSeparator()
+        toolBar.addWidget(self.colors) 
+        toolBar.addSeparator()
+        toolBar.addWidget(self.pixelValue)
+        toolBar.setStyleSheet("background-color: white")  
+
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        layout.addWidget(toolBar)
+        layout.addWidget(self.maskView) 
+        layout.addWidget(self.imageSliders) 
+
+        self.setLayout(layout)

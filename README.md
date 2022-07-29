@@ -413,12 +413,9 @@ functional pipelines have already been tested on the first datasets.
 
 ## Current `wezel` version
 
-Wezel is currently at version 0.2 - a prototype version 
-supporting all basic functionality that has however not been
+Wezel is currently at a prototype version that has not been
 tried and tested under the defined context of use. 
 First applications in 4 multi-centre renal and liver projects 
-are currently under construction. Until these applications have 
-progressed to their first endpoints, Wezel is considered and 
-early prototype still subject to substantial change in the code 
-base and documenting material. A Wezel version 0.3 with a revised 
-programming interface and simplified code base will be released shortly.
+are currently underway. Until these applications have 
+progressed to their first endpoints, wezel is considered an 
+early prototype still subject to substantial change in the code base and documenting material. 

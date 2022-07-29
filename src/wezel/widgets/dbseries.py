@@ -1,4 +1,4 @@
-__all__ = ['ImageSliders']
+__all__ = ['SeriesColors', 'ImageSliders']
 
 import pandas as pd
 
@@ -10,6 +10,79 @@ from PyQt5.QtGui import QIcon
 
 from .. import widgets as widgets
 
+class SeriesColors(QWidget):
+    """Widget to set and manage color and window settings of a Series"""
+
+    valueChanged = pyqtSignal()  # emitted when the color settings are changed by the widget
+
+    def __init__(self):
+        super().__init__()
+
+        self._setWidgets()
+        self._setConnections()
+        self._setLayout()
+
+    def _setWidgets(self):
+
+        self.mode = widgets.LockUnlockButton(toolTip = 'Lock image settings')
+        self.colors = widgets.SelectImageColorTable()
+        self.brightness = widgets.ImageBrightness()
+        self.contrast = widgets.ImageContrast()
+        self.save = widgets.SaveImageButton()
+
+    def setData(self, series, image):
+
+        self.series = series
+        self.colors.setData(image)
+        self.brightness.setData(image)
+        self.contrast.setData(image)
+        self.save.setData(image)
+
+    def setValue(self):
+
+        # self.colors.setValue()
+        self.brightness.setValue()
+        self.contrast.setValue()
+
+    def setImage(self, image):
+        """Assigns a new image to the color tools
+        
+        If the settings are locked, the color settings
+        of the image are updated based on the current values 
+        and a signal is emitted that the image properties have changed.
+
+        If the settings are not locked then they are set to 
+        the values of the new image.
+        """
+
+        self.colors.setData(image)
+        self.brightness.setData(image, set=not self.mode.isLocked)
+        self.contrast.setData(image, set=not self.mode.isLocked)
+        self.save.setData(image)
+#        if self.mode.isLocked: # image has been updated based on color settings
+#            self.valueChanged.emit()
+
+    def _setConnections(self):
+
+        self.brightness.valueChanged.connect(self.valueChanged.emit)
+        self.contrast.valueChanged.connect(self.valueChanged.emit)
+        self.colors.newColorTable.connect(self.valueChanged.emit)
+
+    def _setLayout(self):
+
+        layout = QHBoxLayout()
+        layout.setContentsMargins(0,0,0,0)
+        layout.setSpacing(0)
+        layout.addWidget(self.mode)
+    #    layout.addWidget(self.colors)
+        layout.addWidget(self.brightness)
+        layout.addWidget(self.contrast)
+    #    layout.addWidget(self.save)
+        
+        #self.setStyleSheet("background-color: white")
+        self.setLayout(layout)
+
+
 class ImageSliders(QWidget):
     """Widget with sliders to navigate through a DICOM series."""
 
@@ -17,6 +90,8 @@ class ImageSliders(QWidget):
 
     def __init__(self, series=None, image=None, dimensions=[]):  
         super().__init__()
+
+        self._blockSignals = False
 
         if dimensions == []:
             self.sliderTags = ["AcquisitionTime", "SliceLocation"]
@@ -54,8 +129,13 @@ class ImageSliders(QWidget):
         self.setStyleSheet("background-color: white")
         self.setLayout(self.layout)
 
-    def setData(self, series=None, image=None):
+    def blockSignals(self, block):
+        self._blockSignals = block
 
+    def setData(self, series=None, image=None, blockSignals=False):
+
+        restore = self._blockSignals
+        self._blockSignals = blockSignals
         self.series = series
         self._readDataFrame()
         self._setSliderValueLists()
@@ -64,7 +144,8 @@ class ImageSliders(QWidget):
             if self.series is not None:
                 self.image = self.series.children(0)
         self._setSliderValues()
-        self._sliderValueChanged()            
+        self._sliderValueChanged()  
+        self._blockSignals = restore          
 
     def setSeries(self, series): # Obsolete?
 
@@ -206,7 +287,8 @@ class ImageSliders(QWidget):
         else:
             index = self.sliders[0].value()
             self._set_image(imageUIDs[index])
-        self.valueChanged.emit()
+        if not self._blockSignals:
+            self.valueChanged.emit()
 
     def _sliderValueChanged(self):  
         """Change the selected image"""
@@ -225,7 +307,8 @@ class ImageSliders(QWidget):
             # self.image = self.series.children(SOPInstanceUID = imageUIDs[index])[0]
             self._set_image(imageUIDs[index])
             self.sliders[0].show()
-        self.valueChanged.emit()
+        if not self._blockSignals:
+            self.valueChanged.emit()
 
     def _set_image(self, SOPInstanceUID):
         """
