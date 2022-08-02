@@ -43,10 +43,7 @@ class ImageView(QGraphicsView):
 
 
 class ImageItem(QGraphicsObject):
-    """Displays a mask as an overlay on an image.
-    
-    Needs to be assigned an image to display, but a mask is optional.
-    If no mask is provided, a mask will be created from the image.
+    """Displays an image.
     """
 
     def __init__(self, image): 

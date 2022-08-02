@@ -7,6 +7,9 @@ IMAGE_VIEWER = 4
 
 def all(parent):
    
+    parent.action(SeriesDev, text = 'Series (dev)')
+    parent.action(RegionDev, text = 'Region (dev)')
+    parent.separator()
     parent.action(Image)
     parent.action(Series)
     parent.action(Region)
@@ -16,6 +19,57 @@ def all(parent):
     parent.action(CloseWindows, text='Close windows')
     parent.action(TileWindows, text='Tile windows')
 
+
+class SeriesDev(wezel.Action):
+
+    def enable(self, app):
+        
+        if app.__class__.__name__ != 'Windows':
+            return False
+        return app.nr_selected(SERIES_VIEWER) != 0
+
+    def run(self, app):
+
+        for series in app.get_selected(SERIES_VIEWER):
+
+            viewer = wezel.widgets.SeriesViewerDev(series)
+            viewer.dataWritten.connect(app.treeView.setFolder)
+            app.addAsSubWindow(viewer, title=series.label())
+
+class RegionDev(wezel.Action):
+
+    def enable(self, app):
+        
+        if app.__class__.__name__ != 'Windows':
+            return False
+        return app.nr_selected(SERIES_VIEWER) != 0
+
+    def run(self, app):
+
+        for series in app.get_selected(SERIES_VIEWER):
+
+            viewer = wezel.widgets.RegionViewerDev(series)
+            viewer.dataWritten.connect(app.treeView.setFolder)
+            app.addAsSubWindow(viewer, title=series.label())
+
+
+class Region(wezel.Action):
+
+    def enable(self, app):
+        
+        if app.__class__.__name__ != 'Windows':
+            return False
+        return app.nr_selected(SERIES_VIEWER) != 0
+
+    def run(self, app):
+
+        for series in app.get_selected(SERIES_VIEWER):
+
+            viewer = wezel.widgets.SeriesViewerROI()
+            app.addAsSubWindow(viewer, title=series.label())
+            viewer.dataWritten.connect(app.treeView.setFolder)
+            viewer.setData(series)
+            
 
 class Image(wezel.Action):
 
@@ -45,22 +99,7 @@ class Series(wezel.Action):
             app.display(series)
 
 
-class Region(wezel.Action):
 
-    def enable(self, app):
-        
-        if app.__class__.__name__ != 'Windows':
-            return False
-        return app.nr_selected(SERIES_VIEWER) != 0
-
-    def run(self, app):
-
-        for series in app.get_selected(SERIES_VIEWER):
-
-            viewer = wezel.widgets.SeriesViewerROI()
-            app.addAsSubWindow(viewer, title=series.label())
-            viewer.dataWritten.connect(app.treeView.setFolder)
-            viewer.setData(series)
             
 
 class Array4D(wezel.Action):
@@ -94,6 +133,8 @@ class HeaderDICOM(wezel.Action):
        for series in app.get_selected(SERIES_VIEWER):
             viewer = wezel.widgets.SeriesViewerMetaData(series)
             app.addAsSubWindow(viewer, title=series.label())
+
+
 
 
 class CloseWindows(wezel.Action):

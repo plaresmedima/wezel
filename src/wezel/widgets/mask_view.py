@@ -13,7 +13,7 @@ from matplotlib.path import Path as MplPath
 
 from PyQt5.QtCore import Qt, QPointF, QRectF, pyqtSignal
 from PyQt5.QtGui import QPixmap, QImage, qRgb, QIcon, QCursor, QColor, QPen
-from PyQt5.QtWidgets import QGraphicsObject, QAction, QAction, QMenu
+from PyQt5.QtWidgets import QGraphicsObject, QAction, QMenu
 
 from .. import widgets as widgets
 
@@ -110,7 +110,10 @@ class MaskItem(QGraphicsObject):
     def __init__(self, mask=None, shape=None): 
         super().__init__()
 
+        self.bin = None
+        self.qImage = None
         self.mask = mask
+        
         self._setMaskImage(shape=shape)
 
     def _setMaskImage(self, shape=(128,128)):
