@@ -444,7 +444,6 @@ class ImageItem(QGraphicsObject):
     def __init__(self, image): 
         super().__init__()
 
-        #self.view = view
         self.boundingRectangle = QRectF(0, 0, 128, 128)
         self.setAcceptHoverEvents(True)
         self.setFlag(QGraphicsItem.ItemIsFocusable)
