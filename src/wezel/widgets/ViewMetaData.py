@@ -126,11 +126,13 @@ class SeriesViewerMetaData(QWidget):
         header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(3, QHeaderView.ResizeMode(QHeaderView.AdjustToContentsOnFirstShow))
 
+
     def createScrollableLabel(self, rowPosition, valueMetadata):
         scrollableLabel = ScrollLabel()
         scrollableLabel.setText(valueMetadata)
         self.tableWidget.setCellWidget(rowPosition , 3, scrollableLabel)
         self.tableWidget.resizeRowToContents(rowPosition)
+
 
     def populateTable(self):
         """Builds a Table View displaying DICOM image metadata
@@ -222,7 +224,7 @@ class SeriesViewerMetaData(QWidget):
         try:
             for data_element in dataset:
                 if isinstance(data_element, pydicom.dataset.Dataset):
-                    self.iterateSequenceTag(table, data_element, level='>')
+                    self.iterateSequenceTag(table, data_element, level=' > ')
                 else:
                     rowPosition = table.rowCount()
                     table.insertRow(rowPosition)
@@ -242,7 +244,7 @@ class SeriesViewerMetaData(QWidget):
                         valueMetadata =  str(data_element.value)
                     
                     if data_element.VR == "SQ":
-                        level+='>'
+                        level+=' > '
                         self.iterateSequenceTag(table, data_element, level)
                     else:
                         table.setItem(rowPosition , 3, QTableWidgetItem(valueMetadata))
