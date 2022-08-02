@@ -15,8 +15,6 @@ __all__ = [
 import math
 import numpy as np
 from matplotlib.path import Path as MplPath
-import actions.reggrow as reg
-import actions.edgeDetection as seg
 import cv2 as cv2
 import time
 from skimage import feature
@@ -635,8 +633,8 @@ class MaskViewRegionGrowing(MaskViewPenFreehand):
                 radius = self.radius
                 seedThreshold = 1.5*np.sqrt(np.var(img_array_Blurred[int(self.center[0])-int(radius):int(self.center[0])+int(radius),int(self.center[1])-int(radius):int(self.center[1])+int(radius)]))
 
-            seeds = [reg.Point(self.x,self.y)]
-            pixels = reg.regionGrow(img_array_Blurred,seeds,seedThreshold)
+            seeds = [Point(self.x,self.y)]
+            pixels = regionGrow(img_array_Blurred,seeds,seedThreshold)
             yx_corr = np.column_stack(np.where(pixels==1))                
             for p in yx_corr: self.maskItem.setPixel(p[0],p[1],True)
             self.path = None
@@ -719,16 +717,19 @@ class MaskViewEdgeDetection(MaskViewPenFreehand):
         self.x = int(event.pos().x())
         self.y = int(event.pos().y())
 
+    
     def edgeCalculation(self,p):
 
         im = self.item.image
         array = im.array()
         pixelSize = im.PixelSpacing
-        pixels = seg.kidneySegmentation(array,p[1],p[0],pixelSize,side=None)
+        pixels = kidneySegmentation(array,p[1],p[0],pixelSize,side=None)
         yx_corr = np.column_stack(np.where(pixels==1))                
         for p in yx_corr: self.maskItem.setPixel(p[0],p[1],True)
         self.path = None
         self.maskItem.update
+    
+    
 
 class MaskViewErode(MaskViewPenFreehand):
     """Erode Button.
@@ -770,8 +771,8 @@ class MaskViewErode(MaskViewPenFreehand):
             if self.mode == "SingleROI":
                 if im[p[0],p[1]] ==1:
                     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (self.kernelSize, self.kernelSize))
-                    seeds = [reg.Point(p[0],p[1])]
-                    pixels = reg.regionGrow(im,seeds,1)                
+                    seeds = [Point(p[0],p[1])]
+                    pixels = regionGrow(im,seeds,1)                
                     im = im*pixels
                 else:
                     pass #display a message that no ROI was selected
@@ -902,8 +903,8 @@ class MaskViewDilate(MaskViewPenFreehand):
 
                 if im[p[0],p[1]] ==1:
                     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (self.kernelSize, self.kernelSize))
-                    seeds = [reg.Point(p[0],p[1])]
-                    pixels = reg.regionGrow(im,seeds,1)
+                    seeds = [Point(p[0],p[1])]
+                    pixels = regionGrow(im,seeds,1)
                     im = im*pixels
                 else:
                     pass #display a message that no ROI was selected
@@ -1012,8 +1013,8 @@ class MaskViewDeleteROI(MaskViewPenFreehand):
             p = [self.x, self.y]
             im = self.maskItem.bin.astype(np.uint8)
             if im[p[0],p[1]] ==1:
-                seeds = [reg.Point(p[0],p[1])]
-                pixels = reg.regionGrow(im,seeds,1)
+                seeds = [Point(p[0],p[1])]
+                pixels = regionGrow(im,seeds,1)
                 yx_corr = np.column_stack(np.where(pixels==1))                
                 for p in yx_corr: self.maskItem.setPixel(p[0],p[1],False)
                 self.maskItem.update()
@@ -1024,3 +1025,145 @@ class MaskViewDeleteROI(MaskViewPenFreehand):
 
         self.x = int(event.pos().x())
         self.y = int(event.pos().y())
+
+class Point(object):
+ def __init__(self,x,y):
+  self.x = x
+  self.y = y
+
+ def getX(self):
+  return self.x
+ def getY(self):
+  return self.y
+
+def getGrayDiff(img,currentPoint,tmpPoint):
+ return abs(int(img[currentPoint.x,currentPoint.y]) - int(img[tmpPoint.x,tmpPoint.y]))
+
+def selectConnects(p):
+ if p != 0:
+  connects = [Point(-1, -1), Point(0, -1), Point(1, -1), Point(1, 0), Point(1, 1), \
+     Point(0, 1), Point(-1, 1), Point(-1, 0)]
+ else:
+  connects = [ Point(0, -1), Point(1, 0),Point(0, 1), Point(-1, 0)]
+ return connects
+
+def regionGrow(img,seeds,thresh,p = 1):
+ height, weight = img.shape
+ seedMark = np.zeros(img.shape)
+ seedList = []
+ for seed in seeds:
+  seedList.append(seed)
+ label = 1
+ connects = selectConnects(p)
+ while(len(seedList)>0):
+  currentPoint = seedList.pop(0)
+
+  seedMark[currentPoint.x,currentPoint.y] = label
+  for i in range(8):
+   tmpX = currentPoint.x + connects[i].x
+   tmpY = currentPoint.y + connects[i].y
+   if tmpX < 0 or tmpY < 0 or tmpX >= height or tmpY >= weight:
+    continue
+   grayDiff = getGrayDiff(img,currentPoint,Point(tmpX,tmpY))
+   if grayDiff < thresh and seedMark[tmpX,tmpY] == 0:
+    seedMark[tmpX,tmpY] = label
+    seedList.append(Point(tmpX,tmpY))
+ return seedMark
+
+
+
+def kidneySegmentation(img_array,pixelY,pixelX,pixelSize,side=None):
+
+        img_array_Blurred = cv2.GaussianBlur(img_array, (31,31),cv2.BORDER_DEFAULT)
+
+        KidneyBlurred = np.zeros(np.shape(img_array_Blurred))
+        if pixelX>img_array.shape[0]/2:
+            KidneyBlurred[int(np.shape(img_array_Blurred)[0]/2):np.shape(img_array_Blurred)[0],:] = img_array_Blurred[int(np.shape(img_array_Blurred)[0]/2):np.shape(img_array_Blurred)[0],:]
+        if pixelX<img_array.shape[0]/2:
+            KidneyBlurred[0:int(np.shape(img_array_Blurred)[0]/2),:] = img_array_Blurred[0:int(np.shape(img_array_Blurred)[0]/2),:]
+
+        sigmaCanny = 0
+        edges = feature.canny(KidneyBlurred, sigma =sigmaCanny)
+        edges= edges.astype(np.uint8)
+        #plt.imshow(edges)
+
+        maxIteration = 10
+        maxIteration_2 =5
+
+        Kidney=[]
+        #dilate edges until you find a potential renal contour 
+        for j in range(maxIteration):
+
+            kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(1+j,1+j))
+            dilated = cv2.dilate(edges, kernel)
+            #plt.imshow(dilated)
+            cnts_Kidney,hierarchy_Kidney = cv2.findContours(dilated.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+            cnts_Kidney = sorted(cnts_Kidney, key=cv2.contourArea, reverse=True)
+
+            #loop through the different contours until you find a potential renal contour 
+            for i in range(len(cnts_Kidney)):
+                cntTemp = cnts_Kidney[i]
+                #print(i)
+                #print(cv2.contourArea(cntTemp))
+                #print(cv2.pointPolygonTest(cntTemp,(pixelY,pixelX),True))
+
+                #Kidney = cntTemp
+                #mask_Kidney = np.ones(np.shape(img_array))
+                #cv2.drawContours(mask_Kidney,[Kidney],0,(0,255,0),thickness=cv2.FILLED)
+                #mask_Kidney = np.abs(mask_Kidney + 1 - 2)
+                #plt.imshow(mask_Kidney)
+                #Kidney = []
+
+                if cv2.contourArea(cntTemp)*pixelSize[0]*pixelSize[1]>1500: #check if the area of the contour is suitable with the kidneys
+
+                    dist = cv2.pointPolygonTest(cntTemp,(pixelY,pixelX),True)
+                    
+                    if dist > 0:
+                        #print('Dilation iteration: ' +str(j))
+                        #print('Contour Number: ' +str(i))
+                        #print('Distance: ' +str(dist))
+                        #print('ROI Area: ' +str(cv2.contourArea(cntTemp)) +' pixels')
+                        #print('Son: '+str(hierarchy_Kidney[0,i][2]))
+                        #print('Grandfather: '+str(hierarchy_Kidney[0,i][3]))
+
+                        Kidney = cntTemp
+                        mask_Kidney = np.ones(np.shape(img_array))
+                        cv2.drawContours(mask_Kidney,[Kidney],0,(0,255,0),thickness=cv2.FILLED)
+                        mask_Kidney = np.abs(mask_Kidney + 1 - 2)
+                        
+                        kernel_mask = np.ones((j+3,j+3)).astype(np.uint8)
+                        edges_Kidney_new = (cv2.erode(mask_Kidney,kernel_mask)*edges).astype(np.uint8)
+                        
+                        kernel_new = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(1,1))
+                        edges_Kidney_new = cv2.erode(edges_Kidney_new,kernel_new).astype(np.uint8)
+                        edges_Kidney_new = cv2.dilate(edges_Kidney_new,kernel_new).astype(np.uint8)
+
+                        edges_Kidney_new_dilated = cv2.dilate(edges_Kidney_new, kernel_new)
+                        cnts_Kidney_new,hierarchy_Kidney_new = cv2.findContours(edges_Kidney_new_dilated.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) 
+                        cnts_Kidney_new_Sorted = sorted(cnts_Kidney_new, key=cv2.contourArea, reverse=True)
+
+                        #check if contours needed to be removed from the main mask (nasty pelvis pixels)
+                        for i_2 in range(len(cnts_Kidney_new_Sorted)):
+                            cntTemp_new = cnts_Kidney_new_Sorted[i_2]
+                            if cv2.contourArea(cntTemp_new)==0:
+                                break
+
+                            cntHull = cv2.convexHull(cntTemp_new, returnPoints=True)
+                            #mask_Kidney_son = np.ones(np.shape(img_array))
+                            #cv2.drawContours(mask_Kidney_son,[cntHull],0,(0,255,0),thickness=cv2.FILLED)
+                            #plt.imshow(mask_Kidney_son)
+
+
+                            if (cv2.contourArea(cntHull) < 0.5*cv2.contourArea(cntTemp) and cv2.contourArea(cntHull) > 0.03*cv2.contourArea(cntTemp)):
+                                
+                                Kidney_son = cntHull
+
+                                mask_Kidney_son = np.ones(np.shape(img_array))
+                                cv2.drawContours(mask_Kidney_son,[Kidney_son],0,(0,255,0),thickness=cv2.FILLED)
+                                mask_Kidney_son = np.abs(mask_Kidney_son + 1 - 2)
+                                mask_Kidney = mask_Kidney - mask_Kidney_son
+                                mask_Kidney[mask_Kidney<0]=0
+
+                if Kidney!=[]:
+                    #print(' Kindey Found')
+                    return mask_Kidney
