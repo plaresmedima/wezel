@@ -633,7 +633,7 @@ class MaskViewRegionGrowing(MaskViewPenFreehand):
                 radius = self.radius
                 seedThreshold = 1.5*np.sqrt(np.var(img_array_Blurred[int(self.center[0])-int(radius):int(self.center[0])+int(radius),int(self.center[1])-int(radius):int(self.center[1])+int(radius)]))
 
-            seeds = [Point(self.x,self.y)]
+            seeds = [Point(int(self.center[0]),int(self.center[1]))]
             pixels = regionGrow(img_array_Blurred,seeds,seedThreshold)
             yx_corr = np.column_stack(np.where(pixels==1))                
             for p in yx_corr: self.maskItem.setPixel(p[0],p[1],True)
