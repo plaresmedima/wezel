@@ -4,7 +4,12 @@ __all__ = [
     'MaskViewPenFreehand',
     'MaskViewPenRectangle', 
     'MaskViewPenPolygon', 
-    'MaskViewPenCircle'
+    'MaskViewPenCircle',
+    'MaskViewRegionGrowing',
+    'MaskViewDeleteROI',
+    'MaskViewEdgeDetection',
+    'MaskViewErode',
+    'MaskViewDilate'
 ]
 
 import math
