@@ -775,7 +775,7 @@ class MaskViewErode(MaskViewPenFreehand):
                     pixels = regionGrow(im,seeds,1)                
                     im = im*pixels
                 else:
-                    pass #display a message that no ROI was selected
+                    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (self.kernelSize, self.kernelSize))
             if self.mode == "AllROI":
                 kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (self.kernelSize, self.kernelSize))
                 
@@ -907,7 +907,7 @@ class MaskViewDilate(MaskViewPenFreehand):
                     pixels = regionGrow(im,seeds,1)
                     im = im*pixels
                 else:
-                    pass #display a message that no ROI was selected
+                    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (self.kernelSize, self.kernelSize)) #display a message that no ROI was selected
             elif self.mode == "AllROI":
                 kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (self.kernelSize, self.kernelSize))
 
