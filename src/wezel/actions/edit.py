@@ -108,7 +108,6 @@ class Rename(wezel.Action):
         app.status.hide()
         app.refresh()
 
-
 class Extract(wezel.Action):
 
     def enable(self, app):

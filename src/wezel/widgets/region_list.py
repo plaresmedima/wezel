@@ -6,9 +6,9 @@ from PyQt5.QtWidgets import (
     QWidget, 
     QComboBox, 
     QHBoxLayout, 
-    QPushButton, 
-)
-from .UserInput import userInput
+    QPushButton)
+
+from .UserInput import ParameterInputDialog as paramInputDialog
 from . import icons
 
 class RegionList(QWidget):
