@@ -1,3 +1,5 @@
+__all__ = ['ParameterInputDialog']
+
 from ast import literal_eval
 
 from PyQt5.QtWidgets import (QDialog, QFormLayout, QDialogButtonBox, QComboBox,

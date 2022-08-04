@@ -28,5 +28,4 @@ class Test_UserInput(wezel.Action):
             title = "Can we have some input?")
         if not cancel: 
             for field in input:
-                print(field["label"])
-                print(field["value"])
+                print(field["label"], ': ', field["value"])

@@ -11,7 +11,7 @@ from PyQt5.QtWidgets import (
 )
 
 
-from .UserInput import ParameterInputDialog
+from .user_input import ParameterInputDialog
 
  
 class Dialog():
