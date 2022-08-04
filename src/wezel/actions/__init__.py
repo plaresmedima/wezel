@@ -4,6 +4,7 @@ from . import (
     edit,
     folder,
     view,
+    test
 )
 
 
