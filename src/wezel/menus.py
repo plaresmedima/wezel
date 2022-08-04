@@ -6,7 +6,7 @@ def dicom(parent):
     wezel.actions.edit.all(parent.menu('Edit'))
     wezel.actions.view.all(parent.menu('View'))
     wezel.actions.about.all(parent.menu('About'))
-    wezel.actions.about.all(parent.menu('Test'))
+    wezel.actions.test.all(parent.menu('Test'))
 
 def about(parent): 
 
