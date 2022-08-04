@@ -32,6 +32,7 @@ class RegionViewerDev(QWidget):
         if series is not None:
             self.setData(series)
 
+
     def _setWidgets(self, dimensions=[]):
 
         self.imageSliders = widgets.ImageSliders(dimensions=dimensions)
@@ -83,6 +84,20 @@ class RegionViewerDev(QWidget):
         self.imageSliders.valueChanged.connect(self._currentImageChanged)
         self.colors.valueChanged.connect(self._currentImageEdited)
         self.view.imageUpdated.connect(self.colors.setValue)
+
+    def closeEvent(self, event):
+
+        reply = self.series.dialog.question( 
+            title = 'Closing ROI window', 
+            message = 'Save all ROIs before closing?',
+            cancel = True, 
+        )
+        if reply == "Cancel": 
+            event.ignore()
+        elif reply == "Yes":
+            self.regionList.writeAllRegions()
+        elif reply == 'No':
+            self.regionList.removeAllRegions()
 
     def setData(self, series):
 
