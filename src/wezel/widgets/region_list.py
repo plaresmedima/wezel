@@ -6,9 +6,8 @@ from PyQt5.QtWidgets import (
     QWidget, 
     QComboBox, 
     QHBoxLayout, 
-    QPushButton, 
-)
-from .UserInput import userInput
+    QPushButton)
+
 from . import icons
 
 class RegionList(QWidget):
@@ -212,7 +211,7 @@ class RegionList(QWidget):
         seriesLabels = [series.SeriesDescription for series in seriesList]
 
         # Ask the user to select series to import as regions
-        cancel, input = userInput(
+        cancel, input = self._underlay.dialog.input(
             {"label":"Series:", "type":"listview", "list": seriesLabels},
             title = "Please select series to import as Regions", 
         )
