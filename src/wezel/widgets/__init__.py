@@ -27,3 +27,4 @@ from .series_display import *
 from .image_display import *
 from .user_input import *
 from .view_meta_data import *
+from .log_to_GUI import *
