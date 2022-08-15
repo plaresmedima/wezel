@@ -50,14 +50,16 @@ class Worker(QRunnable):
       args: Arguments to pass to the callback function
       kwargs: Keywords to pass to the callback function
       """
-      def __init__(self, func, *args, **kwargs):
+      def __init__(self, func, **kwargs):
           super().__init__()
           self._func = func
-          self.args = args
-          self.kwargs = kwargs
+          #self.args = args
           self.signals = WorkerSignals()
           # Add the signals object to the kwargs
           kwargs["signals"] = self.signals
+          self.kwargs = kwargs
+          print("self.kwargs={}".format(self.kwargs))
+
 
 
       @pyqtSlot()
@@ -68,7 +70,7 @@ class Worker(QRunnable):
           to the GUI.
           """
           try:
-            result = self._func(*self.args, **self.kwargs)
+            result = self._func(**self.kwargs)
           except Exception:
               traceback.print_exc()
               exctype, value = sys.exc_info()[:2]
@@ -91,11 +93,13 @@ class LoggingWidget(QWidget):
       func: The callback function containing a long-running calculation. 
       title: Text to appear on the first line of the plain text textbox
     """
-    def __init__(self, func, title="Progress Log"):
+    def __init__(self, func, **kwargs):
           super().__init__()
-          self._fuction = func
+          self._function = func
+          self.kwargs = kwargs
+          print("LoggingWidget self.kwargs={}".format(self.kwargs))
           layout = QVBoxLayout()
-          self.displayLogs = QPlainTextEdit(title)
+          self.displayLogs = QPlainTextEdit()
           self.displayLogs.setReadOnly(True)
           layout.addWidget(self.displayLogs)
           self.setLayout(layout)
@@ -113,7 +117,7 @@ class LoggingWidget(QWidget):
         Additionally, it sets up communication of status from the callback function
         to the plain text textbox in the GUI thread.
         """
-        worker = Worker(self._fuction)
+        worker = Worker(self._function, **self.kwargs)
         worker.signals.log.connect(self.logProgress)
         worker.signals.result.connect(self.logResult)
         worker.signals.finished.connect(self.logFinished)

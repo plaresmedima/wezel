@@ -1,8 +1,8 @@
 import wezel
 import time
 
-def myFunction(signals):
-  for n in range(0, 5):
+def myFunction(start, end, signals):
+  for n in range(start, end):
     time.sleep(2)
     signals.log.emit("Message " + str(n))
   signals.result.emit("Result of the calculation") 
@@ -18,7 +18,7 @@ class Test_LoggingToGUI(wezel.Action):
         return True
 
     def run(self, app):
-        viewer = wezel.widgets.LoggingWidget(myFunction)
+        viewer = wezel.widgets.LoggingWidget(myFunction, start=2,end=6)
         app.addAsSubWindow(viewer, "Test Logging to GUI")
 
 
