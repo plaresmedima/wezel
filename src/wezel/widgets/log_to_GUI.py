@@ -1,6 +1,6 @@
 """
 This module contains classes for the creation of a widget to display status updates
-from a calculation, running in its own thread, on the GUI.
+on the GUI from a calculation running in its own thread.
 """
 import sys
 import datetime
@@ -47,19 +47,15 @@ class Worker(QRunnable):
       Input arguments:
       ****************
       func: The callback function containing a long-running calculation. 
-      args: Arguments to pass to the callback function
-      kwargs: Keywords to pass to the callback function
+      kwargs: Keyword arguments to pass to the callback function
       """
       def __init__(self, func, **kwargs):
           super().__init__()
           self._func = func
-          #self.args = args
           self.signals = WorkerSignals()
           # Add the signals object to the kwargs
           kwargs["signals"] = self.signals
           self.kwargs = kwargs
-          print("self.kwargs={}".format(self.kwargs))
-
 
 
       @pyqtSlot()
@@ -97,7 +93,6 @@ class LoggingWidget(QWidget):
           super().__init__()
           self._function = func
           self.kwargs = kwargs
-          print("LoggingWidget self.kwargs={}".format(self.kwargs))
           layout = QVBoxLayout()
           self.displayLogs = QPlainTextEdit()
           self.displayLogs.setReadOnly(True)
@@ -105,7 +100,7 @@ class LoggingWidget(QWidget):
           self.setLayout(layout)
           self.threadpool = QThreadPool()
           #Comment out the next line of code if you wish to trigger
-          #execution of the callback function by a button press
+          #execution of the callback function by a button press on the GUI
           self.executeFunction()  
 
 
@@ -116,13 +111,16 @@ class LoggingWidget(QWidget):
 
         Additionally, it sets up communication of status from the callback function
         to the plain text textbox in the GUI thread.
+
+        Connect this function to the  clicked() signal of a QPushButton if you wish to
+        start with calculation with a button click.
         """
         worker = Worker(self._function, **self.kwargs)
         worker.signals.log.connect(self.logProgress)
         worker.signals.result.connect(self.logResult)
         worker.signals.finished.connect(self.logFinished)
         worker.signals.progress.connect(self.logProgress)
-        # Execute
+        # Start the calculation in its own thread
         self.threadpool.start(worker)
           
 

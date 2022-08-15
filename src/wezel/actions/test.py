@@ -1,12 +1,12 @@
 import wezel
 import time
 
-def myFunction(start, end, signals):
+def testFunction(start, end, signals):
+  signals.log.emit("Calculation Started")
   for n in range(start, end):
-    time.sleep(2)
-    signals.log.emit("Message " + str(n))
-  signals.result.emit("Result of the calculation") 
-  return "Done."
+    time.sleep(1)
+    signals.log.emit("Message " + str(n))  
+  return "Result of the calculation"
 
 def all(parent):
     parent.action(Test_UserInput, text='Test UserInput')
@@ -18,8 +18,8 @@ class Test_LoggingToGUI(wezel.Action):
         return True
 
     def run(self, app):
-        viewer = wezel.widgets.LoggingWidget(myFunction, start=2,end=6)
-        app.addAsSubWindow(viewer, "Test Logging to GUI")
+        window = wezel.widgets.LoggingWidget(testFunction, start=1,end=10)
+        app.addAsSubWindow(window, "Test Logging to GUI")
 
 
 class Test_UserInput(wezel.Action):
