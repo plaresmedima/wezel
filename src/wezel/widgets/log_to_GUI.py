@@ -49,14 +49,15 @@ class Worker(QRunnable):
       func: The callback function containing a long-running calculation. 
       kwargs: Keyword arguments to pass to the callback function
       """
-      def __init__(self, func, **kwargs):
+      def __init__(self, func, *args, **kwargs):
           super().__init__()
           self._func = func
+          self.args = args
           self.signals = WorkerSignals()
           # Add the signals object to the kwargs
           kwargs["signals"] = self.signals
           self.kwargs = kwargs
-
+          
 
       @pyqtSlot()
       def run(self):
@@ -66,7 +67,7 @@ class Worker(QRunnable):
           to the GUI.
           """
           try:
-            result = self._func(**self.kwargs)
+            result = self._func(*self.args, **self.kwargs)
           except Exception:
               traceback.print_exc()
               exctype, value = sys.exc_info()[:2]
@@ -89,9 +90,10 @@ class LoggingWidget(QWidget):
       func: The callback function containing a long-running calculation. 
       title: Text to appear on the first line of the plain text textbox
     """
-    def __init__(self, func, **kwargs):
+    def __init__(self, func, *args, **kwargs):
           super().__init__()
           self._function = func
+          self.args = args
           self.kwargs = kwargs
           layout = QVBoxLayout()
           self.displayLogs = QPlainTextEdit()
@@ -115,7 +117,7 @@ class LoggingWidget(QWidget):
         Connect this function to the  clicked() signal of a QPushButton if you wish to
         start with calculation with a button click.
         """
-        worker = Worker(self._function, **self.kwargs)
+        worker = Worker(self._function, *self.args, **self.kwargs)
         worker.signals.log.connect(self.logProgress)
         worker.signals.result.connect(self.logResult)
         worker.signals.finished.connect(self.logFinished)
