@@ -115,7 +115,7 @@ class LoggingWidget(QWidget):
         to the plain text textbox in the GUI thread.
 
         Connect this function to the  clicked() signal of a QPushButton if you wish to
-        start with calculation with a button click.
+        start with calculation with the click of a  button on the GUI.
         """
         worker = Worker(self._function, *self.args, **self.kwargs)
         worker.signals.log.connect(self.logProgress)
