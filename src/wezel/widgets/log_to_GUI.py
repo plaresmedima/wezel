@@ -5,8 +5,7 @@ on the GUI from a calculation running in its own thread.
 import sys
 import datetime
 import traceback
-from PyQt5.QtCore import (QObject, QRunnable, QThreadPool, QTimer, 
-                pyqtSignal, pyqtSlot)
+from PyQt5.QtCore import (QObject, QRunnable, QThreadPool, pyqtSignal, pyqtSlot)
 from PyQt5.QtWidgets import (QVBoxLayout, QWidget, QPlainTextEdit)
 
 
@@ -125,10 +124,6 @@ class LoggingWidget(QWidget):
         # Start the calculation in its own thread
         self.threadpool.start(worker)
           
-
-    def logProgress(self, text):
-        self.displayLogs.appendPlainText(str(datetime.datetime.now())[:19] + ': ' + text)
-
 
     def logProgress(self, text):
         self.displayLogs.appendPlainText(str(datetime.datetime.now())[:19] + ': ' + text)

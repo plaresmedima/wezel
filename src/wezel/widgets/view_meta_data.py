@@ -254,21 +254,6 @@ class SeriesViewerMetaData(QWidget):
             #logger.error('Error in : SeriesViewerMetaData.iterateSequenceTag' + str(e))
 
 
-    def show_dataset(self, dataset, order, indent=""):
-        try:
-            print("order={}".format(order))
-            for data_element in dataset:
-                print("data_element={}".format(data_element))
-                if data_element.VR == "SQ":
-                    indent += 4 * " "
-                    for item in data_element:
-                        show_dataset(item, indent)
-                    indent = indent[4:]
-                print(indent + str(elem))
-        except Exception as e:
-            print('Error in : SeriesViewerMetaData.show_dataset' + str(e))
-
-
     def exportToFile(self, parent, excel=False, csv=False):
         try:
             columHeaders = []
