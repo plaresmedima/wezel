@@ -33,6 +33,8 @@ class Worker(QRunnable):
       """
       This class allows a long-running calculation to run in its own thread, 
       the Worker thread, separate from the thread that the GUI is run in.
+
+      Threads run in the same memory space, Processes run in a separate memory space.
       
       The function containing the long-running calculation is passed as an object
       into this class's object constructor.
