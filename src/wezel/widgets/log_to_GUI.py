@@ -45,7 +45,8 @@ class Worker(QRunnable):
         
       Input arguments:
       ****************
-      func: The callback function containing a long-running calculation. 
+      func: The callback function containing a long-running calculation as an object. 
+      args: arguments to pass to the callback function
       kwargs: Keyword arguments to pass to the callback function
       """
       def __init__(self, func, *args, **kwargs):
@@ -86,8 +87,9 @@ class LoggingWidget(QWidget):
 
     Input arguments:
     ****************
-      func: The callback function containing a long-running calculation. 
-      title: Text to appear on the first line of the plain text textbox
+      func: The callback function containing a long-running calculation as an object. 
+      args: arguments to pass to the callback function
+      kwargs: Keyword arguments to pass to the callback function
     """
     def __init__(self, func, *args, **kwargs):
           super().__init__()
