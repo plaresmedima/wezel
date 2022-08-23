@@ -1,3 +1,5 @@
+"""This module contains custom widgets for the display DICOM Series Metadata in a table."""
+
 __all__ = ['SeriesViewerMetaData']
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (QFileDialog, QLineEdit, QApplication,                           
