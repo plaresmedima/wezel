@@ -19,6 +19,14 @@ def test_Copy(series_list, signals):
     return "Copying complete"
 
 
+def test_export(series, path,signals):
+    signals.log.emit("Start exporting series")
+    for s in series:
+        signals.log.emit("Exporting {} series to {}".format(s.label(), path))
+        s.export(path)
+    return "Series export complete"   
+
+
 def test_array_copy(start, end, signals):
     signals.log.emit("Copying arrays started")      
     for n in range(start, end):
@@ -55,6 +63,7 @@ def all(parent):
     parent.action(Test_ArrayCopy, text='Test Array Copy & Logging to GUI')
     parent.action(Test_FileWrite, text='Test Write to File & Logging to GUI')
     parent.action(Test_Copy, text='Test Copy Series & Logging to GUI')
+    parent.action(Test_Export, text='Test Export Series & Logging to GUI')
     
     
 
@@ -122,4 +131,20 @@ class Test_ArrayCopy(wezel.Action):
        
     def run(self, app):
         window = wezel.widgets.LoggingWidget(test_array_copy, start=10,end=20)
+        app.addAsSubWindow(window, "Test Logging to GUI while copying numpy arrays")
+
+
+class Test_Export(wezel.Action):
+    """Export selected series"""
+
+    def enable(self, app):
+
+        if not hasattr(app, 'folder'):
+            return False
+        return app.nr_selected(3) != 0
+
+    def run(self, app):
+        series = app.get_selected(3)
+        path = app.dialog.directory("Where do you want to export the data?")
+        window = wezel.widgets.LoggingWidget(test_export, series=series, path=path)
         app.addAsSubWindow(window, "Test Logging to GUI while copying numpy arrays")
