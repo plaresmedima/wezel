@@ -27,4 +27,5 @@ from .region_list import *
 from .region_draw import *
 from .series_display import *
 from .image_display import *
-from .ViewMetaData import *
+from .user_input import *
+from .view_meta_data import *
