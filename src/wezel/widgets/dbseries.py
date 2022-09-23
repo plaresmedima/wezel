@@ -247,15 +247,61 @@ class ImageSliders(QWidget):
 
     def _setSliderValues(self):
         
-        if self.image is None: return
-
+        if self.image is None: 
+            return
         self._setActiveSliderValues()
         self._setMainSliderValue()
 
+    def move(self, slider, direction):
+        """
+        Move the sliders by one step forwards or backwards.
+
+        Arguments
+        ---------
+        slider : either first or second slider
+        direction : either +1 (forwards) or -1 (backwards)
+        """
+        active = self._activeSliders
+        if self.sliders[0].isHidden():
+
+            if slider == 'first':
+                sldr = active[0]
+                index = sldr.index() + direction
+                if sldr.setIndex(index):
+                    self._sliderValueChanged()
+            else:
+                if len(active) > 1:
+                    sldr = active[1]
+                else:
+                    sldr = active[0]
+                index = sldr.index() + direction
+                if sldr.setIndex(index):
+                    self._sliderValueChanged()
+
+        else: # main slider is visible
+
+            if slider == 'first':
+                sldr = self.sliders[0]
+                index = sldr.index() + direction
+                if sldr.setIndex(index):
+                    self._mainSliderValueChanged()
+            else: 
+                if len(active) > 0:
+                    sldr = active[0]
+                    index = sldr.index() + direction
+                    if sldr.setIndex(index):
+                        self._sliderValueChanged()
+                else:
+                    sldr = self.sliders[0]
+                    index = sldr.index() + direction
+                    if sldr.setIndex(index):
+                        self._mainSliderValueChanged()
+
+
     def _setActiveSliderValues(self):
 
-        if self.image is None: return
-
+        if self.image is None: 
+            return
         find = self.dataFrame.SOPInstanceUID == self.image.UID[-1]
         row = self.dataFrame.loc[find]
         for slider in self._activeSliders:
@@ -264,8 +310,8 @@ class ImageSliders(QWidget):
 
     def _setMainSliderValue(self):
 
-        if self.image is None: return
-
+        if self.image is None: 
+            return
         imageUIDs = self._getAllSelectedImages()
         if len(imageUIDs) <= 1:
             self.sliders[0].hide()

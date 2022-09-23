@@ -111,7 +111,15 @@ class LabelSlider(QGroupBox):
         return self.values[index-1]
 
     def index(self):
-        return self.slider.index-1
+        return self.slider.value()-1
+
+    def setIndex(self, index):
+        if index < 0:
+            return False
+        if index > len(self.values)-1:
+            return False
+        self.slider.setValue(index+1)
+        return True
 
 
 class CheckBoxSlider(QGroupBox):
@@ -210,3 +218,14 @@ class CheckBoxSlider(QGroupBox):
 
         index = self.slider.value()
         return self.values[index-1]
+
+    def index(self):
+        return self.slider.value()-1
+
+    def setIndex(self, index):
+        if index < 0:
+            return False
+        if index > len(self.values)-1:
+            return False
+        self.slider.setValue(index+1)
+        return True

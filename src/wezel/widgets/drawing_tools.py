@@ -1,9 +1,73 @@
-__all__ = ['MaskViewToolBox']
+__all__ = ['ToolBox', 'MaskViewToolBox']
 
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QPushButton
 
 from .. import widgets as widgets
+
+
+
+class ToolBox(QWidget):
+    """General purpose toolbox for cursor tools"""
+
+    newTool = pyqtSignal()
+    
+    def __init__(self, *tools):
+        super().__init__()
+
+        self.buttons = {}
+        self.current = tools[0].__class__.__name__
+        self._defineWidgets(*tools)
+        self._defineLayout()
+        self.setTool(self.current)
+
+    def _defineWidgets(self, *tools):
+
+        for tool in tools:
+            self._defineButton(tool)
+
+    def _defineButton(self, tool):
+
+        key = tool.__class__.__name__
+        self.buttons[key] = QPushButton()
+        self.buttons[key].setToolTip(tool.toolTip)
+        self.buttons[key].setCheckable(True)
+        self.buttons[key].setIcon(tool.icon)
+        self.buttons[key].tool = tool
+        self.buttons[key].clicked.connect(lambda: self._buttonClicked(key))     
+
+    def _defineLayout(self):
+
+        layout = QHBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        for button in self.buttons.values():
+            layout.addWidget(button, alignment=Qt.AlignLeft)
+        self.setLayout(layout)
+
+    def _buttonClicked(self, key):
+
+        self.setTool(key)
+        self.newTool.emit()
+
+    def setTool(self, key):
+        
+        #self.buttons[self.current].blockSignals(True)
+        self.buttons[self.current].setChecked(False)
+        #self.buttons[self.current].blockSignals(False)
+        self.current = key
+        #self.buttons[self.current].blockSignals(True)
+        self.buttons[self.current].setChecked(True)
+        #self.buttons[self.current].blockSignals(False)
+
+    def getTool(self):
+
+        return self.buttons[self.current].tool
+
+    def allTools(self):
+
+        return [button.tool for button in self.buttons.values()]
+
 
 class MaskViewToolBox(QWidget):
 

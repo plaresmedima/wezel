@@ -4,6 +4,8 @@ in `wezel` applications.
 
 """
 
+from .series_display_dev import *
+
 from .dbimage import *
 from .dbseries import *
 

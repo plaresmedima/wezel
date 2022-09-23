@@ -42,11 +42,11 @@ class RegionList(QWidget):
 
         if regions == None:
             region = self._underlay.parent.new_child()
-            self.regions = [region]
+            self.regions = [region.read()]
         else:
-            self.regions = regions
-        for region in self.regions: 
-            region.read()
+            self.regions = [region.read() for region in regions] 
+#        for region in self.regions: 
+#            region.read()
 
         self.comboBox.blockSignals(True)
         self.comboBox.clear()
@@ -135,8 +135,8 @@ class RegionList(QWidget):
         self.btnNew.clicked.connect(self._newRegion)
         self.btnDelete.clicked.connect(self._deleteRegion)
     #    self.btnReset.clicked.connect(self.maskView.eraseMask)
-        self.btnWrite.clicked.connect(self._writeCurrentRegion)
-        self.btnWrite.clicked.connect(self.dataWritten.emit)
+        self.btnWrite.clicked.connect(self.writeAllRegions)
+    #    self.btnWrite.clicked.connect(self.dataWritten.emit)
         
     @property
     def _currentRegion(self):
@@ -149,23 +149,30 @@ class RegionList(QWidget):
 
         items = []
         for region in self.regions:
-            if region.data().empty:
+            if region.empty():
                 item = 'New Region'
             else:
                 item = region.SeriesDescription
             items.append(item)
         return items
 
-    def _writeCurrentRegion(self):
+    def writeAllRegions(self):
 
-        text = self.comboBox.currentText()
-        self._currentRegion.SeriesDescription = text
-        self._currentRegion.write()
+        for i, region in enumerate(self.regions):
+            text = self.comboBox.itemText(i)
+            region.SeriesDescription = text # requires __setattr__ and __setitem__ in DataSet
+            self._underlay.parent.write(region) # requires write(DataSet)
+        self.dataWritten.emit()  
 
+    def removeAllRegions(self):
+
+        for region in self.regions:
+            region.remove()  # implement
+        
     def _newRegion(self):
 
         region = self._underlay.parent.new_child()
-        region.read()
+        #region.read()
         self.regions.append(region) # add to the list
         description = "New Region"
         count = 2
@@ -183,15 +190,16 @@ class RegionList(QWidget):
         currentIndex = self.comboBox.currentIndex()
         region = self._currentRegion
 
-        # Drop from the list
+        # Drop from the list and delete from database
         self.regions.remove(region) 
+        region.remove()
 
         # Update the widget
         self.comboBox.blockSignals(True) 
         self.comboBox.removeItem(currentIndex)
         if self.regions == []:
             region = self._underlay.parent.new_child()
-            region.read()
+            #region.read()
             self.regions = [region]
             self.comboBox.addItems(self._items())
             self.comboBox.setCurrentIndex(0)
@@ -221,8 +229,8 @@ class RegionList(QWidget):
         # Overlay each of the selected series on the displayed series
         self.comboBox.blockSignals(True)
         for series in selectedSeries:
-            series.read()
-            region = series.map_onto(self._underlay)
+            #series.read()
+            region = series.map_onto(self._underlay) 
             self.regions.append(region)
             self.comboBox.addItem(region.SeriesDescription)
         self.comboBox.setCurrentIndex(len(self.regions)-1)
