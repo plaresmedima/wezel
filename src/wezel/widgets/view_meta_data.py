@@ -1,10 +1,11 @@
+"""This module contains custom widgets for the display DICOM Series Metadata in a table."""
+
 __all__ = ['SeriesViewerMetaData']
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (QFileDialog, QLineEdit, QApplication,                           
         QMessageBox, QWidget, QVBoxLayout, QHBoxLayout, QTableWidgetItem,
         QPushButton, QLabel,  QHeaderView,  QTableWidget,  QAbstractItemView, QScrollArea)
 
-import os
 import pydicom
 import pandas as pd
 
@@ -254,21 +255,6 @@ class SeriesViewerMetaData(QWidget):
             #logger.error('Error in : SeriesViewerMetaData.iterateSequenceTag' + str(e))
 
 
-    def show_dataset(self, dataset, order, indent=""):
-        try:
-            print("order={}".format(order))
-            for data_element in dataset:
-                print("data_element={}".format(data_element))
-                if data_element.VR == "SQ":
-                    indent += 4 * " "
-                    for item in data_element:
-                        show_dataset(item, indent)
-                    indent = indent[4:]
-                print(indent + str(elem))
-        except Exception as e:
-            print('Error in : SeriesViewerMetaData.show_dataset' + str(e))
-
-
     def exportToFile(self, parent, excel=False, csv=False):
         try:
             columHeaders = []
@@ -279,12 +265,12 @@ class SeriesViewerMetaData(QWidget):
                 for col in range(self.tableWidget.columnCount()):
                     df.at[row, columHeaders[col]] = self.tableWidget.item(row, col).text()
             if excel:
-                filename, _ = QFileDialog.getSaveFileName( parent, 'Save Excel file as ...',  'Metadata.xlsx', "Excel files (*.xlsx)") #os.path.join(wezel.data_folder(),
+                filename, _ = QFileDialog.getSaveFileName( parent, 'Save Excel file as ...',  'Metadata.xlsx', "Excel files (*.xlsx)") 
                 if filename != '':
                     df.to_excel(filename, index=False)
                     QMessageBox.information(parent, "Export to Excel", "File " + filename + " saved successfully")
             if csv:
-                filename, _ = QFileDialog.getSaveFileName(parent, 'Save CSV file as ...', 'Metadata.csv', "CSV files (*.csv)") #os.path.join(wezel.data_folder(),
+                filename, _ = QFileDialog.getSaveFileName(parent, 'Save CSV file as ...', 'Metadata.csv', "CSV files (*.csv)") 
                 if filename != '':
                     df.to_csv(filename, index=False)
                     QMessageBox.information(parent, "Export to CSV", "File " + filename + " saved successfully")
