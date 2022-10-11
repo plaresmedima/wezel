@@ -21,7 +21,7 @@ from .bits_and_bobs import *
 from .drawing_tools import *
 from .message import *
 #from .folder import *
-from .folder_fast import *
+from .folder_fast import DICOMFolderTree
 from .graphics_view import *
 from .region_list import *
 from .region_draw import *

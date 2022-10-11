@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import (
     QHBoxLayout, QPushButton)
 from PyQt5.QtGui import QPixmap, QCursor, QIcon, QColor, QPen, QBrush
 
-from dbdicom.classes.image import QImage
+from wezel.utils import QImage
 from . import icons
 
 
@@ -148,6 +148,7 @@ class ArrayItem(QGraphicsObject):
             self.pixMap.fill(Qt.black)
         else:
             self.qImage = QImage(self.image, width=self.WindowWidth, center=self.WindowCenter)
+            #self.qImage = makeQImage(self.image.BGRA_array())
             self.pixMap = QPixmap.fromImage(self.qImage)
 
     def paint(self, painter, option, widget):

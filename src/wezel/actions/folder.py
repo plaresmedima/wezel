@@ -11,7 +11,11 @@ def all(parent):
     parent.action(Close, shortcut='Ctrl+C')
     parent.separator()
     parent.action(OpenSubFolders, text='Open subfolders')
-    parent.action(Export, text='Export selections..')
+    parent.separator()
+    parent.action(ExportAsDicom, text='Export selections (.dcm)')
+    parent.action(ExportAsCsv, text='Export selections (.csv)')
+    parent.action(ExportAsPng, text='Export selections (.png)')
+    parent.action(ExportAsNifti, text='Export selections (.nii)')
     
 
 class Open(wezel.Action):
@@ -34,6 +38,7 @@ class Open(wezel.Action):
         app.status.cursorToHourglass()
         app.close()
         app.open(path)
+        app.status.hide()
         app.status.cursorToNormal()
 
 
@@ -47,7 +52,7 @@ class Close(wezel.Action):
             return False  
         if app.folder is None:
             return False
-        return app.folder.is_open()
+        return app.folder.manager.is_open()
 
     def run(self, app):
 
@@ -64,7 +69,7 @@ class Read(wezel.Action):
             return False 
         if app.folder is None:
             return False  
-        return app.folder.is_open()
+        return app.folder.manager.is_open()
 
     def run(self, app):
         """
@@ -85,7 +90,7 @@ class Restore(wezel.Action):
             return False
         if app.folder is None:
             return False
-        return app.folder.is_open()
+        return app.folder.manager.is_open()
 
     def run(self, app):
         """
@@ -103,7 +108,7 @@ class Save(wezel.Action):
             return False 
         if app.folder is None:
             return False  
-        return app.folder.is_open()
+        return app.folder.manager.is_open()
 
     def run(self, app):
         """
@@ -135,13 +140,13 @@ class OpenSubFolders(wezel.Action):
         app.status.cursorToHourglass()
         for i, path in enumerate(subfolders):
             msg = 'Reading folder ' + str(i+1) + ' of ' + str(len(subfolders))
-            app.open(path, attributes=self.options, message=msg)
+            app.open(path)
             app.folder.save()
         app.status.cursorToNormal()
         app.display(app.folder)
 
 
-class Export(wezel.Action):
+class ExportAsDicom(wezel.Action):
     """Export selected series"""
 
     def enable(self, app):
@@ -159,5 +164,68 @@ class Export(wezel.Action):
         path = app.dialog.directory("Where do you want to export the data?")
         for i, s in enumerate(series):
             app.status.progress(i, len(series), 'Exporting data..')
-            s.export(path)
+            s.export_as_dicom(path)
+        app.status.hide()
+
+class ExportAsCsv(wezel.Action):
+    """Export selected series"""
+
+    def enable(self, app):
+
+        if not hasattr(app, 'folder'):
+            return False
+        return app.nr_selected(3) != 0
+
+    def run(self, app):
+
+        series = app.get_selected(3)
+        if series == []:
+            app.dialog.information("Please select at least one series")
+            return
+        path = app.dialog.directory("Where do you want to export the data?")
+        for i, s in enumerate(series):
+            app.status.progress(i, len(series), 'Exporting data..')
+            s.export_as_csv(path)
+        app.status.hide()
+
+class ExportAsPng(wezel.Action):
+    """Export selected series"""
+
+    def enable(self, app):
+
+        if not hasattr(app, 'folder'):
+            return False
+        return app.nr_selected(3) != 0
+
+    def run(self, app):
+
+        series = app.get_selected(3)
+        if series == []:
+            app.dialog.information("Please select at least one series")
+            return
+        path = app.dialog.directory("Where do you want to export the data?")
+        for i, s in enumerate(series):
+            app.status.progress(i, len(series), 'Exporting data..')
+            s.export_as_png(path)
+        app.status.hide()
+
+class ExportAsNifti(wezel.Action):
+    """Export selected series"""
+
+    def enable(self, app):
+
+        if not hasattr(app, 'folder'):
+            return False
+        return app.nr_selected(3) != 0
+
+    def run(self, app):
+
+        series = app.get_selected(3)
+        if series == []:
+            app.dialog.information("Please select at least one series")
+            return
+        path = app.dialog.directory("Where do you want to export the data?")
+        for i, s in enumerate(series):
+            app.status.progress(i, len(series), 'Exporting data..')
+            s.export_as_nifti(path)
         app.status.hide()
