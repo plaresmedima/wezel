@@ -1,14 +1,3 @@
-__all__ = [
-    'SelectImageColorTable',
-    'RestoreImageButton', 
-    'SaveImageButton', 
-    'ExportImageButton', 
-    'DeleteImageButton', 
-    'PixelValueLabel', 
-    'ImageBrightness', 
-    'ImageContrast'
-]
-
 from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtWidgets import QComboBox, QPushButton, QLabel, QWidget, QDoubleSpinBox, QHBoxLayout
 from PyQt5.QtGui import QIcon, QPixmap
@@ -27,7 +16,7 @@ listColors =  ['gray', 'cividis',  'magma', 'plasma', 'viridis',
     'twilight', 'twilight_shifted', 'hsv',
     'flag', 'prism', 'ocean', 'gist_earth', 'terrain', 'gist_stern',
     'gnuplot', 'gnuplot2', 'CMRmap', 'cubehelix', 'brg', 'turbo',
-    'gist_rainbow', 'rainbow', 'jet', 'nipy_spectral', 'gist_ncar', 'custom']
+    'gist_rainbow', 'rainbow', 'jet', 'nipy_spectral', 'gist_ncar']
 
 QComboBoxStyleSheet = """
 
@@ -104,7 +93,7 @@ class ImageContrast(QWidget):
 
         if self.image is None: return
 
-        centre, width = self.image.window() # should be the actual value range, not the window
+        centre, width = self.image.window # should be the actual value range, not the window
         minimumValue = centre - width/2
         maximumValue = centre + width/2
         if (minimumValue < 1 and minimumValue > -1) and (maximumValue < 1 and maximumValue > -1):
@@ -194,7 +183,7 @@ class ImageBrightness(QWidget):
 
         if self.image is None: return
 
-        centre, width = self.image.window()
+        centre, width = self.image.window
         minimumValue = centre - width/2
         maximumValue = centre + width/2
         if (minimumValue < 1 and minimumValue > -1) and (maximumValue < 1 and maximumValue > -1):
@@ -238,7 +227,7 @@ class SelectImageColorTable(QComboBox):
         if self.image is None:
             colorTable = 'gray'
         else:
-            colorTable, _ = self.image.get_colormap()
+            colorTable = self.image.colormap
         self.blockSignals(True)
         self.setCurrentText(colorTable)
         self.blockSignals(False)
@@ -248,12 +237,9 @@ class SelectImageColorTable(QComboBox):
         if self.image is None: return
         
         colorTable = self.currentText()
-        if colorTable.lower() == 'custom':
-            colorTable = 'gray'             
-            self.blockSignals(True)
-            self.setCurrentText(colorTable)
-            self.blockSignals(False) 
-        self.image.set_colormap(colormap=colorTable)
+        if colorTable == 'gray':
+            colorTable = None            
+        self.image.colormap = colorTable
         self.newColorTable.emit(colorTable)
 
 
@@ -303,10 +289,8 @@ class ExportImageButton(QPushButton):
 
         if self.image is None: 
             return
-        fileName = self.image.dialog.file_to_save(filter = "*.png")
-        if fileName is None: 
-            return
-        self.image.export_as_png(fileName[:-4])
+        path = self.image.dialog.directory("Where do you want to export the data?")
+        self.image.export_as_png(path)
 
 
 class RestoreImageButton(QPushButton):

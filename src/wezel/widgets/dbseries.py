@@ -1,5 +1,3 @@
-__all__ = ['SeriesColors', 'ImageSliders']
-
 import pandas as pd
 
 from PyQt5.QtCore import Qt, pyqtSignal
@@ -94,7 +92,7 @@ class ImageSliders(QWidget):
         self._blockSignals = False
 
         if dimensions == []:
-            self.sliderTags = ["AcquisitionTime", "SliceLocation"]
+            self.sliderTags = ["SliceLocation","AcquisitionTime"]
         else: 
             self.sliderTags = dimensions
 
@@ -142,7 +140,7 @@ class ImageSliders(QWidget):
         self.image = image
         if image is None:
             if self.series is not None:
-                self.image = self.series.children(0)
+                self.image = self.series.children()[0]
         self._setSliderValues()
         self._sliderValueChanged()  
         self._blockSignals = restore          
@@ -152,7 +150,7 @@ class ImageSliders(QWidget):
         self.series = series
         self._readDataFrame()
         self._setSliderValueLists()
-        self.image = self.series.children(0)
+        self.image = self.series.children()[0]
         self.setImage(self.image)
 
     def setImage(self, image):  # Obsolete?
@@ -190,14 +188,16 @@ class ImageSliders(QWidget):
         # If all required tags are in the register,
         # then just extract the register for the series;
         # else read the data from disk.
-        tags = list(set(tags + list(self.series.folder.dataframe)))
-        if set(tags) == set(self.series.folder.dataframe):
-            self.dataFrame = self.series.data()
-        else: 
-            self.dataFrame = self.series.read_dataframe(tags)  
+        columns = list(self.series.manager.columns)
+        tags = list(set(tags + columns))
+        # if set(tags) == set(columns): # integrated in dbdicom read_dataframe
+        #     self.dataFrame = self.series.register()
+        # else: 
+        #     self.dataFrame = self.series.read_dataframe(tags)  
+        self.dataFrame = self.series.read_dataframe(tags)  
         self.dataFrame.sort_values("InstanceNumber", inplace=True)
         self.dataFrame.dropna(axis=1, inplace=True)  
-        self.dataFrame.reset_index()
+        #self.dataFrame.reset_index()
         # remove tags with one unique value  
         for tag in self.sliderTags:        
             if tag in self.dataFrame: 
@@ -302,7 +302,7 @@ class ImageSliders(QWidget):
 
         if self.image is None: 
             return
-        find = self.dataFrame.SOPInstanceUID == self.image.UID[-1]
+        find = self.dataFrame.SOPInstanceUID == self.image.uid
         row = self.dataFrame.loc[find]
         for slider in self._activeSliders:
             value = row[slider.label].values[0]
@@ -316,7 +316,7 @@ class ImageSliders(QWidget):
         if len(imageUIDs) <= 1:
             self.sliders[0].hide()
         else:
-            index = imageUIDs.index(self.image.UID[-1])
+            index = imageUIDs.index(self.image.uid)
             self.sliders[0].setValue(index)
             self.sliders[0].show()
 
@@ -328,11 +328,13 @@ class ImageSliders(QWidget):
             self.image = None
             self.sliders[0].hide()
         elif len(imageUIDs) == 1:
-            self._set_image(imageUIDs[0])
+            #self._set_image(imageUIDs[0])
+            self.image = self.series.instance(imageUIDs[0])
             self.sliders[0].hide()
         else:
             index = self.sliders[0].value()
-            self._set_image(imageUIDs[index])
+            #self._set_image(imageUIDs[index])
+            self.image = self.series.instance(imageUIDs[index])
         if not self._blockSignals:
             self.valueChanged.emit()
 
@@ -345,24 +347,26 @@ class ImageSliders(QWidget):
             self.sliders[0].hide()
         elif len(imageUIDs) == 1:
             #self.image = self.series.children(SOPInstanceUID = imageUIDs[0])[0]
-            self._set_image(imageUIDs[0])
+            #self._set_image(imageUIDs[0])
+            self.image = self.series.instance(imageUIDs[0])
             self.sliders[0].hide()
         else:
             self.sliders[0].setValues(range(len(imageUIDs)))
             index = self.sliders[0].value()
             # self.image = self.series.children(SOPInstanceUID = imageUIDs[index])[0]
-            self._set_image(imageUIDs[index])
+            # self._set_image(imageUIDs[index])
+            self.image = self.series.instance(imageUIDs[index])
             self.sliders[0].show()
         if not self._blockSignals:
             self.valueChanged.emit()
 
-    def _set_image(self, SOPInstanceUID):
-        """
-        Set image based on its UID
-        """
-        df = self.dataFrame[self.dataFrame.SOPInstanceUID == SOPInstanceUID]
-        self.image = self.series.dicm.object(self.series.folder, df.iloc[0], 4)
-#        self.image = self.series.children(SOPInstanceUID = imageUIDs[index])[0]
+#     def _set_image(self, SOPInstanceUID):
+#         """
+#         Set image based on its UID
+#         """
+#         df = self.dataFrame[self.dataFrame.SOPInstanceUID == SOPInstanceUID]
+#         self.image = self.series.dicm.object(self.series.folder, df.iloc[0], 4)
+# #        self.image = self.series.children(SOPInstanceUID = imageUIDs[index])[0]
 
     def _getAllSelectedImages(self):
         """Get the list of all image files selected by the optional sliders"""

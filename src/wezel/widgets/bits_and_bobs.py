@@ -1,5 +1,3 @@
-__all__ = ['LockUnlockButton']
-
 from PyQt5.QtCore import  pyqtSignal
 from PyQt5.QtWidgets import QPushButton
 from PyQt5.QtGui import QIcon

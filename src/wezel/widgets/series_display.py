@@ -1,4 +1,4 @@
-__all__ = ['SeriesViewer']
+
 
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import (
@@ -82,10 +82,9 @@ class SeriesViewer(QWidget):
         if series is None:
             self.image = None
         else:
-            if series.on_disk():
-                series.read()
-            self.image = series.children(0)
-        self.image_has_changed = False
+            series.read()
+            self.image = series.children()[0]
+        #self.image_has_changed = False
 
         self._setImage()
         self.imageSliders.setData(self.series, self.image)
@@ -104,14 +103,13 @@ class SeriesViewer(QWidget):
         
     def _imageHasChanged(self):
 
-        self.image_has_changed = True
+        #self.image_has_changed = True
         self.graphics.show()
 
     def _restoreClicked(self):
 
-        self.image_has_changed = False
-        self.series.restore(
-            message="Restoring all images of the series to last saved state..")
+        #self.image_has_changed = False
+        self.series.restore()
         self.brightness.setValue()
         self.contrast.setValue()
         self.colors.setValue()
@@ -119,16 +117,16 @@ class SeriesViewer(QWidget):
 
     def _saveClicked(self):
 
-        self.image_has_changed = False
+        #self.image_has_changed = False
         center = self.image.WindowCenter
         width = self.image.WindowWidth
-        colormap, _ = self.image.get_colormap()
+        colormap = self.image.colormap
         instances = self.series.instances()
         self.series.status.message('Saving all images of the series..')
         for i, image in enumerate(instances):
             image.WindowCenter = center
             image.WindowWidth = width 
-            image.set_colormap(colormap=colormap)
+            image.colormap = colormap
             image.save()
             self.series.status.progress(i, len(instances))
         self.series.status.hide()
@@ -143,7 +141,7 @@ class SeriesViewer(QWidget):
         
     def _setWindowValue(self):
 
-        self.image_has_changed = True
+        #self.image_has_changed = True
         self.brightness.setValue()
         self.contrast.setValue()
 
@@ -155,24 +153,24 @@ class SeriesViewer(QWidget):
     def _imageSlidersValueChanged(self):
 
         image_on_display = self.image is not None
-        if self.image_has_changed: 
-            if image_on_display:
-                self.image.write() 
+        # if self.image_has_changed: 
+        #     if image_on_display:
+        #         self.image.write() 
         if self.settings.isLocked:
             if image_on_display:
                 center = self.image.WindowCenter
                 width = self.image.WindowWidth
-                colormap, _ = self.image.get_colormap()
+                colormap = self.image.colormap
 
         self.image = self.imageSliders.getImage()
-        self.image_has_changed = False
+        #self.image_has_changed = False
 
         if self.settings.isLocked:
             if self.image is not None:
                 if image_on_display:
                     self.image.WindowCenter = center 
                     self.image.WindowWidth = width 
-                    self.image.set_colormap(colormap=colormap)
-                    self.image_has_changed = True
+                    self.image.colormap = colormap
+                    #self.image_has_changed = True
 
         self._setImage()

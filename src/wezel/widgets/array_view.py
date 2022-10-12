@@ -1,5 +1,3 @@
-__all__ = ['ArrayViewToolBox', 'ArrayView']
-
 import numpy as np
 
 from PyQt5.QtCore import Qt, pyqtSignal, QRectF
@@ -9,7 +7,7 @@ from PyQt5.QtWidgets import (
     QHBoxLayout, QPushButton)
 from PyQt5.QtGui import QPixmap, QCursor, QIcon, QColor, QPen, QBrush
 
-from wezel.utils import QImage
+from wezel.utils import makeQImage
 from . import icons
 
 
@@ -147,8 +145,8 @@ class ArrayItem(QGraphicsObject):
             self.pixMap = QPixmap(width, height)
             self.pixMap.fill(Qt.black)
         else:
-            self.qImage = QImage(self.image, width=self.WindowWidth, center=self.WindowCenter)
-            #self.qImage = makeQImage(self.image.BGRA_array())
+            #self.qImage = QImage(self.image, width=self.WindowWidth, center=self.WindowCenter)
+            self.qImage = makeQImage(self.image.BGRA_array())
             self.pixMap = QPixmap.fromImage(self.qImage)
 
     def paint(self, painter, option, widget):

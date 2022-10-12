@@ -149,19 +149,19 @@ class Windows(wezel.App):
 
     def display(self, object):
 
-        if object.generation == 0:
+        if object.type() == 'Database':
             self.treeView = wezel.widgets.DICOMFolderTree(object)
             self.treeView.itemSelectionChanged.connect(self.menubar.enable)
             self.addAsDockWidget(self.treeView)
             self.menubar.enable()
-        elif object.generation == 1: # No Patient Viewer yet
+        elif object.type() == 'Patient': # No Patient Viewer yet
             pass
-        elif object.generation == 2: # No Study Viewer yet
+        elif object.type() == 'Study': # No Study Viewer yet
             pass
-        elif object.generation == 3:
+        elif object.type() == 'Series':
             viewer = wezel.widgets.SeriesViewer(object)
             self.addAsSubWindow(viewer, title=object.label())
-        elif object.generation == 4:
+        elif object.type() == 'Instance':
             viewer = wezel.widgets.ImageViewer(object)
             self.addAsSubWindow(viewer, title=object.label())
 

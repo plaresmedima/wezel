@@ -1,17 +1,3 @@
-__all__ = [
-    'MaskView', 
-    'MaskViewBrush', 
-    'MaskViewPenFreehand',
-    'MaskViewPenRectangle', 
-    'MaskViewPenPolygon', 
-    'MaskViewPenCircle',
-    'MaskViewRegionGrowing',
-    'MaskViewDeleteROI',
-    'MaskViewEdgeDetection',
-    'MaskViewErode',
-    'MaskViewDilate'
-]
-
 import math
 import numpy as np
 from matplotlib.path import Path as MplPath
@@ -24,6 +10,7 @@ from PyQt5.QtGui import QPixmap, QImage, qRgb, QIcon, QCursor, QColor, QPen
 from PyQt5.QtWidgets import QGraphicsObject, QAction, QMenu
 
 from .. import widgets as widgets
+from wezel.utils import makeQImage
 
 
 class MaskView(widgets.ImageView):
@@ -53,8 +40,8 @@ class MaskView(widgets.ImageView):
             width = self.imageItem.pixMap.width()
             height = self.imageItem.pixMap.height() 
         else:            
-            width = mask.Rows
-            height = mask.Columns
+            width = mask.Columns
+            height = mask.Rows
         return width, height
 
 #    def isBlank(self):

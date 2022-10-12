@@ -1,4 +1,4 @@
-__all__ = ['RegionList']
+
 
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt, pyqtSignal
@@ -41,7 +41,7 @@ class RegionList(QWidget):
     def setRegions(self, regions):
 
         if regions == None:
-            region = self._underlay.parent.new_child()
+            region = self._underlay.parent().new_child()
             self.regions = [region.read()]
         else:
             self.regions = [region.read() for region in regions] 
@@ -69,7 +69,8 @@ class RegionList(QWidget):
             return
         if self._currentRegion is None: 
             return
-        maskList = self._currentRegion.children(SliceLocation=image.SliceLocation) # needs to be slice orientation
+        # make it an option to specify attributes here
+        maskList = self._currentRegion.children(SliceLocation=image.SliceLocation) 
         if maskList != []: 
             return maskList[0]
 
@@ -153,6 +154,8 @@ class RegionList(QWidget):
                 item = 'New Region'
             else:
                 item = region.SeriesDescription
+                if isinstance(item, list):
+                    item = item[0]
             items.append(item)
         return items
 
@@ -160,19 +163,19 @@ class RegionList(QWidget):
 
         for i, region in enumerate(self.regions):
             text = self.comboBox.itemText(i)
-            region.SeriesDescription = text # requires __setattr__ and __setitem__ in DataSet
-            self._underlay.parent.write(region) # requires write(DataSet)
+            region.SeriesDescription = text 
+            region.save()
         self.dataWritten.emit()  
 
     def removeAllRegions(self):
 
         for region in self.regions:
-            region.remove()  # implement
+            region.remove()  
         
     def _newRegion(self):
 
-        region = self._underlay.parent.new_child()
-        #region.read()
+        region = self._underlay.new_sibling()
+        region.read()
         self.regions.append(region) # add to the list
         description = "New Region"
         count = 2
@@ -198,7 +201,7 @@ class RegionList(QWidget):
         self.comboBox.blockSignals(True) 
         self.comboBox.removeItem(currentIndex)
         if self.regions == []:
-            region = self._underlay.parent.new_child()
+            region = self._underlay.new_sibling()
             #region.read()
             self.regions = [region]
             self.comboBox.addItems(self._items())
@@ -215,7 +218,7 @@ class RegionList(QWidget):
     def _loadRegion(self):
 
         # Build list of series for all series in the same study
-        seriesList = self._underlay.parent.children()
+        seriesList = self._underlay.parent().children()
         seriesLabels = [series.SeriesDescription for series in seriesList]
 
         # Ask the user to select series to import as regions

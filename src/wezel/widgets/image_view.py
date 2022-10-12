@@ -1,10 +1,9 @@
-__all__ = ['ImageView', 'ImageViewCursor', 'ImageViewZoom']
-
 from PyQt5.QtCore import Qt, pyqtSignal, QRectF
 from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene, QGraphicsObject
 from PyQt5.QtGui import QPixmap, QCursor, QIcon, QColor, QPen, QBrush
 
 from . import icons
+from wezel.utils import makeQImage
 
 class ImageView(QGraphicsView):
     """Wrapper for ImageItem displaying it in a scrollable Widget"""
@@ -74,7 +73,7 @@ class ImageItem(QGraphicsObject):
             self.pixMap = QPixmap(width, height)
             self.pixMap.fill(Qt.black)
         else:
-            self.qImage = self.image.QImage()
+            self.qImage = makeQImage(self.image.BGRA_array())
             self.pixMap = QPixmap.fromImage(self.qImage)
 
     def paint(self, painter, option, widget):

@@ -1,6 +1,6 @@
 """This module contains classes for the creation of a custom widget 
     for a pop-up dialog window with one or more input widgets to accept input data."""
-__all__ = ['ParameterInputDialog']
+
 
 from ast import literal_eval
 

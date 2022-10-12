@@ -1,5 +1,3 @@
-__all__ = ['ImageViewer', 'ImageLabel']
-
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import (
@@ -72,8 +70,7 @@ class ImageViewer(QWidget):
 
         self.setEnabled(image is not None)
         if image is not None:
-            if image.on_disk(): 
-                image.read()
+            image.read()
         self.image = image
         self.colors.setData(image)
         self.brightness.setData(image)

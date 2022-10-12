@@ -1,4 +1,4 @@
-__all__ = ['GraphicsView']
+
 
 import numpy as np
 import math
@@ -49,8 +49,7 @@ class GraphicsView(QObject):
     def setData(self, image):
 
         if image is not None: 
-            if image.on_disk(): 
-                image.read()
+            image.read()
         self.image = image
         self.show()
 
@@ -91,8 +90,9 @@ class GraphicsView(QObject):
             self.imageView.clear()
             return
         pixelArray = self.image.array()
-        center, width = self.image.window()
-        colormap, lut = self.image.get_colormap() 
+        center, width = self.image.window
+        colormap = self.image.colormap
+        lut = self.image.lut
         pgMap = colorMap(colormap, lut) 
 #        print(center-width/2, center+width/2)
         self.imageView.setColorMap(pgMap)

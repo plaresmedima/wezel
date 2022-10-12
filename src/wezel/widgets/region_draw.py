@@ -1,5 +1,3 @@
-__all__ = ['SeriesViewerROI']
-
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import (QWidget, 
                             QVBoxLayout, 
@@ -18,8 +16,7 @@ class SeriesViewerROI(QWidget):
         super().__init__()
 
         #Faster access but loading times are prohibitive for large series
-        #if series.on_disk(): 
-        #    series.read()
+        #series.read()
 
         self._setWidgets(dimensions=dimensions)
         self._setConnections()

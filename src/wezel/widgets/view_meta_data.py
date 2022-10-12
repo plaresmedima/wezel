@@ -1,6 +1,6 @@
 """This module contains custom widgets for the display DICOM Series Metadata in a table."""
 
-__all__ = ['SeriesViewerMetaData']
+
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (QFileDialog, QLineEdit, QApplication,                           
         QMessageBox, QWidget, QVBoxLayout, QHBoxLayout, QTableWidgetItem,
@@ -84,7 +84,7 @@ class SeriesViewerMetaData(QWidget):
         super().__init__()
         #Get the DICOM object for the first image in the series
         #The DICOM object for an image contains the metadata for the whole series
-        self._objectDICOM = series.children(0).read() 
+        self._objectDICOM = series.children()[0].read() 
 
         self.setLayout(QVBoxLayout())
         self.setAttribute(Qt.WA_DeleteOnClose)
