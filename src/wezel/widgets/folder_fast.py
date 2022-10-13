@@ -9,6 +9,7 @@ class DICOMFolderTree(QTreeWidget):
 
     itemSelectionChanged = pyqtSignal(dict)
     itemDoubleClicked = pyqtSignal(dict)
+    databaseSet = pyqtSignal()
 
     def __init__(self, folder):
         super().__init__()
@@ -47,6 +48,7 @@ class DICOMFolderTree(QTreeWidget):
                             key = sery['indices'][0]
                             seriesWidget =  self._treeWidgetItem('Series', key, sery, studyWidget)
         self.setUpdatesEnabled(True)
+        self.databaseSet.emit()
 
 
     def _treeWidgetItem(self, level, key, record, parent, expanded=True):

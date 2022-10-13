@@ -97,9 +97,9 @@ class ImageContrast(QWidget):
         minimumValue = centre - width/2
         maximumValue = centre + width/2
         if (minimumValue < 1 and minimumValue > -1) and (maximumValue < 1 and maximumValue > -1):
-            spinBoxStep = float(width / 200) # It takes 100 clicks to walk through the middle 50% of the signal range
+            spinBoxStep = float(width / 10) # It takes 100 clicks to walk through the middle 50% of the signal range
         else:
-            spinBoxStep = int(width / 200) # It takes 100 clicks to walk through the middle 50% of the signal range
+            spinBoxStep = int(width / 10) # It takes 100 clicks to walk through the middle 50% of the signal range
         self.spinBox.setSingleStep(spinBoxStep)
 
     def spinBoxValueChanged(self):
@@ -187,9 +187,9 @@ class ImageBrightness(QWidget):
         minimumValue = centre - width/2
         maximumValue = centre + width/2
         if (minimumValue < 1 and minimumValue > -1) and (maximumValue < 1 and maximumValue > -1):
-            spinBoxStep = float(width / 200) # It takes 100 clicks to walk through the middle 50% of the signal range
+            spinBoxStep = float(width / 10) # It takes 100 clicks to walk through the middle 50% of the signal range
         else:
-            spinBoxStep = int(width / 200) # It takes 100 clicks to walk through the middle 50% of the signal range
+            spinBoxStep = int(width / 10) # It takes 100 clicks to walk through the middle 50% of the signal range
         self.spinBox.setSingleStep(spinBoxStep)
 
 

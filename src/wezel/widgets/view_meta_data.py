@@ -13,6 +13,12 @@ import pandas as pd
 localStyleSheet = """
     QTableWidget {
     alternate-background-color: #dce2f2;background-color: #b6bdd1;
+    } 
+    """
+
+_localStyleSheet = """
+    QTableWidget {
+    alternate-background-color: #dce2f2;background-color: #b6bdd1;
                                             }           
     QTableWidget::item {
         border: 1px solid rgba(68, 119, 170, 150);
@@ -48,6 +54,7 @@ localStyleSheet = """
                 QWidget{background: transparent;}
             """
 
+
 class ScrollLabel(QScrollArea):
     """
     A custom composite widget, a label with a vertical scrollbar,
@@ -61,6 +68,8 @@ class ScrollLabel(QScrollArea):
         self.setWidget(centralWidget)
 
         verticalLayout = QVBoxLayout()
+        verticalLayout.setContentsMargins(0, 0, 0, 0)
+        verticalLayout.setSpacing(0)
         centralWidget.setLayout(verticalLayout)
 
         self.label = QLabel()
@@ -77,6 +86,8 @@ class ScrollLabel(QScrollArea):
 class SeriesViewerMetaData(QWidget):
     """Display DICOM Series Metadata in a table."""
 
+    rowHeight = 4
+
     def __init__(self, series):  
         """
         Constructs the composite widget for displaying a table of DICOM series metadata
@@ -84,23 +95,26 @@ class SeriesViewerMetaData(QWidget):
         super().__init__()
         #Get the DICOM object for the first image in the series
         #The DICOM object for an image contains the metadata for the whole series
-        self._objectDICOM = series.children()[0].read() 
+        self._objectDICOM = series.children()[0].get_dataset()
+        self.series = series
 
-        self.setLayout(QVBoxLayout())
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        self.setLayout(layout)
         self.setAttribute(Qt.WA_DeleteOnClose)
-        tableTitle = "Metadata for series, {}".format(series.label())
-        lblImageName = QLabel('<H4>' + tableTitle + '</H4>')
-        self.layout().addWidget(lblImageName)
 
         #Add table to display rows of metadata
         self.tableWidget = QTableWidget()
         self.tableWidget.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self.tableWidget.horizontalScrollBar().setEnabled(True)
         self.tableWidget.setAlternatingRowColors(True)
-        self.tableWidget.setStyleSheet(localStyleSheet) 
-        self.tableWidget.setShowGrid(True)
+        #self.tableWidget.setStyleSheet(localStyleSheet) 
+        #self.tableWidget.setShowGrid(True)
         self.tableWidget.setColumnCount(4)
         self.tableWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.tableWidget.verticalHeader().setVisible(False)
         self.populateTable()
 
         # Add Search Bar
@@ -108,12 +122,12 @@ class SeriesViewerMetaData(QWidget):
         self.searchField.textEdited.connect(lambda x=self.searchField.text(): self.searchTable( x))
         
         # Add export to Excel/CSV buttons
-        self.export_excel_button = QPushButton('&Export To Excel', clicked=lambda: self.exportToFile(self,  excel=True))
-        self.export_csv_button = QPushButton('&Export To CSV', clicked=lambda: self.exportToFile(self, csv=True))
+        self.export_csv_button = QPushButton('&Export To CSV', clicked=lambda: self.exportToFile(self))
 
         self.horizontalBox = QHBoxLayout()
+        self.horizontalBox.setContentsMargins(0, 0, 0, 0)
+        self.horizontalBox.setSpacing(0)
         self.horizontalBox.addWidget(self.searchField)
-        self.horizontalBox.addWidget(self.export_excel_button)
         self.horizontalBox.addWidget(self.export_csv_button)
 
         self.layout().addLayout(self.horizontalBox)
@@ -131,79 +145,79 @@ class SeriesViewerMetaData(QWidget):
     def createScrollableLabel(self, rowPosition, valueMetadata):
         scrollableLabel = ScrollLabel()
         scrollableLabel.setText(valueMetadata)
-        self.tableWidget.setCellWidget(rowPosition , 3, scrollableLabel)
+        self.tableWidget.setCellWidget(rowPosition, 3, scrollableLabel)
         self.tableWidget.resizeRowToContents(rowPosition)
 
 
     def populateTable(self):
         """Builds a Table View displaying DICOM image metadata
         as Tag, name, VR & Value"""
-        try:
-            QApplication.setOverrideCursor(Qt.WaitCursor)
-            self.createHeaderRow()
-            
-            if self._objectDICOM:
-                # Loop through the DICOM group (0002, XXXX) first
-                for meta_element in self._objectDICOM.file_meta:
-                    rowPosition = self.tableWidget.rowCount()
-                    self.tableWidget.insertRow(rowPosition)
-                    self.tableWidget.setItem(rowPosition , 0, 
-                                    QTableWidgetItem(str(meta_element.tag)))
-                    self.tableWidget.setItem(rowPosition , 1, 
-                                    QTableWidgetItem(meta_element.name))
-                    self.tableWidget.setItem(rowPosition , 2, 
-                                    QTableWidgetItem(meta_element.VR))
+    
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+        self.createHeaderRow()
+        
+        if self._objectDICOM:
+            # Loop through the DICOM group (0002, XXXX) first
+            for meta_element in self._objectDICOM.file_meta:
+                rowPosition = self.tableWidget.rowCount()
+                self.tableWidget.insertRow(rowPosition)
+                self.tableWidget.setRowHeight(rowPosition, self.rowHeight)
+                self.tableWidget.setItem(rowPosition , 0, 
+                                QTableWidgetItem(str(meta_element.tag)))
+                self.tableWidget.setItem(rowPosition , 1, 
+                                QTableWidgetItem(meta_element.name))
+                self.tableWidget.setItem(rowPosition , 2, 
+                                QTableWidgetItem(meta_element.VR))
 
-                    if meta_element.VR == "OW" or meta_element.VR == "OB" or meta_element.VR == "UN":
-                        try:
-                            valueMetadata = str(list(meta_element))
-                        except:
-                            valueMetadata = str(meta_element.value)
-                    else:
+                if meta_element.VR == "OW" or meta_element.VR == "OB" or meta_element.VR == "UN":
+                    try:
+                        valueMetadata = str(list(meta_element))
+                    except:
                         valueMetadata = str(meta_element.value)
+                else:
+                    valueMetadata = str(meta_element.value)
 
-                    if meta_element.VR == "OB" or meta_element.VR == "OW":
-                        self.createScrollableLabel(rowPosition, valueMetadata)
-                    elif meta_element.VR == "SQ":
-                        self.iterateSequenceTag(self.tableWidget, meta_element)
-                    else:
-                        self.tableWidget.setItem(rowPosition , 3, QTableWidgetItem(valueMetadata))
-                
-                for data_element in self._objectDICOM:
-                    # Exclude pixel data from metadata listing
-                    if data_element.name == 'Pixel Data':
-                        continue
-                    rowPosition = self.tableWidget.rowCount()
-                    self.tableWidget.insertRow(rowPosition)
-                    self.tableWidget.setItem(rowPosition , 0, 
-                                    QTableWidgetItem(str(data_element.tag)))
-                    self.tableWidget.setItem(rowPosition , 1, 
-                                    QTableWidgetItem(data_element.name))
-                    self.tableWidget.setItem(rowPosition , 2, 
-                                    QTableWidgetItem(data_element.VR))
+                if meta_element.VR == "OB" or meta_element.VR == "OW":
+                    self.createScrollableLabel(rowPosition, valueMetadata)
+                elif meta_element.VR == "SQ":
+                    self.iterateSequenceTag(self.tableWidget, meta_element)
+                else:
+                    self.tableWidget.setItem(rowPosition , 3, QTableWidgetItem(valueMetadata))
+            
+            for data_element in self._objectDICOM:
+                # Exclude pixel data from metadata listing
+                if data_element.name == 'Pixel Data':
+                    continue
+                rowPosition = self.tableWidget.rowCount()
+                self.tableWidget.insertRow(rowPosition)
+                self.tableWidget.setRowHeight(rowPosition, self.rowHeight)
+                self.tableWidget.setItem(rowPosition , 0, 
+                                QTableWidgetItem(str(data_element.tag)))
+                self.tableWidget.setItem(rowPosition , 1, 
+                                QTableWidgetItem(data_element.name))
+                self.tableWidget.setItem(rowPosition , 2, 
+                                QTableWidgetItem(data_element.VR))
 
-                    if data_element.VR == "OW" or data_element.VR == "OB" or data_element.VR == "UN":
+                if data_element.VR == "OW" or data_element.VR == "OB" or data_element.VR == "UN":
+                    try:
+                        valueMetadata = str(list(data_element))
+                    except:
                         try:
-                            valueMetadata = str(list(data_element))
+                            valueMetadata = str(data_element.value.decode('utf-8'))
                         except:
-                            try:
-                                valueMetadata = str(data_element.value.decode('utf-8'))
-                            except:
-                                valueMetadata = str(data_element.value)
-                    else:
-                        valueMetadata = str(data_element.value)
+                            valueMetadata = str(data_element.value)
+                else:
+                    valueMetadata = str(data_element.value)
 
-                    if data_element.VR == "OB" or data_element.VR == "OW":
-                        self.createScrollableLabel(rowPosition, valueMetadata)
-                    elif data_element.VR == "SQ":
-                        self.iterateSequenceTag(self.tableWidget, data_element)
-                    else:
-                        self.tableWidget.setItem(rowPosition , 3, QTableWidgetItem(valueMetadata))
-            self.resizeColumnsToContents()
-            QApplication.restoreOverrideCursor()
-        except Exception as e:
-            print('Error in : SeriesViewerMetaData.populateTable' + str(e))
-           # logger.error('Error in : SeriesViewerMetaData.populateTable' + str(e))
+                if data_element.VR == "OB" or data_element.VR == "OW":
+                    self.createScrollableLabel(rowPosition, valueMetadata)
+                elif data_element.VR == "SQ":
+                    self.iterateSequenceTag(self.tableWidget, data_element)
+                else:
+                    self.tableWidget.setItem(rowPosition , 3, QTableWidgetItem(valueMetadata))
+        self.resizeColumnsToContents()
+        QApplication.restoreOverrideCursor()
+
 
 
     def createHeaderRow(self):
@@ -222,78 +236,69 @@ class SeriesViewerMetaData(QWidget):
 
 
     def iterateSequenceTag(self, table, dataset, level=''):
-        try:
-            for data_element in dataset:
-                if isinstance(data_element, pydicom.dataset.Dataset):
-                    self.iterateSequenceTag(table, data_element, level=' > ')
-                else:
-                    rowPosition = table.rowCount()
-                    table.insertRow(rowPosition)
-                    table.setItem(rowPosition , 0, QTableWidgetItem(level + ' ' + str(data_element.tag)))
-                    table.setItem(rowPosition , 1, QTableWidgetItem(data_element.name))
-                    table.setItem(rowPosition , 2, QTableWidgetItem(data_element.VR))
-                    if data_element.VR == "OW" or data_element.VR == "OB":
+
+        for data_element in dataset:
+            if isinstance(data_element, pydicom.dataset.Dataset):
+                self.iterateSequenceTag(table, data_element, level='    ')
+            else:
+                rowPosition = table.rowCount()
+                table.insertRow(rowPosition)
+                table.setItem(rowPosition , 0, QTableWidgetItem(level + ' ' + str(data_element.tag)))
+                table.setItem(rowPosition , 1, QTableWidgetItem(data_element.name))
+                table.setItem(rowPosition , 2, QTableWidgetItem(data_element.VR))
+                if data_element.VR == "OW" or data_element.VR == "OB":
+                    try:
+                        valueMetadata = str(data_element.value.decode('utf-8'))
+                    except:
                         try:
-                            valueMetadata = str(data_element.value.decode('utf-8'))
+                            valueMetadata = str(list(data_element))
                         except:
-                            try:
-                                valueMetadata = str(list(data_element))
-                            except:
-                                valueMetadata = str(data_element.value)
-                        self.createScrollableLabel(rowPosition, valueMetadata)
-                    else:
-                        valueMetadata =  str(data_element.value)
-                    
-                    if data_element.VR == "SQ":
-                        level+=' > '
-                        self.iterateSequenceTag(table, data_element, level)
-                    else:
-                        table.setItem(rowPosition , 3, QTableWidgetItem(valueMetadata))
-
-        except Exception as e:
-            print('Error in : SeriesViewerMetaData.iterateSequenceTag' + str(e))
-            #logger.error('Error in : SeriesViewerMetaData.iterateSequenceTag' + str(e))
+                            valueMetadata = str(data_element.value)
+                    self.createScrollableLabel(rowPosition, valueMetadata)
+                else:
+                    valueMetadata =  str(data_element.value)
+                
+                if data_element.VR == "SQ":
+                    level+=' > '
+                    self.iterateSequenceTag(table, data_element, level)
+                else:
+                    table.setItem(rowPosition , 3, QTableWidgetItem(valueMetadata))
 
 
-    def exportToFile(self, parent, excel=False, csv=False):
-        try:
-            columHeaders = []
-            for i in range(self.tableWidget.model().columnCount()):
-                columHeaders.append(self.tableWidget.horizontalHeaderItem(i).text())
-            df = pd.DataFrame(columns=columHeaders)
-            for row in range(self.tableWidget.rowCount()):
-                for col in range(self.tableWidget.columnCount()):
-                    df.at[row, columHeaders[col]] = self.tableWidget.item(row, col).text()
-            if excel:
-                filename, _ = QFileDialog.getSaveFileName( parent, 'Save Excel file as ...',  'Metadata.xlsx', "Excel files (*.xlsx)") 
-                if filename != '':
-                    df.to_excel(filename, index=False)
-                    QMessageBox.information(parent, "Export to Excel", "File " + filename + " saved successfully")
-            if csv:
-                filename, _ = QFileDialog.getSaveFileName(parent, 'Save CSV file as ...', 'Metadata.csv', "CSV files (*.csv)") 
-                if filename != '':
-                    df.to_csv(filename, index=False)
-                    QMessageBox.information(parent, "Export to CSV", "File " + filename + " saved successfully")
-        except Exception as e:
-            print('Error in : SeriesViewerMetaData.exportToFile: ' + str(e))
-            #logger.error('Error in : SeriesViewerMetaData.exportToFile: ' + str(e))
+
+    def exportToFile(self, parent):
+    
+        columHeaders = []
+        for i in range(self.tableWidget.model().columnCount()):
+            columHeaders.append(self.tableWidget.horizontalHeaderItem(i).text())
+        df = pd.DataFrame(columns=columHeaders)
+        for row in range(self.tableWidget.rowCount()):
+            for col in range(self.tableWidget.columnCount()):
+                item = self.tableWidget.item(row, col)
+                if item is None:
+                    #item = self.tableWidget.cellWidget(row, col) 
+                    pass # THIS NEEDS FIXING
+                else:
+                    text = item.text()
+                df.at[row, columHeaders[col]] = text
+        filename, _ = QFileDialog.getSaveFileName(parent, 'Save CSV file as ...', self.series.label()+'.csv', "CSV files (*.csv)") 
+        if filename != '':
+            df.to_csv(filename, index=False)
+
 
 
     def searchTable(self, expression):
-        try:
-            self.tableWidget.clearSelection()
-            if expression:
-                items = self.tableWidget.findItems(expression, Qt.MatchContains)
-                if items:  # we have found something
-                    for item in items:
-                        item.setSelected(True)
-                        #self.tableWidget.item(item).setSelected(True)
-                    self.tableWidget.scrollToItem(items[0])
-                    #item = items[0]  # take the first
-                    #table.table.setCurrentItem(item)
-        except Exception as e:
-            print('Error in : SeriesViewerMetaData.searchTable: ' + str(e))
-            #logger.error('Error in : SeriesViewerMetaData.searchTable: ' + str(e))
+
+        self.tableWidget.clearSelection()
+        if expression:
+            items = self.tableWidget.findItems(expression, Qt.MatchContains)
+            if items:  # we have found something
+                for item in items:
+                    item.setSelected(True)
+                    #self.tableWidget.item(item).setSelected(True)
+                self.tableWidget.scrollToItem(items[0])
+                #item = items[0]  # take the first
+                #table.table.setCurrentItem(item)
 
 
 

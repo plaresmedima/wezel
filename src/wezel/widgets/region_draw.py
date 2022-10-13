@@ -34,7 +34,14 @@ class SeriesViewerROI(QWidget):
         self.pixelValue = widgets.PixelValueLabel()
         self.colors = widgets.SeriesColors()
 
-    def setData(self, series):
+    def refresh(self):
+        if not self.imageSliders.series.in_database():
+            self.close()
+            return
+        self.regionList.refresh()
+
+
+    def setData(self, series=None):
 
         self.imageSliders.setData(series, blockSignals=True)
         self.regionList.setData(series)
@@ -100,7 +107,7 @@ class SeriesViewerROI(QWidget):
 
         mask = self.maskView.getMask()
         region = self.regionList.getRegion()
-        mask = mask.move_to(region)
+        mask = mask.move_to(region) 
         self.maskView.setObject(mask)
 
     def _setLayout(self):

@@ -10,7 +10,6 @@ from PyQt5.QtGui import QPixmap, QImage, qRgb, QIcon, QCursor, QColor, QPen
 from PyQt5.QtWidgets import QGraphicsObject, QAction, QMenu
 
 from .. import widgets as widgets
-from wezel.utils import makeQImage
 
 
 class MaskView(widgets.ImageView):
@@ -123,7 +122,7 @@ class MaskItem(QGraphicsObject):
 
     def _getMaskImage(self):
 
-        return self.bin.astype(float)
+        return self.bin.astype(np.float32)
 
     def eraseMaskImage(self):
 

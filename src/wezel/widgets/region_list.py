@@ -74,6 +74,17 @@ class RegionList(QWidget):
         if maskList != []: 
             return maskList[0]
 
+    def refresh(self):
+        regions = [r for r in self.regions if r.in_database()]
+        if len(regions) != len(self.regions):
+            currentRegion = self._currentRegion
+            self.setRegions(regions)
+            try:
+                i=regions.index(currentRegion)
+            except:
+                i=0
+                self.currentRegionChanged.emit()
+            self.comboBox.setCurrentIndex(i)
 
 #    def remove(self, region_to_remove):
 
@@ -163,9 +174,9 @@ class RegionList(QWidget):
 
         for i, region in enumerate(self.regions):
             text = self.comboBox.itemText(i)
-            region.SeriesDescription = text 
+            region.SeriesDescription = text
             region.save()
-        self.dataWritten.emit()  
+        self.dataWritten.emit()
 
     def removeAllRegions(self):
 

@@ -34,6 +34,7 @@ class Region(wezel.Action):
             app.addAsSubWindow(viewer, title=series.label())
             viewer.dataWritten.connect(app.treeView.setFolder)
             viewer.setData(series)
+            app.treeView.databaseSet.connect(viewer.refresh)
             
 
 class Image(wezel.Action):
