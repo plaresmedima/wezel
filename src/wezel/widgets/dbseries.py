@@ -140,7 +140,9 @@ class ImageSliders(QWidget):
         self.image = image
         if image is None:
             if self.series is not None:
-                self.image = self.series.children()[0]
+                images = self.series.children()
+                if images != []:
+                    self.image = images[0]
         self._setSliderValues()
         self._sliderValueChanged()  
         self._blockSignals = restore          

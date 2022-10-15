@@ -5,6 +5,7 @@
 docs/*
 dev/*
 data/*
+tests/tmp/*
 
 ### Python ###
 # Byte-compiled / optimized / DLL files

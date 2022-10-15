@@ -40,7 +40,7 @@ class RegionList(QWidget):
 
     def setRegions(self, regions):
 
-        if regions == None:
+        if (regions is None) or (regions==[]):
             region = self._underlay.parent().new_child()
             self.regions = [region.read()]
         else:
@@ -81,10 +81,13 @@ class RegionList(QWidget):
             self.setRegions(regions)
             try:
                 i=regions.index(currentRegion)
+                changed = False
             except:
                 i=0
-                self.currentRegionChanged.emit()
+                changed = True
             self.comboBox.setCurrentIndex(i)
+            if changed:
+                self.currentRegionChanged.emit()
 
 #    def remove(self, region_to_remove):
 

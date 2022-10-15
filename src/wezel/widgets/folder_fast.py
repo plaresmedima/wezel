@@ -1,7 +1,7 @@
 from PyQt5.QtCore import  Qt, pyqtSignal
 from PyQt5.QtWidgets import (
     QApplication, QAbstractItemView,
-    QHeaderView, QTreeWidget, QTreeWidgetItem,
+    QHeaderView, QTreeWidget, QTreeWidgetItem, QFileSystemModel, QTreeView,
 )
 
 class DICOMFolderTree(QTreeWidget):
@@ -17,6 +17,7 @@ class DICOMFolderTree(QTreeWidget):
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.itemDoubleClicked.connect(lambda item, col: self._itemDoubleClickedEvent(item, col))
         self.itemClicked.connect(lambda item, col: self._itemClickedEvent(item, col))
+        # self.setModel(QFileSystemModel()) #This only works for QTreeView
         self.setFolder(folder)
 
     def setFolder(self, folder=None):

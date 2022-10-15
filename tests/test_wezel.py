@@ -6,7 +6,7 @@ import numpy as np
 from PyQt5.QtWidgets import QApplication, QWidget
 import dbdicom as db
 import wezel
-from wezel import widgets, canvas
+from wezel import widgets
 
 
 datapath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data')
@@ -49,7 +49,7 @@ def test_build():
 
 def test_launch():
 
-    tmp = create_tmp_database(rider)
+    tmp = create_tmp_database(onefile)
 
     app = wezel.app()
     app.set_app(wezel.apps.dicom.Windows)

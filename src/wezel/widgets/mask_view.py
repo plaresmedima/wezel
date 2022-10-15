@@ -87,6 +87,8 @@ class MaskView(widgets.ImageView):
 
     def _newMask(self):
 
+        if self.image is None:
+            return
         mask = self.image.copy()
         mask.WindowCenter = 1
         mask.WindowWidth = 2

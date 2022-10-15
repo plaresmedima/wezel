@@ -173,8 +173,34 @@ class Windows(wezel.App):
             return []
         return self.treeView.get_selected(generation)
 
+    def selected(self, generation):
+        
+        if isinstance(generation, str):
+            if generation == 'Patients':
+                generation=1
+            elif generation == 'Studies':
+                generation=2
+            elif generation == 'Series':
+                generation=3
+            elif generation == 'Instances':
+                generation=4
+        if self.treeView is None: 
+            return []
+        if generation == 4: 
+            return []
+        return self.treeView.get_selected(generation)
+
     def nr_selected(self, generation):
 
+        if isinstance(generation, str):
+            if generation == 'Patients':
+                generation=1
+            elif generation == 'Studies':
+                generation=2
+            elif generation == 'Series':
+                generation=3
+            elif generation == 'Instances':
+                generation=4
         if self.treeView is None: 
             return 0
         selected = self.treeView.get_selected(generation)

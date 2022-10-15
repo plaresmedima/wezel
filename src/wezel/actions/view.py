@@ -31,9 +31,9 @@ class Region(wezel.Action):
         for series in app.get_selected(SERIES_VIEWER):
 
             viewer = wezel.widgets.SeriesViewerROI()
-            app.addAsSubWindow(viewer, title=series.label())
             viewer.dataWritten.connect(app.treeView.setFolder)
             viewer.setData(series)
+            app.addAsSubWindow(viewer, title=series.label())
             app.treeView.databaseSet.connect(viewer.refresh)
             
 

@@ -4,29 +4,20 @@ import wezel
 
 def all(parent):
 
-    #parent.action(Copy, text='Copy', generation=0)
-    #parent.action(Delete, text='Delete', generation=0)
-
-    series = parent.menu('Series')
-    series.action(Copy, text='Copy', generation=3)
-    series.action(Delete, text='Delete', generation=3)
-    series.action(Merge, text='Merge', generation=3)
-    series.action(Group, text='Group', generation=3)
-    series.separator()
-    series.action(SeriesRename, text='Rename')
-    series.action(SeriesExtract, text='Extract subseries')
-
-    study = parent.menu('Study')
-    study.action(Copy, text='Copy', generation=2)
-    study.action(Delete, text='Delete', generation=2)
-    study.action(Merge, text='Merge', generation=2)
-    study.action(Group, text='Group', generation=2)
-
-    patient = parent.menu('Patient')
-    patient.action(Copy, text='Copy', generation=1)
-    patient.action(Delete, text='Delete', generation=1)
-    patient.action(Merge, text='Merge', generation=1)
-    patient.action(Group, text='Group', generation=1)
+    parent.action(Delete, text='Delete', generation=3)
+    parent.separator()
+    parent.action(Copy, text='Series > Copy', generation=3)
+    parent.action(MergeSeries, text='Series > Merge')
+    parent.action(GroupSeries, text='Series > Group')
+    parent.action(SeriesRename, text='Series > Rename')
+    parent.action(SeriesExtract, text='Series > Extract subseries')
+    parent.separator()
+    parent.action(Copy, text='Study > Copy', generation=2)
+    parent.action(MergeStudies, text='Study > Merge')
+    parent.action(GroupStudies, text='Study > Group')
+    parent.separator()
+    parent.action(Copy, text='Patient > Copy', generation=1)
+    parent.action(MergePatients, text='Patient > Merge')
     
 
 class Copy(wezel.Action):
@@ -65,37 +56,78 @@ class Delete(wezel.Action):
         app.refresh()
 
 
-class Merge(wezel.Action):
+class MergeSeries(wezel.Action):
 
     def enable(self, app):
 
         if not hasattr(app, 'folder'):
             return False
-        return app.nr_selected(self.generation) != 0
+        return app.nr_selected('Series') != 0
 
     def run(self, app): 
 
         app.status.message('Merging..')
-        records = app.get_selected(self.generation)
-        study = records[0].parent().new_sibling(StudyDescription='Merged Series')
-        db.merge(records, study.new_series(SeriesDescription='Merged Series'))
+        records = app.selected('Series')
+        study = records[0].new_pibling(StudyDescription='Merger')
+        db.merge(records, study.new_series(SeriesDescription='Merged series'))
+        app.refresh()
+
+class MergeStudies(wezel.Action):
+
+    def enable(self, app):
+        if not hasattr(app, 'folder'):
+            return False
+        return app.nr_selected('Studies') != 0
+
+    def run(self, app): 
+        app.status.message('Merging..')
+        records = app.selected('Studies')
+        patient = records[0].new_pibling(PatientName='Merger')
+        db.merge(records, patient.new_study(StudyDescription='Merged studies'))
+        app.refresh()
+
+class MergePatients(wezel.Action):
+
+    def enable(self, app):
+        if not hasattr(app, 'folder'):
+            return False
+        return app.nr_selected('Patients') != 0
+
+    def run(self, app): 
+        app.status.message('Merging..')
+        records = app.selected('Patients')
+        patient = records[0].new_sibling(PatientName='Merged Patients')
+        db.merge(records, patient)
         app.refresh()
 
 
-class Group(wezel.Action):
+class GroupSeries(wezel.Action):
 
     def enable(self, app):
-
         if not hasattr(app, 'folder'):
             return False
-        return app.nr_selected(self.generation) != 0
+        return app.nr_selected('Series') != 0
 
     def run(self, app): 
-
-        app.status.message('Merging..')
-        records = app.get_selected(self.generation)
-        study = records[0].parent().new_sibling(StudyDescription='Grouped Series')
+        app.status.message('Grouping..')
+        records = app.selected('Series')
+        study = records[0].new_pibling(StudyDescription='Grouped')
         db.group(records, study)
+        app.status.hide()
+        app.refresh()
+
+class GroupStudies(wezel.Action):
+
+    def enable(self, app):
+        if not hasattr(app, 'folder'):
+            return False
+        return app.nr_selected('Studies') != 0
+
+    def run(self, app): 
+        app.status.message('Grouping..')
+        records = app.selected('Studies')
+        patient = records[0].new_pibling(PatientName='Grouped')
+        db.group(records, patient)
         app.status.hide()
         app.refresh()
 
