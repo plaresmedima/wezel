@@ -107,6 +107,7 @@ class ImageContrast(QWidget):
         
         if self.image is None:
             return
+        self.image.message('Contrast changed!!!')
         width = self.spinBox.value()
         self.image.WindowWidth = width
         self.valueChanged.emit(width)
@@ -163,6 +164,9 @@ class ImageBrightness(QWidget):
         
         if self.image is None:
             return
+
+        self.image.message('Brightness changed!!!')
+
         center = self.spinBox.value()
         self.image.WindowCenter = center
         self.valueChanged.emit(center)
@@ -234,7 +238,10 @@ class SelectImageColorTable(QComboBox):
         
     def colorTableChanged(self):
 
-        if self.image is None: return
+        if self.image is None: 
+            return
+
+        self.image.message('Color table changed!!!')
         
         colorTable = self.currentText()
         if colorTable == 'gray':
@@ -356,6 +363,7 @@ class PixelValueLabel(QLabel):
 
     def setData(self, image):
         self.image = image
+        self.array = self.image.array()
 
     def setValue(self, coordinates):
         
@@ -364,10 +372,14 @@ class PixelValueLabel(QLabel):
             if len(coordinates) == 2:
                 x = coordinates[0]
                 y = coordinates[1]
+                #
+                # THIS IS VERY SLOW FOR DATA IN MEMORY DUE TO LOOKUPS FOR UID
+                #
                 if 0 <= x < self.image.Columns:
-                    if 0 <= y < self.image.Rows:
-                        pixelArray = self.image.array()
-                        pixelValue = pixelArray[x,y]
+                     if 0 <= y < self.image.Rows:
+                #if 0 <= x < self.array.shape[0]:
+                #    if 0 <= y < self.array.shape[1]:
+                        pixelValue = self.array[x,y]
                         text = "Signal ({}, {}) = {}".format(x, y, pixelValue)
         self.setText(text)
 

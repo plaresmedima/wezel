@@ -19,11 +19,11 @@ class SeriesViewerROI(QWidget):
         #series.read()
 
         self._setWidgets(dimensions=dimensions)
-        self._setConnections()
-        self._setMaskViewTool()
         self._setLayout()
+        self._setConnections()
         if series is not None:
             self.setData(series)
+        self._setMaskViewTool()
 
     def _setWidgets(self, dimensions=[]):
 
@@ -33,82 +33,6 @@ class SeriesViewerROI(QWidget):
         self.maskViewToolBox = widgets.MaskViewToolBox()
         self.pixelValue = widgets.PixelValueLabel()
         self.colors = widgets.SeriesColors()
-
-    def refresh(self):
-        if not self.imageSliders.series.in_database():
-            self.close()
-            return
-        self.regionList.refresh()
-
-
-    def setData(self, series=None):
-
-        self.imageSliders.setData(series, blockSignals=True)
-        self.regionList.setData(series)
-
-        image = self.imageSliders.getImage()
-        mask = self.regionList.getMask(image)
-        self.colors.setData(series, image)
-        self.maskView.setData(image, mask)
-        self.pixelValue.setData(image)
-
-        #self.maskView.fitInView(self.maskView.imageItem, Qt.KeepAspectRatio)
-        #self.maskView.imageItem.update()
-        
-        # changes are made in memory only until a new image is displayed
-        #image.read() 
-        #self.image = image
-
-    def _setConnections(self):
-
-        self.maskView.mousePositionMoved.connect(self._mouseMoved)
-        self.maskView.newMask.connect(self._newMask)
-        self.maskViewToolBox.newTool.connect(self._setMaskViewTool)
-        self.regionList.currentRegionChanged.connect(self._currentRegionChanged)
-        self.regionList.dataWritten.connect(self.dataWritten.emit)
-        self.imageSliders.valueChanged.connect(self._currentImageChanged)
-        self.colors.valueChanged.connect(self._currentImageEdited)
-        self.maskView.imageUpdated.connect(self.colors.setValue)
-
-    def _currentImageEdited(self):
-
-        self.maskView.imageItem.setPixMap()
-        self.maskView.imageItem.update()
-
-    def _setMaskViewTool(self):
-
-        tool = self.maskViewToolBox.getTool()
-        self.maskView.setEventHandler(tool)
-
-    def _mouseMoved(self):
-
-        tool = self.maskViewToolBox.getTool()
-        self.pixelValue.setValue([tool.x, tool.y])
-        
-    def _currentImageChanged(self):
-
-        #if self.image is not None:
-        #    self.image.write()
-        image = self.imageSliders.getImage()
-        mask = self.regionList.getMask(image)
-        self.colors.setImage(image)
-        self.maskView.setData(image, mask)
-        self.pixelValue.setData(image)
-        #image.read()
-        #self.image = image
-        
-    def _currentRegionChanged(self):
-
-        image = self.imageSliders.getImage()
-        mask = self.regionList.getMask(image)
-        self.maskView.setMask(mask)
-
-    def _newMask(self):
-
-        mask = self.maskView.getMask()
-        region = self.regionList.getRegion()
-        mask = mask.move_to(region) 
-        self.maskView.setObject(mask)
 
     def _setLayout(self):
 
@@ -129,3 +53,115 @@ class SeriesViewerROI(QWidget):
         layout.addWidget(self.imageSliders) 
 
         self.setLayout(layout)
+
+    def refresh(self):
+        if not self.imageSliders.series.in_database():
+            self.close()
+            return
+        self.regionList.refresh()
+
+
+    def setData(self, series=None):
+
+        series.message('Setting data: Setting up sliders..')
+        self.imageSliders.setData(series, blockSignals=True)
+        series.message('Setting data: Setting up region list..')
+        self.regionList.setData(series)
+        series.message('Setting data: Getting image..')
+        image = self.imageSliders.getImage()
+        image.read()
+        series.message('Setting data: Getting mask..')
+        mask = self.regionList.getMask(image)
+        series.message('Setting data: Setting colors..')
+        self.colors.setData(series, image)
+        series.message('Setting data: Setting mask View..')
+        self.maskView.setData(image, mask)
+        series.message('Setting data: Setting pixel value..')
+        self.pixelValue.setData(image)
+        series.message('Setting data: Finished..')
+
+        #series.status.hide()
+
+        #self.maskView.fitInView(self.maskView.imageItem, Qt.KeepAspectRatio)
+        #self.maskView.imageItem.update()
+        
+        # changes are made in memory only until a new image is displayed
+        #image.read() 
+        #self.image = image
+
+    def _setConnections(self):
+
+        self.maskView.mousePositionMoved.connect(self._mouseMoved)
+        self.maskView.newMask.connect(self._newMask)
+        self.maskViewToolBox.newTool.connect(self._setMaskViewTool)
+        self.regionList.currentRegionChanged.connect(self._currentRegionChanged)
+        self.regionList.dataWritten.connect(self.dataWritten.emit)
+        self.imageSliders.valueChanged.connect(self._currentImageChanged)
+        self.colors.valueChanged.connect(self._currentImageEdited)
+        self.maskView.imageUpdated.connect(self.colors.setValue)
+
+
+    def _setMaskViewTool(self):
+
+        #self.imageSliders.series.message('setMaskViewTool: getting tool..')
+        tool = self.maskViewToolBox.getTool()
+        #self.imageSliders.series.message('setMaskViewTool: setting tool..')
+        self.maskView.setEventHandler(tool)
+        #self.imageSliders.series.message('setMaskViewTool: Finished..')
+
+    def _mouseMoved(self):
+
+        self.imageSliders.series.message('mouseMoved: getting tool..')
+        tool = self.maskViewToolBox.getTool()
+        self.imageSliders.series.message('mouseMoved: setting pixel value..')
+        self.pixelValue.setValue([tool.x, tool.y])
+        self.imageSliders.series.message('mouseMoved: Finished..')
+        
+    def _currentImageChanged(self):
+
+        #if self.image is not None:
+        #    self.image.write()
+        self.imageSliders.series.message('currentImageChanged: Getting image..')
+        image = self.imageSliders.getImage()
+        image.read()
+        self.imageSliders.series.message('currentImageChanged: Getting mask..')
+        mask = self.regionList.getMask(image)
+        self.imageSliders.series.message('currentImageChanged: Setting colors..')
+        self.colors.setImage(image)
+        self.imageSliders.series.message('currentImageChanged: Setting maskView..')
+        self.maskView.setData(image, mask)
+        self.imageSliders.series.message('currentImageChanged: Setting value label..')
+        self.pixelValue.setData(image)
+        self.imageSliders.series.message('currentImageChanged: Finished..')
+        #image.read()
+        #self.image = image
+
+    def _currentImageEdited(self):
+
+        self.imageSliders.series.message('currentImageEdited: setting image..')
+        self.maskView.imageItem.setPixMap()
+        self.maskView.imageItem.update()
+        self.imageSliders.series.message('currentImageEdited: finished..')
+        
+    def _currentRegionChanged(self):
+
+        self.imageSliders.series.message('currentRegionChanged: Getting image..')
+        image = self.imageSliders.getImage()
+        self.imageSliders.series.message('currentRegionChanged: Getting mask..')
+        mask = self.regionList.getMask(image)
+        self.imageSliders.series.message('currentRegionChanged: Setting mask..')
+        self.maskView.setMask(mask)
+        self.imageSliders.series.message('currentRegionChanged: Finished..')
+
+    def _newMask(self):
+
+        self.imageSliders.series.message('newMask: Getting mask..')
+        mask = self.maskView.getMask()
+        self.imageSliders.series.message('newMask: Getting region..')
+        region = self.regionList.getRegion()
+        self.imageSliders.series.message('newMask: Moving mask..')
+        mask = mask.move_to(region) 
+        self.imageSliders.series.message('newMask: Setting Maskview..')
+        self.maskView.setObject(mask)
+        self.imageSliders.series.message('newMask: Finished..')
+

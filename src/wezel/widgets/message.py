@@ -124,11 +124,12 @@ class StatusBar(QStatusBar):
 
     def progress(self, value, total, message=None):
 
-        if message is not None: self.message(message)
+        if message is not None: 
+            self.message(message)
         self.progressBar.show()
         self.progressBar.setRange(0, total)
         self.progressBar.setValue(value)
-        QApplication.processEvents() # allow gui to update
+        QApplication.processEvents() # allow gui to update - prevent freezing
 
     def cursorToHourglass(self):
         """
