@@ -11,7 +11,7 @@ from PyQt5.QtWidgets import (QWidget, QPushButton,
     QGraphicsView, QGraphicsScene, QGraphicsObject, QGraphicsItem)
 from PyQt5.QtGui import QPixmap, QCursor, QIcon, QColor, QPen, QBrush, qRgb, QImage
 
-from . import icons
+import wezel.icons as icons
 from .. import widgets
 
 
@@ -35,7 +35,7 @@ class RegionViewerDev(QWidget):
 
     def _setWidgets(self, dimensions=[]):
 
-        self.imageSliders = widgets.ImageSliders(dimensions=dimensions)
+        self.imageSliders = widgets.SeriesSliders(dimensions=dimensions)
         self.regionList = widgets.RegionList()
         self.view = MaskView()
         self.toolBox = widgets.ToolBox(
@@ -104,7 +104,7 @@ class RegionViewerDev(QWidget):
         self.imageSliders.setData(series, blockSignals=True)
         self.regionList.setData(series)
 
-        image = self.imageSliders.getImage()
+        image = self.imageSliders.image
         mask = self.regionList.getMask(image)
 
         self.colors.setData(series, image)
@@ -140,7 +140,7 @@ class RegionViewerDev(QWidget):
         
     def _currentImageChanged(self):
 
-        image = self.imageSliders.getImage()
+        image = self.imageSliders.image
         mask = self.regionList.getMask(image)
         self.colors.setImage(image)
         self.view.setData(image, mask)
@@ -148,7 +148,7 @@ class RegionViewerDev(QWidget):
 
     def _currentRegionChanged(self):
 
-        image = self.imageSliders.getImage()
+        image = self.imageSliders.image
         mask = self.regionList.getMask(image)
         self.view.setMask(mask)
 
@@ -179,7 +179,7 @@ class SeriesViewerDev(QWidget):
 
     def _setWidgets(self, dimensions=[]):
 
-        self.imageSliders = widgets.ImageSliders(dimensions=dimensions)
+        self.imageSliders = widgets.SeriesSliders(dimensions=dimensions)
         self.view = ImageView()
         self.toolBox = widgets.ToolBox(
             ImageViewCursor(), 
@@ -220,7 +220,7 @@ class SeriesViewerDev(QWidget):
     def setData(self, series):
 
         self.imageSliders.setData(series, blockSignals=True)
-        image = self.imageSliders.getImage()
+        image = self.imageSliders.image
         self.colors.setData(series, image)
         self.view.setData(image)
         self.view.fitImage()
@@ -254,7 +254,7 @@ class SeriesViewerDev(QWidget):
         
     def _currentImageChanged(self):
 
-        image = self.imageSliders.getImage()
+        image = self.imageSliders.image
         self.colors.setImage(image)
         self.view.setData(image)
         self.pixelValue.setData(image)
@@ -722,11 +722,11 @@ class MaskViewBrush(ImageViewCursor):
 
         self.mode = mode
         if mode == "paint":
-            pixMap = QPixmap(widgets.icons.paint_brush)
+            pixMap = QPixmap(icons.paint_brush)
             self.cursor = QCursor(pixMap, hotX=0, hotY=16)
             self.toolTip = 'Paint brush'
         elif mode == "erase":
-            pixMap = QPixmap(widgets.icons.eraser)
+            pixMap = QPixmap(icons.eraser)
             self.cursor = QCursor(pixMap, hotX=0, hotY=16)
             self.toolTip = 'Eraser'
         self.icon = QIcon(pixMap)
@@ -779,17 +779,17 @@ class MaskViewBrush(ImageViewCursor):
 
         view = self.scene().parent()
 
-        pickBrush = QAction(QIcon(widgets.icons.paint_brush), 'Paint', None)
+        pickBrush = QAction(QIcon(icons.paint_brush), 'Paint', None)
         pickBrush.setCheckable(True)
         pickBrush.setChecked(self.mode == "paint")
         pickBrush.triggered.connect(lambda: self.setMode("paint"))
         
-        pickEraser = QAction(QIcon(widgets.icons.eraser), 'Erase', None)
+        pickEraser = QAction(QIcon(icons.eraser), 'Erase', None)
         pickEraser.setCheckable(True)
         pickEraser.setChecked(self.mode == "erase")
         pickEraser.triggered.connect(lambda: self.setMode("erase"))
 
-        clearMask = QAction(QIcon(widgets.icons.arrow_curve_180_left), 'Clear Region', None)
+        clearMask = QAction(QIcon(icons.arrow_curve_180_left), 'Clear Region', None)
         clearMask.triggered.connect(view.maskItem.eraseMaskImage)
 
         onePixel = QAction('1 pixel', None)
@@ -858,7 +858,7 @@ class MaskViewPenFreehand(ImageViewCursor):
     def __init__(self, mode="draw"):
         super().__init__()
 
-        self.icon = QIcon(widgets.icons.layer_shape_curve)
+        self.icon = QIcon(icons.layer_shape_curve)
         self.path = None
         self.setMode(mode)
         
@@ -866,11 +866,11 @@ class MaskViewPenFreehand(ImageViewCursor):
 
         self.mode = mode
         if mode == "draw":
-            pixMap = QPixmap(widgets.icons.pencil)
+            pixMap = QPixmap(icons.pencil)
             self.cursor = QCursor(pixMap, hotX=0, hotY=16)
             self.toolTip = 'Draw'
         elif mode == "cut":
-            pixMap = QPixmap(widgets.icons.cutter)
+            pixMap = QPixmap(icons.cutter)
             self.cursor = QCursor(pixMap, hotX=0, hotY=16)
             self.toolTip = 'Cut'
         
@@ -959,17 +959,17 @@ class MaskViewPenFreehand(ImageViewCursor):
 
         view = self.scene().parent()
 
-        pickBrush = QAction(QIcon(widgets.icons.pencil), 'Draw', None)
+        pickBrush = QAction(QIcon(icons.pencil), 'Draw', None)
         pickBrush.setCheckable(True)
         pickBrush.setChecked(self.mode == "draw")
         pickBrush.triggered.connect(lambda: self.setMode("draw"))
         
-        pickEraser = QAction(QIcon(widgets.icons.cutter), 'Cut', None)
+        pickEraser = QAction(QIcon(icons.cutter), 'Cut', None)
         pickEraser.setCheckable(True)
         pickEraser.setChecked(self.mode == "cut")
         pickEraser.triggered.connect(lambda: self.setMode("cut"))
 
-        clearMask = QAction(QIcon(widgets.icons.arrow_curve_180_left), 'Clear mask', None)
+        clearMask = QAction(QIcon(icons.arrow_curve_180_left), 'Clear mask', None)
         clearMask.triggered.connect(view.maskItem.eraseMaskImage)
 
         contextMenu = QMenu()
@@ -991,7 +991,7 @@ class MaskViewPenPolygon(MaskViewPenFreehand):
     def __init__(self, mode="draw"):
         super().__init__(mode=mode)
 
-        self.icon = QIcon(widgets.icons.layer_shape_polygon)
+        self.icon = QIcon(icons.layer_shape_polygon)
 
     def sceneEventFilter(self, item, event):
 
@@ -1057,7 +1057,7 @@ class MaskViewPenRectangle(MaskViewPenFreehand):
     def __init__(self, mode="draw"):
         super().__init__(mode=mode)
 
-        self.icon = QIcon(widgets.icons.layer_shape)
+        self.icon = QIcon(icons.layer_shape)
 
     def sceneEventFilter(self, item, event):
 
@@ -1096,7 +1096,7 @@ class MaskViewPenCircle(MaskViewPenFreehand):
     def __init__(self, mode="draw"):
         super().__init__(mode=mode)
 
-        self.icon = QIcon(widgets.icons.layer_shape_ellipse)
+        self.icon = QIcon(icons.layer_shape_ellipse)
         self.center = None
 
     def sceneEventFilter(self, item, event):

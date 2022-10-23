@@ -51,7 +51,8 @@ def test_build():
 def test_launch():
 
     #tmp = create_tmp_database(onefile)
-    tmp = tristan
+    tmp = create_tmp_database(rider)
+    #tmp = tristan
 
     app = wezel.app()
     app.set_app(wezel.apps.dicom.Windows)
@@ -59,11 +60,59 @@ def test_launch():
     #app.set_menu(wezel.menus.test)
     app.show()
 
+def test_DICOMFolderTree():
+
+    interactive = True
+
+    tmp = create_tmp_database(rider)
+    #tmp = tristan
+    database = db.database(tmp)
+
+    app = QApplication(sys.argv)
+    start = timeit.default_timer()
+    window = widgets.DICOMFolderTree(database)
+    stop = timeit.default_timer()
+    window.selectRecords(database.patients()[0].studies()[0].uid)
+    window.selectRecords(database.patients()[-1].uid)
+    window.itemSelectionChanged.connect(lambda record: print('Selection changed for ' + record['label']))
+    window.itemDoubleClicked.connect(lambda record: print('Double click on ' + record['label']))
+    window.show()
+    if interactive:
+        app.exec_()
+
+    print('Time for buiding display (sec)', stop-start)
+
+    remove_tmp_database(tmp)
+
+
+def test_SeriesSliders():
+
+    interactive = True
+
+    tmp = create_tmp_database(rider)
+    #tmp = tristan
+    database = db.database(tmp)
+    #series = database.series()[5]
+    series = db.merge(database.series())
+
+    app = QApplication(sys.argv)
+    window = widgets.SeriesSliders(series)
+    window.valueChanged.connect(lambda image: 
+        print('No image') if image is None else print('Image ' + str(image.InstanceNumber))
+    )
+    window.show()
+    if interactive:
+        app.exec_()
+
+    remove_tmp_database(tmp)
+
 
 
 if __name__ == "__main__":
 
     test_launch()
+    #test_DICOMFolderTree()
+    #test_SeriesSliders()
 
 
     print('-----------------------')

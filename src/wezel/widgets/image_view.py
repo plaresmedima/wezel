@@ -2,7 +2,7 @@ from PyQt5.QtCore import Qt, pyqtSignal, QRectF
 from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene, QGraphicsObject
 from PyQt5.QtGui import QPixmap, QCursor, QIcon, QColor, QPen, QBrush
 
-from . import icons
+import wezel.icons as icons
 from wezel.utils import makeQImage
 
 class ImageView(QGraphicsView):

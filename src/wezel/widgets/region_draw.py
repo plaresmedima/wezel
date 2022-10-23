@@ -27,7 +27,7 @@ class SeriesViewerROI(QWidget):
 
     def _setWidgets(self, dimensions=[]):
 
-        self.imageSliders = widgets.ImageSliders(dimensions=dimensions)
+        self.imageSliders = widgets.SeriesSliders(dimensions=dimensions)
         self.regionList = widgets.RegionList()
         self.maskView = widgets.MaskView()
         self.maskViewToolBox = widgets.MaskViewToolBox()
@@ -68,7 +68,7 @@ class SeriesViewerROI(QWidget):
         series.message('Setting data: Setting up region list..')
         self.regionList.setData(series)
         series.message('Setting data: Getting image..')
-        image = self.imageSliders.getImage()
+        image = self.imageSliders.image
         image.read()
         series.message('Setting data: Getting mask..')
         mask = self.regionList.getMask(image)
@@ -122,7 +122,7 @@ class SeriesViewerROI(QWidget):
         #if self.image is not None:
         #    self.image.write()
         self.imageSliders.series.message('currentImageChanged: Getting image..')
-        image = self.imageSliders.getImage()
+        image = self.imageSliders.image
         image.read()
         self.imageSliders.series.message('currentImageChanged: Getting mask..')
         mask = self.regionList.getMask(image)
@@ -146,7 +146,7 @@ class SeriesViewerROI(QWidget):
     def _currentRegionChanged(self):
 
         self.imageSliders.series.message('currentRegionChanged: Getting image..')
-        image = self.imageSliders.getImage()
+        image = self.imageSliders.image
         self.imageSliders.series.message('currentRegionChanged: Getting mask..')
         mask = self.regionList.getMask(image)
         self.imageSliders.series.message('currentRegionChanged: Setting mask..')

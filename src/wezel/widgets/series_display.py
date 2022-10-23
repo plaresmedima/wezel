@@ -37,7 +37,7 @@ class SeriesViewer(QWidget):
         self.delete = widgets.DeleteImageButton()
         self.pixelValue = widgets.PixelValueLabel()
         self.graphics = widgets.GraphicsView()
-        self.imageSliders = widgets.ImageSliders()
+        self.imageSliders = widgets.SeriesSliders()
 
     def _setConnections(self):
 
@@ -136,7 +136,7 @@ class SeriesViewer(QWidget):
         self.imageSliders.blockSignals(True)       
         self.imageSliders.setSeries(self.series)
         self.imageSliders.blockSignals(False)
-        self.image = self.imageSliders.getImage()
+        self.image = self.imageSliders.image
         self._setImage()
         
     def _setWindowValue(self):
@@ -162,7 +162,7 @@ class SeriesViewer(QWidget):
                 width = self.image.WindowWidth
                 colormap = self.image.colormap
 
-        self.image = self.imageSliders.getImage()
+        self.image = self.imageSliders.image
         #self.image_has_changed = False
 
         if self.settings.isLocked:

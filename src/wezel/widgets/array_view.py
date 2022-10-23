@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QPixmap, QCursor, QIcon, QColor, QPen, QBrush
 
 from wezel.utils import makeQImage
-from . import icons
+import wezel.icons as icons
 
 
 class ArrayViewToolBox(QWidget):

@@ -2,7 +2,7 @@ from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtWidgets import QComboBox, QPushButton, QLabel, QWidget, QDoubleSpinBox, QHBoxLayout
 from PyQt5.QtGui import QIcon, QPixmap
 
-from . import icons
+import wezel.icons as icons
 
 listColors =  ['gray', 'cividis',  'magma', 'plasma', 'viridis', 
     'Greys', 'Purples', 'Blues', 'Greens', 'Oranges', 'Reds',

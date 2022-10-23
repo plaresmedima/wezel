@@ -1,7 +1,7 @@
 from PyQt5.QtCore import  Qt, pyqtSignal
 from PyQt5.QtWidgets import (
-    QApplication, QAbstractItemView,
-    QHeaderView, QTreeWidget, QTreeWidgetItem, QFileSystemModel, QTreeView,
+    QAbstractItemView,
+    QTreeWidget, QTreeWidgetItem, QFileSystemModel, QTreeView,
 )
 
 class DICOMFolderTree(QTreeWidget):
@@ -35,34 +35,34 @@ class DICOMFolderTree(QTreeWidget):
         self.setUpdatesEnabled(False)
         self.clear()
         self.setHeaderLabels([self.database.manager.path])
-        database = self.database.manager.tree()
 
+        # This does not show empty patients or studies
+        database = self.database.manager.tree()
         for patient in database['patients']:
             if patient['studies'] != []:
-                key = patient['studies'][0]['series'][0]['indices'][0]
-                patientWidget = self._treeWidgetItem('Patient', key, patient, self)
+                patientWidget = self._treeWidgetItem('Patient', patient, self)
                 for study in patient['studies']:
                     if study['series'] != []:
-                        key = study['series'][0]['indices'][0]
-                        studyWidget = self._treeWidgetItem('Study', key, study, patientWidget) 
+                        studyWidget = self._treeWidgetItem('Study', study, patientWidget)
                         for sery in study['series']:
-                            key = sery['indices'][0]
-                            seriesWidget =  self._treeWidgetItem('Series', key, sery, studyWidget)
+                            seriesWidget = self._treeWidgetItem('Series', sery, studyWidget)
+
         self.setUpdatesEnabled(True)
         self.databaseSet.emit()
 
 
-    def _treeWidgetItem(self, level, key, record, parent, expanded=True):
+
+    def _treeWidgetItem(self, level, record, parent, expanded=True):
         """Build an item in the Tree"""
 
         item = QTreeWidgetItem(parent)
         # Custom attributes
         item.checked = False
         item.dict = {
-            'label': self.database.manager.label(key=key, type=level),
+            'label': self.database.manager.label(key=record['key'], type=level),
             'level': level,
             'uid': record['uid'],
-            'key': key,
+            'key': record['key'],
         }
         # Built-in attributes
         item.setText(0, item.dict['label'])

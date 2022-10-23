@@ -104,7 +104,7 @@ class Windows(wezel.App):
         self.treeView.setFolder()
         self.menubar.enable()
         self.status.hide()
-        self.status.message()
+        #self.status.message()
 
     def addAsDockWidget(self, widget, title=''):
 

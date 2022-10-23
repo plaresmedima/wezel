@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import (
     QHBoxLayout, 
     QPushButton)
 
-from . import icons
+import wezel.icons as icons
 
 class RegionList(QWidget):
     """Manages a list of regions on the same underlay series"""

@@ -10,6 +10,7 @@ from PyQt5.QtGui import QPixmap, QImage, qRgb, QIcon, QCursor, QColor, QPen
 from PyQt5.QtWidgets import QGraphicsObject, QAction, QMenu
 
 from .. import widgets as widgets
+import wezel.icons as icons
 
 
 class MaskView(widgets.ImageView):
@@ -198,11 +199,11 @@ class MaskViewBrush(widgets.ImageViewCursor):
 
         self.mode = mode
         if mode == "paint":
-            pixMap = QPixmap(widgets.icons.paint_brush)
+            pixMap = QPixmap(icons.paint_brush)
             self.cursor = QCursor(pixMap, hotX=0, hotY=16)
             self.toolTip = 'Paint brush'
         elif mode == "erase":
-            pixMap = QPixmap(widgets.icons.eraser)
+            pixMap = QPixmap(icons.eraser)
             self.cursor = QCursor(pixMap, hotX=0, hotY=16)
             self.toolTip = 'Eraser'
         self.icon = QIcon(pixMap)
@@ -243,17 +244,17 @@ class MaskViewBrush(widgets.ImageViewCursor):
        
     def launchContextMenu(self, event):
 
-        pickBrush = QAction(QIcon(widgets.icons.paint_brush), 'Paint', None)
+        pickBrush = QAction(QIcon(icons.paint_brush), 'Paint', None)
         pickBrush.setCheckable(True)
         pickBrush.setChecked(self.mode == "paint")
         pickBrush.triggered.connect(lambda: self.setMode("paint"))
         
-        pickEraser = QAction(QIcon(widgets.icons.eraser), 'Erase', None)
+        pickEraser = QAction(QIcon(icons.eraser), 'Erase', None)
         pickEraser.setCheckable(True)
         pickEraser.setChecked(self.mode == "erase")
         pickEraser.triggered.connect(lambda: self.setMode("erase"))
 
-        clearMask = QAction(QIcon(widgets.icons.arrow_curve_180_left), 'Clear Region', None)
+        clearMask = QAction(QIcon(icons.arrow_curve_180_left), 'Clear Region', None)
         clearMask.triggered.connect(self.maskItem.eraseMaskImage)
 
         onePixel = QAction('1 pixel', None)
@@ -322,7 +323,7 @@ class MaskViewPenFreehand(widgets.ImageViewCursor):
     def __init__(self, mode="draw"):
         super().__init__()
 
-        self.icon = QIcon(widgets.icons.layer_shape_curve)
+        self.icon = QIcon(icons.layer_shape_curve)
         self.path = None
         self.setMode(mode)
         
@@ -330,11 +331,11 @@ class MaskViewPenFreehand(widgets.ImageViewCursor):
 
         self.mode = mode
         if mode == "draw":
-            pixMap = QPixmap(widgets.icons.pencil)
+            pixMap = QPixmap(icons.pencil)
             self.cursor = QCursor(pixMap, hotX=0, hotY=16)
             self.toolTip = 'Draw'
         elif mode == "cut":
-            pixMap = QPixmap(widgets.icons.cutter)
+            pixMap = QPixmap(icons.cutter)
             self.cursor = QCursor(pixMap, hotX=0, hotY=16)
             self.toolTip = 'Cut'
 
@@ -418,17 +419,17 @@ class MaskViewPenFreehand(widgets.ImageViewCursor):
         
     def launchContextMenu(self, event):
 
-        pickBrush = QAction(QIcon(widgets.icons.pencil), 'Draw', None)
+        pickBrush = QAction(QIcon(icons.pencil), 'Draw', None)
         pickBrush.setCheckable(True)
         pickBrush.setChecked(self.mode == "draw")
         pickBrush.triggered.connect(lambda: self.setMode("draw"))
         
-        pickEraser = QAction(QIcon(widgets.icons.cutter), 'Cut', None)
+        pickEraser = QAction(QIcon(icons.cutter), 'Cut', None)
         pickEraser.setCheckable(True)
         pickEraser.setChecked(self.mode == "cut")
         pickEraser.triggered.connect(lambda: self.setMode("cut"))
 
-        clearMask = QAction(QIcon(widgets.icons.arrow_curve_180_left), 'Clear mask', None)
+        clearMask = QAction(QIcon(icons.arrow_curve_180_left), 'Clear mask', None)
         clearMask.triggered.connect(self.maskItem.eraseMaskImage)
 
         contextMenu = QMenu()
@@ -450,7 +451,7 @@ class MaskViewPenPolygon(MaskViewPenFreehand):
     def __init__(self, mode="draw"):
         super().__init__(mode=mode)
 
-        self.icon = QIcon(widgets.icons.layer_shape_polygon)
+        self.icon = QIcon(icons.layer_shape_polygon)
 
     def itemHoverMoveEvent(self, event):
 
@@ -508,7 +509,7 @@ class MaskViewPenRectangle(MaskViewPenFreehand):
     def __init__(self, mode="draw"):
         super().__init__(mode=mode)
 
-        self.icon = QIcon(widgets.icons.layer_shape)
+        self.icon = QIcon(icons.layer_shape)
             
     def itemMouseMoveEvent(self, event):
 
@@ -539,7 +540,7 @@ class MaskViewPenCircle(MaskViewPenFreehand):
     def __init__(self, mode="draw"):
         super().__init__(mode=mode)
 
-        self.icon = QIcon(widgets.icons.layer_shape_ellipse)
+        self.icon = QIcon(icons.layer_shape_ellipse)
         self.center = None
 
     def itemMousePressEvent(self, event):
@@ -595,8 +596,8 @@ class MaskViewRegionGrowing(MaskViewPenFreehand):
     def __init__(self, radius='default'):
 
         self.radius = radius
-        self.icon = QIcon(widgets.icons.paint)
-        pixMap = QPixmap(widgets.icons.paint)
+        self.icon = QIcon(icons.paint)
+        pixMap = QPixmap(icons.paint)
         self.cursor = QCursor(pixMap, hotX=0, hotY=16)
         self.toolTip = 'Select a Region to Paint'
         self.center = None
@@ -685,8 +686,8 @@ class MaskViewEdgeDetection(MaskViewPenFreehand):
     def __init__(self, mode="draw"):
         super().__init__(mode=mode)
 
-        self.icon = QIcon(widgets.icons.wand_hat)
-        pixMap = QPixmap(widgets.icons.wand)
+        self.icon = QIcon(icons.wand_hat)
+        pixMap = QPixmap(icons.wand)
         self.cursor = QCursor(pixMap, hotX=0, hotY=16)
         self.toolTip = 'Select a Region to Detect'
         self.center = None
@@ -735,8 +736,8 @@ class MaskViewErode(MaskViewPenFreehand):
 
         self.setkernelSize(kernelSize)
 
-        self.icon = QIcon(widgets.icons.arrow_in)
-        pixMap = QPixmap(widgets.icons.paint_brush_minus)
+        self.icon = QIcon(icons.arrow_in)
+        pixMap = QPixmap(icons.paint_brush__minus)
         self.cursor = QCursor(pixMap, hotX=0, hotY=16)
         self.toolTip = 'Erode'
         self.center = None
@@ -865,8 +866,8 @@ class MaskViewDilate(MaskViewPenFreehand):
 
         self.setkernelSize(kernelSize)
 
-        self.icon = QIcon(widgets.icons.arrow_out)
-        pixMap = QPixmap(widgets.icons.paint_brush_plus)
+        self.icon = QIcon(icons.arrow_out)
+        pixMap = QPixmap(icons.paint_brush__plus)
         self.cursor = QCursor(pixMap, hotX=0, hotY=16)
         self.toolTip = 'Dilate'
         self.center = None
@@ -989,8 +990,8 @@ class MaskViewDeleteROI(MaskViewPenFreehand):
 
     def __init__(self):
 
-        self.icon = QIcon(widgets.icons.paint_can_minus)
-        pixMap = QPixmap(widgets.icons.paint_can_minus)
+        self.icon = QIcon(icons.paint_can__minus)
+        pixMap = QPixmap(icons.paint_can__minus)
         self.cursor = QCursor(pixMap, hotX=0, hotY=16)
         self.toolTip = 'Delete ROI'
         self.center = None

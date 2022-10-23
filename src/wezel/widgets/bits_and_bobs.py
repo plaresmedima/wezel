@@ -2,7 +2,7 @@ from PyQt5.QtCore import  pyqtSignal
 from PyQt5.QtWidgets import QPushButton
 from PyQt5.QtGui import QIcon
 
-from . import icons
+import wezel.icons as icons
 
 class LockUnlockButton(QPushButton):
 

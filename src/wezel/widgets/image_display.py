@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import (
     QToolBar,
 )
 from .. import widgets as widget
-from . import icons
+import wezel.icons as icons
 
 class ImageViewer(QWidget):
     """Display a single image."""

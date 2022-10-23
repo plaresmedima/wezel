@@ -6,7 +6,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import QMainWindow, QAction, QMenu, QMenuBar
 from PyQt5.QtGui import QIcon
 
-import wezel.widgets as widgets
+import wezel.icons as icons
 
 # Examples of style sheets
 # https://doc.qt.io/qtforpython/overviews/stylesheet-examples.html
@@ -60,7 +60,7 @@ class Main(QMainWindow):
         self.wezel = wezel
         #self.setStyleSheet(STYLESHEET)
         self.setWindowTitle("Wezel")
-        self.setWindowIcon(QIcon(widgets.icons.favicon))
+        self.setWindowIcon(QIcon(icons.favicon))
 
     def closeEvent(self, event): 
         accept = self.wezel.app.close()

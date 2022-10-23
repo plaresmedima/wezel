@@ -21,7 +21,7 @@ class Wezel:
         self.app = None
         self.log = logger()
         self.QApp = QApplication(sys.argv)
-        self.QApp.setWindowIcon(QIcon(wezel.widgets.icons.favicon))
+        self.QApp.setWindowIcon(QIcon(wezel.icons.favicon))
         self.status = wezel.widgets.StatusBar()
         self.main = wezel.core.Main(self)
         self.main.setStatusBar(self.status)

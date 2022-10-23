@@ -20,7 +20,7 @@ from .dbimage import (
 )
 from .dbseries import (
     SeriesColors, 
-    ImageSliders,
+    SeriesSliders,
 )
 from .array_display import (
     FourDimViewer,

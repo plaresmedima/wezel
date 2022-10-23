@@ -7,17 +7,20 @@ def all(parent):
     parent.action(Delete, text='Delete', generation=3)
     parent.separator()
     parent.action(Copy, text='Series > Copy', generation=3)
+    parent.action(NewSeries, text='Series > New')
     parent.action(MergeSeries, text='Series > Merge')
     parent.action(GroupSeries, text='Series > Group')
     parent.action(SeriesRename, text='Series > Rename')
     parent.action(SeriesExtract, text='Series > Extract subseries')
     parent.separator()
-    parent.action(Copy, text='Study > Copy', generation=2)
-    parent.action(MergeStudies, text='Study > Merge')
-    parent.action(GroupStudies, text='Study > Group')
+    parent.action(Copy, text='Studies > Copy', generation=2)
+    parent.action(NewStudy, text='Study > New')
+    parent.action(MergeStudies, text='Studies > Merge')
+    parent.action(GroupStudies, text='Studies > Group')
     parent.separator()
-    parent.action(Copy, text='Patient > Copy', generation=1)
-    parent.action(MergePatients, text='Patient > Merge')
+    parent.action(Copy, text='Patients > Copy', generation=1)
+    parent.action(NewPatient, text='Patient > New')
+    parent.action(MergePatients, text='Patients > Merge')
     
 
 class Copy(wezel.Action):
@@ -56,6 +59,49 @@ class Delete(wezel.Action):
         app.refresh()
 
 
+class NewSeries(wezel.Action):
+
+    def enable(self, app):
+        if not hasattr(app, 'folder'):
+            return False
+        return app.nr_selected('Studies') != 0
+
+    def run(self, app): 
+        app.status.message('Creating new series..')
+        studies = app.selected('Studies')
+        for study in studies:
+            study.new_series(SeriesDescription='New series')
+        app.refresh()
+
+
+class NewStudy(wezel.Action):
+
+    def enable(self, app):
+        if not hasattr(app, 'folder'):
+            return False
+        return app.nr_selected('Patients') != 0
+
+    def run(self, app): 
+        app.status.message('Creating new study..')
+        patients = app.selected('Patients')
+        for patient in patients:
+            patient.new_study(StudyDescription='New study')
+        app.refresh()
+
+
+class NewPatient(wezel.Action):
+
+    def enable(self, app):
+        if not hasattr(app, 'folder'):
+            return False
+        return True
+
+    def run(self, app): 
+        app.status.message('Creating new patient..')
+        self.folder.new_patient(PatientName='New patient')
+        app.refresh()
+
+
 class MergeSeries(wezel.Action):
 
     def enable(self, app):
@@ -69,8 +115,13 @@ class MergeSeries(wezel.Action):
         app.status.message('Merging..')
         records = app.selected('Series')
         study = records[0].new_pibling(StudyDescription='Merger')
-        db.merge(records, study.new_series(SeriesDescription='Merged series'))
+        series = study.new_series(SeriesDescription='Merged series')
+        db.merge(records, series)
         app.refresh()
+
+
+
+
 
 class MergeStudies(wezel.Action):
 
@@ -81,9 +132,9 @@ class MergeStudies(wezel.Action):
 
     def run(self, app): 
         app.status.message('Merging..')
-        records = app.selected('Studies')
-        patient = records[0].new_pibling(PatientName='Merger')
-        db.merge(records, patient.new_study(StudyDescription='Merged studies'))
+        studies = app.selected('Studies')
+        patient = studies[0].new_pibling(PatientName='Merger')
+        db.merge(studies, patient.new_study(StudyDescription='Merged studies'))
         app.refresh()
 
 class MergePatients(wezel.Action):
