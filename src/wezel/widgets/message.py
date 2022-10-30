@@ -96,7 +96,7 @@ class Dialog():
         Collect user input of various types.
         """
         dialog = ParameterInputDialog(*fields, title=title, helpText=helpText)
-        return dialog.returnListParameterValues()
+        return dialog.button=='Cancel', dialog.returnListParameterValues()
 
 
 class StatusBar(QStatusBar):

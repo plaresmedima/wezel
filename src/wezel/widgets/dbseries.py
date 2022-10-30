@@ -89,17 +89,13 @@ class SeriesSliders(QWidget):
 
     def __init__(self, series=None, image=None, dimensions=[]):  
         super().__init__()
-
         self._blockSignals = False
-
         if dimensions == []:
             self.sliderTags = ["SliceLocation","AcquisitionTime"]
         else: 
             self.sliderTags = dimensions
-
         self._setWidgets()
         self._setLayout()
-
         if series is not None:
             self.setData(series, image)
 
@@ -155,17 +151,6 @@ class SeriesSliders(QWidget):
         self._setSliderValues()
         self._sliderValueChanged()
 
-    # def getSeries(self):
-    #     return self.series
-
-    # def getImage(self):
-    #     return self.image
-
-    def _setSliderValueLists(self):
-        for slider in self._activeSliders:
-            values = self.dataFrame[slider.label].unique().tolist()
-            values.sort()
-            slider.setValues(values)
 
     def _readDataFrame(self):
         """Read the dataframe for the series.
@@ -189,7 +174,7 @@ class SeriesSliders(QWidget):
         #     self.dataFrame = self.series.read_dataframe(tags)  
         self.dataFrame = self.series.read_dataframe(tags)  
         self.dataFrame.sort_values("InstanceNumber", inplace=True)
-        self.dataFrame.dropna(axis=1, inplace=True)  
+        #self.dataFrame.dropna(axis=1, inplace=True)  
         #self.dataFrame.reset_index()
         # remove tags with one unique value  
         for tag in self.sliderTags:        
@@ -201,6 +186,13 @@ class SeriesSliders(QWidget):
         for tag in self.sliderTags.copy():
             if tag not in self.dataFrame:
                 self.sliderTags.remove(tag)
+
+
+    def _setSliderValueLists(self):
+        for slider in self._activeSliders:
+            values = self.dataFrame[slider.label].unique().tolist()
+            values.sort()
+            slider.setValues(values)
 
 
     def _slidersButtonClicked(self):
@@ -222,9 +214,6 @@ class SeriesSliders(QWidget):
                 self.sliders.append(slider)
         else: 
             # Delete CheckBox sliders
-            #self.slidersButton.setStyleSheet(
-            #    "background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #CCCCBB, stop: 1 #FFFFFF)"
-            #)
             for slider in self.sliders[1:]:
                 slider.deleteLater()
             self.sliders = self.sliders[:1]

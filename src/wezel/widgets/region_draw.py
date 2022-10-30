@@ -69,6 +69,10 @@ class SeriesViewerROI(QWidget):
         self.regionList.setData(series)
         series.message('Setting data: Getting image..')
         image = self.imageSliders.image
+        if image is None:
+            series.dialog.information(series.label() + ' is an empty series. \n' + 'Nothing to see here..')
+            self.setEnabled(False)
+            return
         image.read()
         series.message('Setting data: Getting mask..')
         mask = self.regionList.getMask(image)

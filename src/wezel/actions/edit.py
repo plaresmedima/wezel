@@ -4,23 +4,31 @@ import wezel
 
 def all(parent):
 
-    parent.action(Delete, text='Delete', generation=3)
-    parent.separator()
+    parent.action(DeleteSeries, text='Series > Delete')
     parent.action(Copy, text='Series > Copy', generation=3)
-    parent.action(NewSeries, text='Series > New')
+    parent.action(CopySeries, text='Series > Copy to..')
+    parent.action(MoveSeries, text='Series > Move to..')
     parent.action(MergeSeries, text='Series > Merge')
     parent.action(GroupSeries, text='Series > Group')
     parent.action(SeriesRename, text='Series > Rename')
     parent.action(SeriesExtract, text='Series > Extract subseries')
     parent.separator()
+    parent.action(DeleteStudies, text='Studies > Delete')
     parent.action(Copy, text='Studies > Copy', generation=2)
-    parent.action(NewStudy, text='Study > New')
+    parent.action(CopyStudies, text='Studies > Copy to..')
+    parent.action(MoveStudies, text='Studies > Move to..')
     parent.action(MergeStudies, text='Studies > Merge')
     parent.action(GroupStudies, text='Studies > Group')
+    parent.action(StudiesRename, text='Studies > Rename')
+    parent.action(NewSeries, text='Studies > New series')
     parent.separator()
+    parent.action(Delete, text='Patients > Delete', generation=1)
     parent.action(Copy, text='Patients > Copy', generation=1)
-    parent.action(NewPatient, text='Patient > New')
     parent.action(MergePatients, text='Patients > Merge')
+    parent.action(PatientsRename, text='Patients > Rename')
+    parent.action(NewStudy, text='Patients > New study')
+    parent.separator()
+    parent.action(NewPatient, text='Database > New patient')
     
 
 class Copy(wezel.Action):
@@ -44,18 +52,136 @@ class Copy(wezel.Action):
 class Delete(wezel.Action):
 
     def enable(self, app):
-
         if not hasattr(app, 'folder'):
             return False
         return app.nr_selected(self.generation) != 0
 
     def run(self, app):
-
         app.status.message("Deleting..")
         records = app.get_selected(self.generation)        
-        for j, series in enumerate(records):
+        for j, record in enumerate(records):
             app.status.progress(j, len(records), 'Deleting..')
-            series.remove()               
+            record.remove()
+        app.refresh()
+
+
+class DeleteSeries(wezel.Action):
+
+    def enable(self, app):
+        if not hasattr(app, 'folder'):
+            return False
+        return app.nr_selected('Series') != 0
+
+    def run(self, app):
+        series = app.selected('Series')        
+        for j, sery in enumerate(series):
+            app.status.progress(j, len(series), 'Deleting..')
+            sery.remove()
+        app.refresh()
+
+class DeleteStudies(wezel.Action):
+
+    def enable(self, app):
+        if not hasattr(app, 'folder'):
+            return False
+        return app.nr_selected('Studies') != 0
+
+    def run(self, app):
+        studies = app.selected('Studies')        
+        for j, study in enumerate(studies):
+            app.status.progress(j, len(studies), 'Deleting..')
+            study.remove()
+        app.refresh()
+
+class CopySeries(wezel.Action):
+
+    def enable(self, app):
+        if not hasattr(app, 'folder'):
+            return False
+        return app.nr_selected('Series') != 0
+
+    def run(self, app):
+        studies = app.folder.studies()
+        labels = [s.label() for s in studies]
+        cancel, f = app.dialog.input(
+            {'type':'dropdownlist', 'label':'Copy to study: ', 'list': labels, 'value': 0},
+            title = 'Copy to which study?')
+        if cancel:
+            return
+        study = studies[f[0]['value']]
+        series = app.selected('Series')        
+        for j, sery in enumerate(series):
+            app.status.progress(j, len(series), 'Moving..')
+            sery.copy_to(study)               
+        app.refresh()
+
+
+class MoveSeries(wezel.Action):
+
+    def enable(self, app):
+        if not hasattr(app, 'folder'):
+            return False
+        return app.nr_selected('Series') != 0
+
+    def run(self, app):
+        studies = app.folder.studies()
+        labels = [s.label() for s in studies]
+        cancel, f = app.dialog.input(
+            {'type':'dropdownlist', 'label':'Move to study: ', 'list': labels, 'value': 0},
+            title = 'Move to which study?')
+        if cancel:
+            return
+        study = studies[f[0]['value']]
+        series = app.selected('Series')        
+        for j, sery in enumerate(series):
+            app.status.progress(j, len(series), 'Moving..')
+            sery.move_to(study)               
+        app.refresh()
+
+
+class MoveStudies(wezel.Action):
+
+    def enable(self, app):
+        if not hasattr(app, 'folder'):
+            return False
+        return app.nr_selected('Studies') != 0
+
+    def run(self, app):
+        patients = app.folder.patients()
+        labels = [p.label() for p in patients]
+        cancel, f = app.dialog.input(
+            {'type':'dropdownlist', 'label':'Move to patient: ', 'list': labels, 'value': 0},
+            title = 'Move to which patient?')
+        if cancel:
+            return
+        patient = patients[f[0]['value']]
+        studies = app.selected('Studies')        
+        for j, study in enumerate(studies):
+            app.status.progress(j, len(studies), 'Moving..')
+            study.move_to(patient)               
+        app.refresh()
+
+
+class CopyStudies(wezel.Action):
+
+    def enable(self, app):
+        if not hasattr(app, 'folder'):
+            return False
+        return app.nr_selected('Studies') != 0
+
+    def run(self, app):
+        patients = app.folder.patients()
+        labels = [p.label() for p in patients]
+        cancel, f = app.dialog.input(
+            {'type':'dropdownlist', 'label':'Copy to patient: ', 'list': labels, 'value': 0},
+            title = 'Copy to which patient?')
+        if cancel:
+            return
+        patient = patients[f[0]['value']]
+        studies = app.selected('Studies')
+        for j, study in enumerate(studies):
+            app.status.progress(j, len(studies), 'Copying..')
+            study.copy_to(patient)
         app.refresh()
 
 
@@ -98,7 +224,7 @@ class NewPatient(wezel.Action):
 
     def run(self, app): 
         app.status.message('Creating new patient..')
-        self.folder.new_patient(PatientName='New patient')
+        app.folder.new_patient(PatientName='New patient')
         app.refresh()
 
 
@@ -118,9 +244,6 @@ class MergeSeries(wezel.Action):
         series = study.new_series(SeriesDescription='Merged series')
         db.merge(records, series)
         app.refresh()
-
-
-
 
 
 class MergeStudies(wezel.Action):
@@ -188,7 +311,7 @@ class SeriesRename(wezel.Action):
     def enable(self, app):
         if not hasattr(app, 'folder'):
             return False
-        return app.nr_selected(3) != 0
+        return app.nr_selected('Series') != 0
 
     def run(self, app): 
         series_list = app.get_selected(3)
@@ -200,6 +323,43 @@ class SeriesRename(wezel.Action):
                 return
             s.SeriesDescription = f[0]['value']
         app.refresh()
+
+
+class StudiesRename(wezel.Action):
+
+    def enable(self, app):
+        if not hasattr(app, 'folder'):
+            return False
+        return app.nr_selected('Studies') != 0
+
+    def run(self, app): 
+        for s in app.selected('Studies'):
+            cancel, f = app.dialog.input(
+                {"type":"string", "label":"New study name:", "value": s.StudyDescription},
+                title = 'Enter new study name')
+            if cancel:
+                return
+            s.StudyDescription = f[0]['value']
+        app.refresh()
+
+
+class PatientsRename(wezel.Action):
+
+    def enable(self, app):
+        if not hasattr(app, 'folder'):
+            return False
+        return app.nr_selected('Patients') != 0
+
+    def run(self, app): 
+        for patient in app.selected('Patients'):
+            cancel, f = app.dialog.input(
+                {"type":"string", "label":"New patient name:", "value": patient.PatientName},
+                title = 'Enter new patient name')
+            if cancel:
+                return
+            patient.PatientName = f[0]['value']
+        app.refresh()
+
 
 class SeriesExtract(wezel.Action):
 

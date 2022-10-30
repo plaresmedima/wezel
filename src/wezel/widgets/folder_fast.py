@@ -36,20 +36,28 @@ class DICOMFolderTree(QTreeWidget):
         self.clear()
         self.setHeaderLabels([self.database.manager.path])
 
+        # # This does not show empty patients or studies
+        # database = self.database.manager.tree()
+        # for patient in database['patients']:
+        #     if patient['studies'] != []:
+        #         patientWidget = self._treeWidgetItem('Patient', patient, self)
+        #         for study in patient['studies']:
+        #             if study['series'] != []:
+        #                 studyWidget = self._treeWidgetItem('Study', study, patientWidget)
+        #                 for sery in study['series']:
+        #                     seriesWidget = self._treeWidgetItem('Series', sery, studyWidget)
+
         # This does not show empty patients or studies
         database = self.database.manager.tree()
         for patient in database['patients']:
-            if patient['studies'] != []:
-                patientWidget = self._treeWidgetItem('Patient', patient, self)
-                for study in patient['studies']:
-                    if study['series'] != []:
-                        studyWidget = self._treeWidgetItem('Study', study, patientWidget)
-                        for sery in study['series']:
-                            seriesWidget = self._treeWidgetItem('Series', sery, studyWidget)
+            patientWidget = self._treeWidgetItem('Patient', patient, self)
+            for study in patient['studies']:
+                studyWidget = self._treeWidgetItem('Study', study, patientWidget)
+                for sery in study['series']:
+                    seriesWidget = self._treeWidgetItem('Series', sery, studyWidget)
 
         self.setUpdatesEnabled(True)
         self.databaseSet.emit()
-
 
 
     def _treeWidgetItem(self, level, record, parent, expanded=True):
@@ -69,7 +77,6 @@ class DICOMFolderTree(QTreeWidget):
         item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsUserCheckable)
         item.setCheckState(0, Qt.Unchecked)
         item.setExpanded(expanded)
-
         return item
 
 
