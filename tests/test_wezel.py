@@ -17,7 +17,7 @@ rider_full = os.path.join(datapath, 'RIDER Neuro MRI-3369019796')
 zipped = os.path.join(datapath, 'ZIP')
 multiframe = os.path.join(datapath, 'MULTIFRAME')
 skull_ct = os.path.join(datapath, '2_skull_ct')
-tristan = 'C:\\Users\\steve\\Dropbox\\Data\\TRISTAN_patient_examples_2\\v1_1'
+tristan = 'C:\\Users\\steve\\Dropbox\\Data\\wezel_dev_tristan'
 
 # Helper functions
 
@@ -51,14 +51,15 @@ def test_build():
 def test_launch():
 
     #tmp = create_tmp_database(onefile)
-    tmp = create_tmp_database(rider)
-    #tmp = tristan
+    #tmp = create_tmp_database(rider)
+    tmp = tristan
 
     app = wezel.app()
     app.set_app(wezel.apps.dicom.Windows)
     app.open(tmp)
     #app.set_menu(wezel.menus.test)
     app.show()
+    
 
 def test_DICOMFolderTree():
 

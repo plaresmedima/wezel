@@ -29,10 +29,9 @@ class SeriesColors(QWidget):
         self.contrast = widgets.ImageContrast()
         self.save = widgets.SaveImageButton()
 
-    def setData(self, series, image):
-
-        self.series = series
-        self.colors.setData(image)
+    def setData(self, series, image): #obsolete
+        #self.series = series
+        #self.colors.setData(image)
         self.brightness.setData(image)
         self.contrast.setData(image)
         self.save.setData(image)
@@ -54,7 +53,7 @@ class SeriesColors(QWidget):
         the values of the new image.
         """
 
-        self.colors.setData(image)
+        #self.colors.setData(image)
         self.brightness.setData(image, set=not self.mode.isLocked)
         self.contrast.setData(image, set=not self.mode.isLocked)
         self.save.setData(image)
@@ -65,7 +64,7 @@ class SeriesColors(QWidget):
 
         self.brightness.valueChanged.connect(self.valueChanged.emit)
         self.contrast.valueChanged.connect(self.valueChanged.emit)
-        self.colors.newColorTable.connect(self.valueChanged.emit)
+        #self.colors.newColorTable.connect(self.valueChanged.emit)
 
     def _setLayout(self):
 
@@ -146,10 +145,12 @@ class SeriesSliders(QWidget):
         image = self.series.instance()
         self.setImage(image)
 
-    def setImage(self, image):  
+    def setImage(self, image): 
+        self.blockSignals(True) 
         self.image = image
         self._setSliderValues()
         self._sliderValueChanged()
+        self.blockSignals(False) 
 
 
     def _readDataFrame(self):

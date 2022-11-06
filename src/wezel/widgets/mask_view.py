@@ -53,7 +53,6 @@ class MaskView(widgets.ImageView):
         self.maskItem.mask = mask
 
     def setData(self, image, mask):
-        
         self.setImage(image)
         self.setMask(mask)
 
@@ -61,7 +60,6 @@ class MaskView(widgets.ImageView):
         super().setData(image)
         
     def setMask(self, mask):
-
         self._updatePixelArray()
         shape = self._shape(mask)
         self.maskItem.mask = mask

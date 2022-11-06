@@ -75,7 +75,7 @@ class ImageContrast(QWidget):
             else:               # adjust image contrast to spinbox value    
                 value = self.spinBox.value()
                 self.image.WindowWidth = value
-                self.valueChanged.emit(value)
+                #self.valueChanged.emit(value)
 
     def getValue(self):
         return self.spinBox.value()
@@ -157,7 +157,7 @@ class ImageBrightness(QWidget):
             else:               # adjust image contrast to spinbox value    
                 value = self.spinBox.value()
                 self.image.WindowCenter = value
-                self.valueChanged.emit(value)
+                # self.valueChanged.emit(value)
 
     def spinBoxValueChanged(self):
         """Update Window Width of the image."""

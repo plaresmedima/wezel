@@ -1,3 +1,5 @@
+import timeit
+
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import (QWidget, 
                             QVBoxLayout, 
@@ -125,18 +127,34 @@ class SeriesViewerROI(QWidget):
 
         #if self.image is not None:
         #    self.image.write()
+        t = timeit.default_timer()
         self.imageSliders.series.message('currentImageChanged: Getting image..')
         image = self.imageSliders.image
         image.read()
-        self.imageSliders.series.message('currentImageChanged: Getting mask..')
-        mask = self.regionList.getMask(image)
+        #print('currentImageChanged: Getting image..', timeit.default_timer()-t)
+
+        t = timeit.default_timer()
         self.imageSliders.series.message('currentImageChanged: Setting colors..')
         self.colors.setImage(image)
+        print('currentImageChanged: Setting colors..', timeit.default_timer()-t)
+
+        t = timeit.default_timer()
+        self.imageSliders.series.message('currentImageChanged: Getting mask..')
+        mask = self.regionList.getMask(image)
+        #print('currentImageChanged: Getting mask..', timeit.default_timer()-t)
+
+        t = timeit.default_timer()
         self.imageSliders.series.message('currentImageChanged: Setting maskView..')
         self.maskView.setData(image, mask)
+        print('currentImageChanged: Setting maskView..', timeit.default_timer()-t)
+
+        t = timeit.default_timer()
         self.imageSliders.series.message('currentImageChanged: Setting value label..')
         self.pixelValue.setData(image)
+        #print('currentImageChanged: Setting value label..', timeit.default_timer()-t)
+
         self.imageSliders.series.message('currentImageChanged: Finished..')
+        #print('currentImageChanged: Finished..')
         #image.read()
         #self.image = image
 
