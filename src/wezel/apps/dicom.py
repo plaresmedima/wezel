@@ -26,6 +26,7 @@ def dicom_entry_menu(parent):
     about = parent.menu('About')
     wezel.actions.about.all(about)
 
+
 class DicomEntry(wezel.Action):
 
     def enable(self, app):
@@ -159,11 +160,13 @@ class Windows(wezel.App):
         elif object.type() == 'Study': # No Study Viewer yet
             pass
         elif object.type() == 'Series':
-            viewer = wezel.widgets.SeriesViewer(object)
+            viewer = wezel.widgets.SeriesViewerROI()
+            viewer.newRegions.connect(self.treeView.setFolder)
+            viewer.setData(object)
             self.addAsSubWindow(viewer, title=object.label())
+            self.treeView.databaseSet.connect(viewer.refresh)
         elif object.type() == 'Instance':
-            viewer = wezel.widgets.ImageViewer(object)
-            self.addAsSubWindow(viewer, title=object.label())
+            pass
 
     def get_selected(self, generation):
         

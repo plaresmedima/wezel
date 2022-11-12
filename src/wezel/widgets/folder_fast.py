@@ -21,32 +21,17 @@ class DICOMFolderTree(QTreeWidget):
         self.setFolder(folder)
 
     def setFolder(self, folder=None):
-
         if folder is not None: 
             self.database=folder
-
         self.dict = {
             'label': self.database.manager.path,
             'level': 'Database',
             'uid': 'Database',
             'key': None,
         }
-
         self.setUpdatesEnabled(False)
         self.clear()
         self.setHeaderLabels([self.database.manager.path])
-
-        # # This does not show empty patients or studies
-        # database = self.database.manager.tree()
-        # for patient in database['patients']:
-        #     if patient['studies'] != []:
-        #         patientWidget = self._treeWidgetItem('Patient', patient, self)
-        #         for study in patient['studies']:
-        #             if study['series'] != []:
-        #                 studyWidget = self._treeWidgetItem('Study', study, patientWidget)
-        #                 for sery in study['series']:
-        #                     seriesWidget = self._treeWidgetItem('Series', sery, studyWidget)
-
         # This does not show empty patients or studies
         database = self.database.manager.tree()
         for patient in database['patients']:
@@ -55,9 +40,8 @@ class DICOMFolderTree(QTreeWidget):
                 studyWidget = self._treeWidgetItem('Study', study, patientWidget)
                 for sery in study['series']:
                     seriesWidget = self._treeWidgetItem('Series', sery, studyWidget)
-
         self.setUpdatesEnabled(True)
-        self.databaseSet.emit()
+        #self.databaseSet.emit()
 
 
     def _treeWidgetItem(self, level, record, parent, expanded=True):

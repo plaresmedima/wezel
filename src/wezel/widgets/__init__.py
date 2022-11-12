@@ -9,7 +9,9 @@ in `wezel` applications.
 #from .log_to_GUI import *
 
 from .dbimage import (
-    SelectImageColorTable,
+    LockUnlockButton,
+    ImageColors, 
+    SelectImageColorMap,
     RestoreImageButton, 
     SaveImageButton, 
     ExportImageButton, 
@@ -19,7 +21,6 @@ from .dbimage import (
     ImageContrast,
 )
 from .dbseries import (
-    SeriesColors, 
     SeriesSliders,
 )
 from .array_display import (
@@ -59,9 +60,6 @@ from .main_mdi import (
     MainMultipleDocumentInterface, 
     Message,
 )
-from .bits_and_bobs import (
-    LockUnlockButton,
-)
 from .drawing_tools import (
     ToolBox, 
     MaskViewToolBox,
@@ -70,12 +68,8 @@ from .message import (
     Dialog, 
     StatusBar,
 )
-
 from .folder_fast import (
     DICOMFolderTree,
-)
-from .graphics_view import (
-    GraphicsView,
 )
 from .region_list import (
     RegionList,

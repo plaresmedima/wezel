@@ -1,4 +1,5 @@
 import pandas as pd
+import timeit
 
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import (
@@ -8,77 +9,6 @@ from PyQt5.QtGui import QIcon
 
 from .. import widgets as widgets
 import wezel.icons as icons
-
-class SeriesColors(QWidget):
-    """Widget to set and manage color and window settings of a Series"""
-
-    valueChanged = pyqtSignal()  # emitted when the color settings are changed by the widget
-
-    def __init__(self):
-        super().__init__()
-
-        self._setWidgets()
-        self._setConnections()
-        self._setLayout()
-
-    def _setWidgets(self):
-
-        self.mode = widgets.LockUnlockButton(toolTip = 'Lock image settings')
-        self.colors = widgets.SelectImageColorTable()
-        self.brightness = widgets.ImageBrightness()
-        self.contrast = widgets.ImageContrast()
-        self.save = widgets.SaveImageButton()
-
-    def setData(self, series, image): #obsolete
-        #self.series = series
-        #self.colors.setData(image)
-        self.brightness.setData(image)
-        self.contrast.setData(image)
-        self.save.setData(image)
-
-    def setValue(self):
-
-        # self.colors.setValue()
-        self.brightness.setValue()
-        self.contrast.setValue()
-
-    def setImage(self, image):
-        """Assigns a new image to the color tools
-        
-        If the settings are locked, the color settings
-        of the image are updated based on the current values 
-        and a signal is emitted that the image properties have changed.
-
-        If the settings are not locked then they are set to 
-        the values of the new image.
-        """
-
-        #self.colors.setData(image)
-        self.brightness.setData(image, set=not self.mode.isLocked)
-        self.contrast.setData(image, set=not self.mode.isLocked)
-        self.save.setData(image)
-#        if self.mode.isLocked: # image has been updated based on color settings
-#            self.valueChanged.emit()
-
-    def _setConnections(self):
-
-        self.brightness.valueChanged.connect(self.valueChanged.emit)
-        self.contrast.valueChanged.connect(self.valueChanged.emit)
-        #self.colors.newColorTable.connect(self.valueChanged.emit)
-
-    def _setLayout(self):
-
-        layout = QHBoxLayout()
-        layout.setContentsMargins(0,0,0,0)
-        layout.setSpacing(0)
-        layout.addWidget(self.mode)
-    #    layout.addWidget(self.colors)
-        layout.addWidget(self.brightness)
-        layout.addWidget(self.contrast)
-    #    layout.addWidget(self.save)
-        
-        #self.setStyleSheet("background-color: white")
-        self.setLayout(layout)
 
 
 class SeriesSliders(QWidget):

@@ -73,15 +73,14 @@ class MaskViewToolBox(QWidget):
     
     def __init__(self):
         super().__init__()
-
         self.button = {}
         self.current = "ImageViewCursor"
         self.defineWidgets()
         self.defineLayout()
         self.setTool(self.current) 
+        self.setEnabled(False)
         
     def defineWidgets(self):
-
         self.defineButton(widgets.ImageViewCursor())
         self.defineButton(widgets.ImageViewZoom())
         self.defineButton(widgets.MaskViewBrush())
@@ -97,7 +96,6 @@ class MaskViewToolBox(QWidget):
 
 
     def defineButton(self, tool):
-
         key = tool.__class__.__name__
         self.button[key] = QPushButton()
         self.button[key].setToolTip(tool.toolTip)
@@ -107,7 +105,6 @@ class MaskViewToolBox(QWidget):
         self.button[key].clicked.connect(lambda: self.buttonClicked(key))     
         
     def defineLayout(self):
-
         layout = QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)

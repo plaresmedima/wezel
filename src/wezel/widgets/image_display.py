@@ -67,7 +67,6 @@ class ImageViewer(QWidget):
         self.setLayout(layout)
 
     def setData(self, image=None):
-
         self.setEnabled(image is not None)
         if image is not None:
             image.read()
@@ -82,17 +81,14 @@ class ImageViewer(QWidget):
         self.graphics.setData(image)
 
     def _restoreClicked(self):
-
         self.colors.setValue()
         self.graphics.show()
 
     def _setWindowValue(self):
-
         self.brightness.setValue()
         self.contrast.setValue()
 
     def _graphicsMouseMoved(self):
-
         xy = self.graphics.coordinates
         self.pixelValue.setValue(xy)
 
@@ -101,7 +97,6 @@ class ImageLabel(QLabel):
 
     def __init__(self):
         super().__init__()
-
         self.setScaledContents(True)
         self.setData(icons.wezel)
         

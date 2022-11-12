@@ -7,9 +7,7 @@ IMAGE_VIEWER = 4
 
 def all(parent):
    
-    parent.action(Image)
-    parent.action(Series)
-    parent.action(Region)
+    parent.action(Series, text = 'Series')
     parent.action(Array4D, text = '4D Array')
     parent.action(HeaderDICOM, text='DICOM Header')
     parent.separator()
@@ -18,55 +16,16 @@ def all(parent):
 
 
 
-class Region(wezel.Action):
+class Series(wezel.Action):
 
     def enable(self, app):
-        
         if app.__class__.__name__ != 'Windows':
             return False
         return app.nr_selected(SERIES_VIEWER) != 0
 
     def run(self, app):
-
         for series in app.get_selected(SERIES_VIEWER):
-
-            viewer = wezel.widgets.SeriesViewerROI()
-            viewer.dataWritten.connect(app.treeView.setFolder)
-            viewer.setData(series)
-            app.addAsSubWindow(viewer, title=series.label())
-            app.treeView.databaseSet.connect(viewer.refresh)
-            
-
-class Image(wezel.Action):
-
-    def enable(self, app):
-        
-        if not hasattr(app, 'folder'):
-            return False
-        return app.nr_selected(IMAGE_VIEWER) != 0
-
-    def run(self, app):
-
-        for image in app.get_selected(IMAGE_VIEWER):
-            app.display(image)
-
-
-class Series(wezel.Action):
-
-    def enable(self, app):
-        
-        if not hasattr(app, 'folder'):
-            return False
-        return app.nr_selected(SERIES_VIEWER) != 0
-
-    def run(self, app):
-
-        for series in app.get_selected(SERIES_VIEWER):
-            app.display(series)
-
-
-
-            
+            app.display(series)            
 
 class Array4D(wezel.Action):
 

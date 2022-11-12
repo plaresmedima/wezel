@@ -12,14 +12,12 @@ class SeriesViewerROI(QWidget):
     GUI for drawing and editing Regions of Interest
     """
 
-    dataWritten = pyqtSignal()
+    newRegions = pyqtSignal()
 
     def __init__(self, series=None, dimensions=[]): 
         super().__init__()
-
         #Faster access but loading times are prohibitive for large series
         #series.read()
-
         self._setWidgets(dimensions=dimensions)
         self._setLayout()
         self._setConnections()
@@ -28,16 +26,14 @@ class SeriesViewerROI(QWidget):
         self._setMaskViewTool()
 
     def _setWidgets(self, dimensions=[]):
-
         self.imageSliders = widgets.SeriesSliders(dimensions=dimensions)
         self.regionList = widgets.RegionList()
         self.maskView = widgets.MaskView()
         self.maskViewToolBox = widgets.MaskViewToolBox()
         self.pixelValue = widgets.PixelValueLabel()
-        self.colors = widgets.SeriesColors()
+        self.colors = widgets.ImageColors()
 
     def _setLayout(self):
-
         toolBar = QToolBar()
         toolBar.addWidget(self.maskViewToolBox)
         toolBar.addWidget(self.regionList)
@@ -46,144 +42,89 @@ class SeriesViewerROI(QWidget):
         toolBar.addSeparator()
         toolBar.addWidget(self.pixelValue)
         toolBar.setStyleSheet("background-color: white")  
-
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         layout.addWidget(toolBar)
         layout.addWidget(self.maskView) 
         layout.addWidget(self.imageSliders) 
-
         self.setLayout(layout)
 
-    def refresh(self):
-        if not self.imageSliders.series.in_database():
-            self.close()
-            return
-        self.regionList.refresh()
-
-
-    def setData(self, series=None):
-
-        series.message('Setting data: Setting up sliders..')
-        self.imageSliders.setData(series, blockSignals=True)
-        series.message('Setting data: Setting up region list..')
-        self.regionList.setData(series)
-        series.message('Setting data: Getting image..')
-        image = self.imageSliders.image
-        if image is None:
-            series.dialog.information(series.label() + ' is an empty series. \n' + 'Nothing to see here..')
-            self.setEnabled(False)
-            return
-        image.read()
-        series.message('Setting data: Getting mask..')
-        mask = self.regionList.getMask(image)
-        series.message('Setting data: Setting colors..')
-        self.colors.setData(series, image)
-        series.message('Setting data: Setting mask View..')
-        self.maskView.setData(image, mask)
-        series.message('Setting data: Setting pixel value..')
-        self.pixelValue.setData(image)
-        series.message('Setting data: Finished..')
-
-        #series.status.hide()
-
-        #self.maskView.fitInView(self.maskView.imageItem, Qt.KeepAspectRatio)
-        #self.maskView.imageItem.update()
-        
-        # changes are made in memory only until a new image is displayed
-        #image.read() 
-        #self.image = image
-
     def _setConnections(self):
-
         self.maskView.mousePositionMoved.connect(self._mouseMoved)
         self.maskView.newMask.connect(self._newMask)
         self.maskViewToolBox.newTool.connect(self._setMaskViewTool)
         self.regionList.currentRegionChanged.connect(self._currentRegionChanged)
-        self.regionList.dataWritten.connect(self.dataWritten.emit)
         self.imageSliders.valueChanged.connect(self._currentImageChanged)
         self.colors.valueChanged.connect(self._currentImageEdited)
         self.maskView.imageUpdated.connect(self.colors.setValue)
 
+    def closeEvent(self, event): 
+        if not self.imageSliders.series.exists():
+            return
+        self.maskView.setMaskArray()
+        newRegions = self.regionList.saveRegions()
+        if newRegions:
+            self.newRegions.emit()
+
+    def refresh(self):
+        if self.imageSliders.series is None:
+            self.close()
+            return
+        if not self.imageSliders.series.exists():
+            self.close()
+            return
+        self.regionList.refresh()
+
+    def setData(self, series=None):
+        self.imageSliders.setData(series, blockSignals=True)
+        self.regionList.series = series
+        image = self.imageSliders.image
+        if image is None:
+            msg = series.label() + ' is an empty series.' 
+            msg += ' \n Nothing to see here..'
+            series.dialog.information(msg)
+            self.setEnabled(False)
+            return
+        image.read()
+        mask = self.regionList.getMask(image)
+        self.colors.setData(image)
+        self.maskView.setData(image, mask)
+        self.pixelValue.setData(image)
 
     def _setMaskViewTool(self):
-
-        #self.imageSliders.series.message('setMaskViewTool: getting tool..')
         tool = self.maskViewToolBox.getTool()
-        #self.imageSliders.series.message('setMaskViewTool: setting tool..')
         self.maskView.setEventHandler(tool)
-        #self.imageSliders.series.message('setMaskViewTool: Finished..')
 
     def _mouseMoved(self):
-
-        self.imageSliders.series.message('mouseMoved: getting tool..')
         tool = self.maskViewToolBox.getTool()
-        self.imageSliders.series.message('mouseMoved: setting pixel value..')
         self.pixelValue.setValue([tool.x, tool.y])
-        self.imageSliders.series.message('mouseMoved: Finished..')
         
     def _currentImageChanged(self):
-
-        #if self.image is not None:
-        #    self.image.write()
-        t = timeit.default_timer()
-        self.imageSliders.series.message('currentImageChanged: Getting image..')
+        self.maskView.setMaskArray()
         image = self.imageSliders.image
-        image.read()
-        #print('currentImageChanged: Getting image..', timeit.default_timer()-t)
-
-        t = timeit.default_timer()
-        self.imageSliders.series.message('currentImageChanged: Setting colors..')
-        self.colors.setImage(image)
-        print('currentImageChanged: Setting colors..', timeit.default_timer()-t)
-
-        t = timeit.default_timer()
-        self.imageSliders.series.message('currentImageChanged: Getting mask..')
+        if image is not None:
+            image.read()
+        self.colors.setData(image)
         mask = self.regionList.getMask(image)
-        #print('currentImageChanged: Getting mask..', timeit.default_timer()-t)
-
-        t = timeit.default_timer()
-        self.imageSliders.series.message('currentImageChanged: Setting maskView..')
         self.maskView.setData(image, mask)
-        print('currentImageChanged: Setting maskView..', timeit.default_timer()-t)
-
-        t = timeit.default_timer()
-        self.imageSliders.series.message('currentImageChanged: Setting value label..')
         self.pixelValue.setData(image)
-        #print('currentImageChanged: Setting value label..', timeit.default_timer()-t)
-
-        self.imageSliders.series.message('currentImageChanged: Finished..')
-        #print('currentImageChanged: Finished..')
-        #image.read()
-        #self.image = image
 
     def _currentImageEdited(self):
-
-        self.imageSliders.series.message('currentImageEdited: setting image..')
         self.maskView.imageItem.setPixMap()
         self.maskView.imageItem.update()
-        self.imageSliders.series.message('currentImageEdited: finished..')
         
     def _currentRegionChanged(self):
-
-        self.imageSliders.series.message('currentRegionChanged: Getting image..')
         image = self.imageSliders.image
-        self.imageSliders.series.message('currentRegionChanged: Getting mask..')
         mask = self.regionList.getMask(image)
-        self.imageSliders.series.message('currentRegionChanged: Setting mask..')
         self.maskView.setMask(mask)
-        self.imageSliders.series.message('currentRegionChanged: Finished..')
+        self.maskViewToolBox.setEnabled(self.regionList.regions!=[])
 
     def _newMask(self):
-
-        self.imageSliders.series.message('newMask: Getting mask..')
-        mask = self.maskView.getMask()
-        self.imageSliders.series.message('newMask: Getting region..')
-        region = self.regionList.getRegion()
-        self.imageSliders.series.message('newMask: Moving mask..')
-        mask = mask.move_to(region) 
-        self.imageSliders.series.message('newMask: Setting Maskview..')
-        self.maskView.setObject(mask)
-        self.imageSliders.series.message('newMask: Finished..')
-
+        region = self.regionList.region()
+        image = self.maskView.image
+        mask = image.copy_to_series(region)
+        mask.read()
+        self.maskView.maskItem.mask = mask
+        mask.WindowCenter = 1
+        mask.WindowWidth = 2
