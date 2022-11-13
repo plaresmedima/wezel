@@ -9,6 +9,7 @@ from PyQt5.QtGui import QPixmap, QCursor, QIcon, QColor, QPen, QBrush
 
 from wezel.utils import makeQImage
 import wezel.icons as icons
+from dbdicom.utils import image
 
 
 class ArrayViewToolBox(QWidget):
@@ -17,15 +18,13 @@ class ArrayViewToolBox(QWidget):
     
     def __init__(self):
         super().__init__()
-
         self.button = {}
         self.current = "ArrayViewCursor"
-        self.defineWidgets()
-        self.defineLayout()
+        self._setWidgets()
+        self._setLayout()
         self.setTool(self.current) 
         
-    def defineWidgets(self):
-
+    def _setWidgets(self):
         self.defineButton(ArrayViewCursor())
         self.defineButton(ArrayViewZoom())
 
@@ -39,7 +38,7 @@ class ArrayViewToolBox(QWidget):
         self.button[key].tool = tool
         self.button[key].clicked.connect(lambda: self.buttonClicked(key))     
         
-    def defineLayout(self):
+    def _setLayout(self):
 
         layout = QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -71,7 +70,6 @@ class ArrayView(QGraphicsView):
 
     def __init__(self, image=None): 
         super().__init__()
-      
         self.imageItem = ArrayItem(image)
         self.scene = QGraphicsScene(self)
         self.scene.addItem(self.imageItem)
@@ -80,7 +78,6 @@ class ArrayView(QGraphicsView):
         self.fitInView(self.imageItem, Qt.KeepAspectRatio)
 
     def setEventHandler(self, eventHandler):
-
         self.eventHandler = eventHandler
         eventHandler.setView(self)
         
@@ -145,8 +142,7 @@ class ArrayItem(QGraphicsObject):
             self.pixMap = QPixmap(width, height)
             self.pixMap.fill(Qt.black)
         else:
-            #self.qImage = QImage(self.image, width=self.WindowWidth, center=self.WindowCenter)
-            self.qImage = makeQImage(self.image.BGRA_array())
+            self.qImage = makeQImage(image.BGRA(self.image))
             self.pixMap = QPixmap.fromImage(self.qImage)
 
     def paint(self, painter, option, widget):

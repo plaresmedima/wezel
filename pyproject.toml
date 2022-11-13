@@ -13,7 +13,6 @@ dependencies = [
   "matplotlib",
   "numpy",
   "pandas",
-  "pyqtgraph<=0.10.0",  # found some image display issues with later versions
   "importlib-resources>=1.1.0",
   "opencv-python",
   "scikit-image"

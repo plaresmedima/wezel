@@ -1,5 +1,6 @@
 import os
 import wezel
+import dbdicom as db
 
 
 def all(parent):
@@ -12,10 +13,10 @@ def all(parent):
     parent.separator()
     parent.action(OpenSubFolders, text='Open subfolders')
     parent.separator()
-    parent.action(ExportAsDicom, text='Export selections (.dcm)')
-    parent.action(ExportAsCsv, text='Export selections (.csv)')
-    parent.action(ExportAsPng, text='Export selections (.png)')
-    parent.action(ExportAsNifti, text='Export selections (.nii)')
+    parent.action(ExportAsDicom, text='Export as .dcm')
+    parent.action(ExportAsCsv, text='Export as .csv')
+    parent.action(ExportAsPng, text='Export as .png')
+    parent.action(ExportAsNifti, text='Export as .nii')
     
 
 class Open(wezel.Action):
@@ -140,9 +141,15 @@ class OpenSubFolders(wezel.Action):
         app.status.cursorToHourglass()
         for i, path in enumerate(subfolders):
             msg = 'Reading folder ' + str(i+1) + ' of ' + str(len(subfolders))
-            app.open(path)
-            app.folder.save()
+            #app.open(path)
+            app.status.message(msg)
+            folder = db.database(path=path, 
+                status = app.status, 
+                dialog = app.dialog)
+            folder.save()
         app.status.cursorToNormal()
+        app.status.hide()
+        app.folder = folder
         app.display(app.folder)
 
 
@@ -184,7 +191,7 @@ class ExportAsCsv(wezel.Action):
             return
         path = app.dialog.directory("Where do you want to export the data?")
         for i, s in enumerate(series):
-            app.status.progress(i, len(series), 'Exporting data..')
+            app.status.message('Exporting series ' + str(i))
             s.export_as_csv(path)
         app.status.hide()
 
@@ -205,7 +212,7 @@ class ExportAsPng(wezel.Action):
             return
         path = app.dialog.directory("Where do you want to export the data?")
         for i, s in enumerate(series):
-            app.status.progress(i, len(series), 'Exporting data..')
+            app.status.message('Exporting series ' + str(i))
             s.export_as_png(path)
         app.status.hide()
 
@@ -226,6 +233,6 @@ class ExportAsNifti(wezel.Action):
             return
         path = app.dialog.directory("Where do you want to export the data?")
         for i, s in enumerate(series):
-            app.status.progress(i, len(series), 'Exporting data..')
+            app.status.message('Exporting series ' + str(i))
             s.export_as_nifti(path)
         app.status.hide()

@@ -27,6 +27,7 @@ class Series(wezel.Action):
         for series in app.get_selected(SERIES_VIEWER):
             app.display(series)            
 
+
 class Array4D(wezel.Action):
 
     def enable(self, app):
@@ -40,6 +41,7 @@ class Array4D(wezel.Action):
         series = app.get_selected(3)[0]
         array, _ = series.array(['SliceLocation', 'AcquisitionTime'], pixels_first=True)
         array = np.squeeze(array[...,0])
+        app.status.hide()
         if array.ndim < 4:
             app.dialog.information('Please select a series with >1 slice location and acquisition time.')
         else:
@@ -58,8 +60,6 @@ class HeaderDICOM(wezel.Action):
        for series in app.get_selected(SERIES_VIEWER):
             viewer = wezel.widgets.SeriesViewerMetaData(series)
             app.addAsSubWindow(viewer, title=series.label())
-
-
 
 
 class CloseWindows(wezel.Action):

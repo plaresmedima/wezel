@@ -3,7 +3,6 @@ dbdicom
 matplotlib
 numpy
 pandas
-pyqtgraph<=0.10.0
 importlib-resources>=1.1.0
 opencv-python
 scikit-image

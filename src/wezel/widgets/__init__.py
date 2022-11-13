@@ -77,11 +77,7 @@ from .region_list import (
 from .region_draw import (
     SeriesViewerROI,
 )
-from .series_display import (
-    SeriesViewer,
-)
 from .image_display import (
-    ImageViewer, 
     ImageLabel,
 )
 from .user_input import (
