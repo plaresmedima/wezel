@@ -1,7 +1,7 @@
 `wezel` is a Python toolbox for prototyping  
 quantitative medical imaging applications. 
 
-***CAUTION: wezel is developed in public but it is work in progress. Some features mentioned in this document are still in development and backwards compatibility is not likely to happen.***
+***CAUTION: wezel is work in progress.***
 
 # How can I use existing `wezel` applications?
 

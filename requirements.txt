@@ -4,5 +4,5 @@ matplotlib
 numpy
 pandas
 importlib-resources>=1.1.0
-opencv-python
+opencv-python<=4.5.3.56
 scikit-image

@@ -44,9 +44,10 @@ def test_build():
     pass
     # To build an executable of the application
     # -----------------------------------------
+    # Turn off dropbox
     # place any required hooks in the directory of the main script.
     # pip install pyinstaller
-    # pyinstaller --name dev_app --clean --onefile --noconsole --additional-hooks-dir=. dev.py
+    # pyinstaller --name wezel --clean --onefile --noconsole --additional-hooks-dir=. exec.py
 
 def test_launch():
 
