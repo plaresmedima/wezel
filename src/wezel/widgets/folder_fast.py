@@ -1,75 +1,82 @@
-__all__ = ['DICOMFolderTree']
-
 from PyQt5.QtCore import  Qt, pyqtSignal
 from PyQt5.QtWidgets import (
-    QApplication, QAbstractItemView,
-    QHeaderView, QTreeWidget, QTreeWidgetItem,
+    QAbstractItemView,
+    QTreeWidget, QTreeWidgetItem, QFileSystemModel, QTreeView,
 )
 
 class DICOMFolderTree(QTreeWidget):
     """Displays a DICOM folder as a Tree."""
 
-    itemSelectionChanged = pyqtSignal()
+    itemSelectionChanged = pyqtSignal(dict)
+    itemDoubleClicked = pyqtSignal(dict)
+    databaseSet = pyqtSignal()
 
-    def __init__(self, folder, status):
+    def __init__(self, folder):
         super().__init__()
-         
-        self.status = status
 
-        self.setAutoScroll(False)
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        self.setUniformRowHeights(True)
-        self.setColumnCount(1)
-        self.header().setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        self.setHeaderLabels(["", ""])
-        self.setContextMenuPolicy(Qt.CustomContextMenu)
-#            self.itemDoubleClicked.connect(lambda item, col: self._displayImage(item, col))
-        
+        self.itemDoubleClicked.connect(lambda item, col: self._itemDoubleClickedEvent(item, col))
         self.itemClicked.connect(lambda item, col: self._itemClickedEvent(item, col))
+        # self.setModel(QFileSystemModel()) #This only works for QTreeView
         self.setFolder(folder)
 
     def setFolder(self, folder=None):
-
         if folder is not None: 
-            self.folder=folder
-
-        QApplication.setOverrideCursor(Qt.WaitCursor)
-        self.blockSignals(True)
+            self.database=folder
+        self.dict = {
+            'label': self.database.manager.path,
+            'level': 'Database',
+            'uid': 'Database',
+            'key': None,
+        }
+        self.setUpdatesEnabled(False)
         self.clear()
-        self.folder.sortby(['StudyDate','SeriesNumber','AcquisitionTime'])
+        self.setHeaderLabels([self.database.manager.path])
+        # This does not show empty patients or studies
+        database = self.database.manager.tree()
+        for patient in database['patients']:
+            patientWidget = self._treeWidgetItem('Patient', patient, self)
+            for study in patient['studies']:
+                studyWidget = self._treeWidgetItem('Study', study, patientWidget)
+                for sery in study['series']:
+                    seriesWidget = self._treeWidgetItem('Series', sery, studyWidget)
+        self.setUpdatesEnabled(True)
+        #self.databaseSet.emit()
 
-        # return a view of the data that are not removed
-        current = self.folder.dataframe.removed == False
-        df = self.folder.dataframe.loc[current]
 
-        nr = len(df.SeriesInstanceUID.unique())
-        cnt = 0
-        for patient in df.PatientID.unique():
-            df_patient = df.loc[df.PatientID == patient]
-            label = self.folder.label(df_patient.iloc[0], 'Patient')
-            patientWidget = _treeWidgetItem(df_patient.iloc[0], self, label)
-            for study in df_patient.StudyInstanceUID.unique():
-                df_study = df_patient.loc[df_patient.StudyInstanceUID == study]
-                label = self.folder.label(df_study.iloc[0], 'Study') # replace by dbd.label()
-                studyWidget = _treeWidgetItem(df_study.iloc[0], patientWidget, label) 
-                for sery in df_study.SeriesInstanceUID.unique():
-                    df_series = df_study.loc[df_study.SeriesInstanceUID == sery]
-                    label = self.folder.label(df_series.iloc[0], 'Series')
-                    seriesWidget =  _treeWidgetItem(df_series.iloc[0], studyWidget, label)
-                    self.status.progress(cnt, nr, "Building display..")
-                    cnt += 1
+    def _treeWidgetItem(self, level, record, parent, expanded=True):
+        """Build an item in the Tree"""
 
-        self.status.hide()
-        self.resizeColumnToContents(0) 
-        self.blockSignals(False)
-        self.status.hide()
-        QApplication.restoreOverrideCursor()
+        item = QTreeWidgetItem(parent)
+        # Custom attributes
+        item.checked = False
+        item.dict = {
+            'label': self.database.manager.label(key=record['key'], type=level),
+            'level': level,
+            'uid': record['uid'],
+            'key': record['key'],
+        }
+        # Built-in attributes
+        item.setText(0, item.dict['label'])
+        item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsUserCheckable)
+        item.setCheckState(0, Qt.Unchecked)
+        item.setExpanded(expanded)
+        return item
+
+
+    def _itemDoubleClickedEvent(self, item, col):
+        self.itemDoubleClicked.emit(item.dict)
 
     def _itemClickedEvent(self, item, col):
         """Update checked state of children and parents"""
 
-        item.treeWidget().blockSignals(True)
-        if col == 1:           
+        self.setUpdatesEnabled(False)
+        #item.treeWidget().blockSignals(True)
+        if was_toggled(item):
+            checked = item.checkState(0) == Qt.Checked
+            _set_checked(item, checked)
+            #_check_children(item, item.checked)
+        else:       
             selectedItems = self.selectedItems()
             if selectedItems:
                 if len(selectedItems) == 1:
@@ -80,20 +87,30 @@ class DICOMFolderTree(QTreeWidget):
                     self.uncheck_all()
                     for i in selectedItems:
                         _set_checked(i, True) 
+        #item.treeWidget().blockSignals(False)
+        self.setUpdatesEnabled(True)
+        self.itemSelectionChanged.emit(item.dict)
+
+
+    def selectRecords(self, uid, checked=True):
+
+        root = self.invisibleRootItem()
+        if uid == 'Database':
+            _check_children(root, checked)
         else:
-            checked = item.checkState(0) == Qt.Checked
-            _check_children(item, checked)
-        item.treeWidget().blockSignals(False)
-        self.itemSelectionChanged.emit()
+            generation = [root]
+            for _ in range(3):
+                generation = _children(generation)
+                for item in generation:
+                    if item.dict['uid'] == uid:
+                        _set_checked(item, checked)
+                        return
 
     def uncheck_all(self):
         """Uncheck all TreeView items."""
 
-        QApplication.setOverrideCursor(Qt.WaitCursor)
-        root = self.invisibleRootItem()
-        _check_children(root, False)
-        QApplication.restoreOverrideCursor()
-        self.itemSelectionChanged.emit()
+        self.selectRecords('Database', False)
+
 
     def get_selected(self, generation=1):
 
@@ -101,32 +118,41 @@ class DICOMFolderTree(QTreeWidget):
             root = self.invisibleRootItem()
         except RuntimeError:
             return []
+        if generation == 0:
+            records = []
+            for gen in [1,2,3]:
+                records += self.get_selected(gen)
+            return records
         items = _children([root])
         while generation > 1:
             items = _children(items)
             generation -= 1
-        return [i.row for i in items if i.checkState(0)==Qt.Checked]
+        return [self.database.record(i.dict['level'], i.dict['uid']) for i in items if i.checkState(0)==Qt.Checked]
 
-def _treeWidgetItem(row, parent, label, expanded=True):
-    """Build an item in the Tree"""
 
-    item = QTreeWidgetItem(parent)
-    item.row = row
-    item.setText(1, label)
-    item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
-    item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
-    item.setCheckState(0, Qt.Unchecked)
-    item.setExpanded(expanded)
-    return item 
+def was_toggled(item):
+
+    checked = item.checkState(0) == Qt.Checked
+    return checked != item.checked
 
 def _set_checked(item, checked):
     """Check or uncheck an item"""
 
     if checked: 
         item.setCheckState(0, Qt.Checked)
+        #item.setSelected(True)
     else: 
         item.setCheckState(0, Qt.Unchecked)
+        #item.setSelected(False)
+    item.checked = checked
     _check_children(item, checked)
+
+
+def _check_children(item, checked):
+    """Set the checkstate of all children of an item."""
+
+    for child in _children([item]):
+        _set_checked(child, checked)
 
 
 def _children(items):
@@ -135,13 +161,4 @@ def _children(items):
     for item in items:
         cnt = item.childCount()
         children += [item.child(i) for i in range(cnt)]
-    #    for n in range(nrOfChildren):
-    #        child = item.child(n)
-    #        children.append(child)
     return children
-
-def _check_children(item, checked):
-    """Set the checkstate of all children of an item."""
-
-    for child in _children([item]):
-        _set_checked(child, checked)

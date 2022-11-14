@@ -1,5 +1,3 @@
-__all__ = ['Dialog', 'StatusBar']
-
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import (
@@ -98,7 +96,7 @@ class Dialog():
         Collect user input of various types.
         """
         dialog = ParameterInputDialog(*fields, title=title, helpText=helpText)
-        return dialog.returnListParameterValues()
+        return dialog.button=='Cancel', dialog.returnListParameterValues()
 
 
 class StatusBar(QStatusBar):
@@ -126,11 +124,12 @@ class StatusBar(QStatusBar):
 
     def progress(self, value, total, message=None):
 
-        if message is not None: self.message(message)
+        if message is not None: 
+            self.message(message)
         self.progressBar.show()
         self.progressBar.setRange(0, total)
         self.progressBar.setValue(value)
-        QApplication.processEvents() # allow gui to update
+        QApplication.processEvents() # allow gui to update - prevent freezing
 
     def cursorToHourglass(self):
         """

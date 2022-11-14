@@ -20,13 +20,13 @@ class Wezel:
     def __init__(self):
         self.app = None
         self.log = logger()
-        self.QApp = QApplication([])
-        self.QApp.setWindowIcon(QIcon(wezel.widgets.icons.favicon))
+        self.QApp = QApplication(sys.argv)
+        self.QApp.setWindowIcon(QIcon(wezel.icons.favicon))
         self.status = wezel.widgets.StatusBar()
         self.main = wezel.core.Main(self)
         self.main.setStatusBar(self.status)
         self.dialog = wezel.widgets.Dialog(self.main)
-        self.app = wezel.apps.About(self)
+        self.app = wezel.apps.dicom.Windows(self)
 
 
 def app(application=None):

@@ -1,19 +1,9 @@
-__all__ = [
-    'SelectImageColorTable',
-    'RestoreImageButton', 
-    'SaveImageButton', 
-    'ExportImageButton', 
-    'DeleteImageButton', 
-    'PixelValueLabel', 
-    'ImageBrightness', 
-    'ImageContrast'
-]
-
+import timeit
 from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtWidgets import QComboBox, QPushButton, QLabel, QWidget, QDoubleSpinBox, QHBoxLayout
 from PyQt5.QtGui import QIcon, QPixmap
 
-from . import icons
+from wezel import widgets, icons
 
 listColors =  ['gray', 'cividis',  'magma', 'plasma', 'viridis', 
     'Greys', 'Purples', 'Blues', 'Greens', 'Oranges', 'Reds',
@@ -27,7 +17,7 @@ listColors =  ['gray', 'cividis',  'magma', 'plasma', 'viridis',
     'twilight', 'twilight_shifted', 'hsv',
     'flag', 'prism', 'ocean', 'gist_earth', 'terrain', 'gist_stern',
     'gnuplot', 'gnuplot2', 'CMRmap', 'cubehelix', 'brg', 'turbo',
-    'gist_rainbow', 'rainbow', 'jet', 'nipy_spectral', 'gist_ncar', 'custom']
+    'gist_rainbow', 'rainbow', 'jet', 'nipy_spectral', 'gist_ncar']
 
 QComboBoxStyleSheet = """
 
@@ -37,10 +27,69 @@ QComboBox::drop-down
 }
 QComboBox:down-arrow 
 {
-    image: url("wezel/widgets/icons/fugue-icons-3.5.6/spectrum.png");
+    image: url("wezel/icons/fugue_icons/spectrum.png");
 }
 """
 
+class ImageColors(QWidget):
+    """Widget to set and manage color and window settings of a Series"""
+
+    valueChanged = pyqtSignal(list)  # emitted when the color settings are changed by the widget
+
+    def __init__(self, image=None):
+        super().__init__()
+        self._setWidgets()
+        self._setConnections()
+        self._setLayout()
+        self.setData(image)
+
+    def _setWidgets(self):
+        self.mode = widgets.LockUnlockButton(toolTip = 'Lock image settings')
+        self.colors = SelectImageColorMap()
+        self.brightness = ImageBrightness()
+        self.contrast = ImageContrast()
+
+    def _setConnections(self):
+        self.colors.newColorMap.connect(self._valueChanged)
+        self.brightness.valueChanged.connect(self._valueChanged)
+        self.contrast.valueChanged.connect(self._valueChanged)
+
+    def _setLayout(self):
+        layout = QHBoxLayout()
+        layout.setContentsMargins(0,0,0,0)
+        layout.setSpacing(0)
+        layout.addWidget(self.mode)
+        layout.addWidget(self.colors)
+        layout.addWidget(self.brightness)
+        layout.addWidget(self.contrast)
+        #self.setStyleSheet("background-color: white")
+        self.setLayout(layout)
+
+    def _valueChanged(self):
+        self.valueChanged.emit(self.getValue())
+
+    def setData(self, image):
+        if image is None:
+            return
+        if self.colors.image is None:
+            set = True
+        else:
+            set = not self.mode.isLocked
+        self.colors.setData(image, set)
+        self.brightness.setData(image, set)
+        self.contrast.setData(image, set)
+
+    def getValue(self):
+        return [
+            self.colors.getValue(), 
+            self.brightness.getValue(),
+            self.contrast.getValue(),
+        ]
+
+    def setValue(self, colormap=None, WindowCenter=None, WindowWidth=None):
+        self.colors.setValue(colormap)
+        self.brightness.setValue(WindowCenter)
+        self.contrast.setValue(WindowWidth)
 
 
 class ImageContrast(QWidget):
@@ -49,11 +98,9 @@ class ImageContrast(QWidget):
 
     def __init__(self, image=None):
         super().__init__()
-
         self.label = QLabel()
         self.label.setPixmap(QPixmap(icons.contrast))
         self.label.setFixedSize(24, 24)
-
         self.spinBox = QDoubleSpinBox()
         self.spinBox.valueChanged.connect(self.spinBoxValueChanged)
         self.spinBox.setToolTip("Adjust Contrast")
@@ -61,21 +108,17 @@ class ImageContrast(QWidget):
         self.spinBox.setMaximum(1000000000.00)
         self.spinBox.setWrapping(True)
         self.spinBox.setFixedWidth(75)
-
         self.layout = QHBoxLayout()
         self.layout.setAlignment(Qt.AlignLeft  | Qt.AlignVCenter)
         self.layout.setContentsMargins(0,0,0,0)
         self.layout.setSpacing(2)
         self.layout.addWidget(self.spinBox)
         self.layout.addWidget(self.label)
-
         self.setMaximumWidth(120)
         self.setLayout(self.layout)
-
         self.setData(image)
 
     def setData(self, image, set=True):
-
         self.image = image
         if image is None: 
             self.setValue(1)  
@@ -83,16 +126,14 @@ class ImageContrast(QWidget):
             if set:  # adjust spinbox value to image contrast
                 value = self.image.WindowWidth 
                 self.setValue(value) 
-            else:               # adjust image contrast to spinbox value    
+            else:    # adjust image contrast to spinbox value    
                 value = self.spinBox.value()
                 self.image.WindowWidth = value
-                self.valueChanged.emit(value)
 
     def getValue(self):
         return self.spinBox.value()
 
     def setValue(self, width=None):
-
         if width is None:
             width = self.image.WindowWidth
         self.spinBox.blockSignals(True)
@@ -101,16 +142,15 @@ class ImageContrast(QWidget):
         self.setSpinBoxStepSize()
 
     def setSpinBoxStepSize(self):
-
-        if self.image is None: return
-
-        centre, width = self.image.window() # should be the actual value range, not the window
+        if self.image is None: 
+            return
+        centre, width = self.image.window # should be the actual value range, not the window
         minimumValue = centre - width/2
         maximumValue = centre + width/2
         if (minimumValue < 1 and minimumValue > -1) and (maximumValue < 1 and maximumValue > -1):
-            spinBoxStep = float(width / 200) # It takes 100 clicks to walk through the middle 50% of the signal range
+            spinBoxStep = float(width / 10) # It takes 100 clicks to walk through the middle 50% of the signal range
         else:
-            spinBoxStep = int(width / 200) # It takes 100 clicks to walk through the middle 50% of the signal range
+            spinBoxStep = int(width / 10) # It takes 100 clicks to walk through the middle 50% of the signal range
         self.spinBox.setSingleStep(spinBoxStep)
 
     def spinBoxValueChanged(self):
@@ -118,7 +158,8 @@ class ImageContrast(QWidget):
         
         if self.image is None:
             return
-        width = self.spinBox.value()
+        self.image.message('Contrast changed!!!')
+        width = self.spinBox.value()   
         self.image.WindowWidth = width
         self.valueChanged.emit(width)
 
@@ -156,7 +197,6 @@ class ImageBrightness(QWidget):
         self.setData(image)
 
     def setData(self, image, set=True):
-
         self.image = image
         if image is None: 
             self.setValue(1)  
@@ -164,14 +204,11 @@ class ImageBrightness(QWidget):
             if set:  # adjust spinbox value to image contrast
                 value = self.image.WindowCenter
                 self.setValue(value) 
-            else:               # adjust image contrast to spinbox value    
+            else:    # adjust image contrast to spinbox value    
                 value = self.spinBox.value()
                 self.image.WindowCenter = value
-                self.valueChanged.emit(value)
 
     def spinBoxValueChanged(self):
-        """Update Window Width of the image."""
-        
         if self.image is None:
             return
         center = self.spinBox.value()
@@ -182,7 +219,6 @@ class ImageBrightness(QWidget):
         return self.spinBox.value()
 
     def setValue(self, center=None):
-
         if center is None: 
             center = self.image.WindowCenter
         self.spinBox.blockSignals(True)
@@ -191,70 +227,88 @@ class ImageBrightness(QWidget):
         self.setSpinBoxStepSize()        
     
     def setSpinBoxStepSize(self):
-
-        if self.image is None: return
-
-        centre, width = self.image.window()
+        if self.image is None: 
+            return
+        centre, width = self.image.window
         minimumValue = centre - width/2
         maximumValue = centre + width/2
         if (minimumValue < 1 and minimumValue > -1) and (maximumValue < 1 and maximumValue > -1):
-            spinBoxStep = float(width / 200) # It takes 100 clicks to walk through the middle 50% of the signal range
+            spinBoxStep = float(width / 10) # It takes 100 clicks to walk through the middle 50% of the signal range
         else:
-            spinBoxStep = int(width / 200) # It takes 100 clicks to walk through the middle 50% of the signal range
+            spinBoxStep = int(width / 10) # It takes 100 clicks to walk through the middle 50% of the signal range
         self.spinBox.setSingleStep(spinBoxStep)
 
 
+class SelectImageColorMap(QComboBox):  
 
-class SelectImageColorTable(QComboBox):  
-
-    newColorTable = pyqtSignal(str)
+    newColorMap = pyqtSignal(str)
 
     def __init__(self, image=None):
-        super().__init__() 
-                                         
+        super().__init__()                              
         self.blockSignals(True)
         self.addItems(listColors)
         self.blockSignals(False)
         self.setToolTip('Change colors')
-        #self.setFixedHeight(28)
         self.setMaximumWidth(120)
         self.setStyleSheet(QComboBoxStyleSheet)
-        self.currentIndexChanged.connect(self.colorTableChanged)
-
+        self.currentIndexChanged.connect(self.colorMapChanged)
         self.setData(image)
-#        if image is None:
-#            colorTable = 'gray'
-#        else:
-#            colorTable, _ = image.get_colormap()
-#        self.image = image
 
-    def setData(self, image):
-
+    def setData(self, image, set=True):
         self.image = image
-        self.setValue()
-    
-    def setValue(self):
-
-        if self.image is None:
-            colorTable = 'gray'
+        if image is None:
+            self.setValue('gray')
         else:
-            colorTable, _ = self.image.get_colormap()
-        self.blockSignals(True)
-        self.setCurrentText(colorTable)
-        self.blockSignals(False)
-        
-    def colorTableChanged(self):
+            if set: # set list to image colormap
+                colormap = self.image.colormap
+                self.setValue(colormap)
+            else:   # set image colormap to current value
+                colormap = self.getValue()
+                self.image.colormap = colormap
 
-        if self.image is None: return
+    def setValue(self, colormap):
+        self.blockSignals(True)
+        self.setCurrentText(colormap)
+        self.blockSignals(False)
+
+    def getValue(self):
+        return str(self.currentText())
         
-        colorTable = self.currentText()
-        if colorTable.lower() == 'custom':
-            colorTable = 'gray'             
+    def colorMapChanged(self):
+        if self.image is None: 
+            return
+        colormap = self.currentText()
+        if colormap.lower() == 'custom':
+            colormap = 'gray'             
             self.blockSignals(True)
-            self.setCurrentText(colorTable)
+            self.setCurrentText(colormap)
             self.blockSignals(False) 
-        self.image.set_colormap(colormap=colorTable)
-        self.newColorTable.emit(colorTable)
+        self.image.colormap = colormap
+        self.newColorMap.emit(colormap)
+
+
+class LockUnlockButton(QPushButton):
+
+    toggled = pyqtSignal()
+
+    def __init__(self, toolTip = 'Lock state'):
+        super().__init__()
+        self.isLocked = True
+        self.icon_lock = QIcon(icons.lock) 
+        self.icon_lock_unlock = QIcon(icons.lock_unlock) 
+        self.setFixedSize(24, 24)
+        self.setIcon(self.icon_lock)
+        self.setToolTip(toolTip)
+        self.clicked.connect(self.toggle) 
+
+    def toggle(self):
+        if self.isLocked == True:
+            self.setIcon(self.icon_lock_unlock)
+            self.isLocked = False
+        elif self.isLocked == False:
+            self.setIcon(self.icon_lock)
+            self.isLocked = True  
+        self.toggled.emit()
 
 
 class DeleteImageButton(QPushButton):
@@ -263,18 +317,13 @@ class DeleteImageButton(QPushButton):
 
     def __init__(self, image=None):
         super().__init__()
-
-    #    self.image = image
-        
         self.setFixedSize(24, 24)
         self.setIcon(QIcon(icons.bin_metal))
         self.setToolTip('Delete image')
         self.clicked.connect(self.delete) 
-
         self.setData(image)
 
     def delete(self):
- 
         if self.image is None:
             return
         self.image.remove()
@@ -300,13 +349,10 @@ class ExportImageButton(QPushButton):
 
     def export(self):
         """Export as png."""
-
         if self.image is None: 
             return
-        fileName = self.image.dialog.file_to_save(filter = "*.png")
-        if fileName is None: 
-            return
-        self.image.export_as_png(fileName[:-4])
+        path = self.image.dialog.directory("Where do you want to export the data?")
+        self.image.export_as_png(path)
 
 
 class RestoreImageButton(QPushButton):
@@ -315,20 +361,18 @@ class RestoreImageButton(QPushButton):
 
     def __init__(self, image=None):
         super().__init__()
-         
         self.setFixedSize(24, 24)
         self.setIcon(QIcon(icons.arrow_curve_180_left))
         self.setToolTip('Undo changes')
         self.clicked.connect(self.restore) 
-
         self.setData(image)
 
     def setData(self, image):
         self.image = image
 
     def restore(self):
-
-        if self.image is None: return
+        if self.image is None: 
+            return
         self.image.restore()
         self.buttonClicked.emit()
 
@@ -372,6 +416,9 @@ class PixelValueLabel(QLabel):
 
     def setData(self, image):
         self.image = image
+        self.array = None
+        if image is not None:
+            self.array = self.image.array()
 
     def setValue(self, coordinates):
         
@@ -380,10 +427,11 @@ class PixelValueLabel(QLabel):
             if len(coordinates) == 2:
                 x = coordinates[0]
                 y = coordinates[1]
-                if 0 <= x < self.image.Columns:
-                    if 0 <= y < self.image.Rows:
-                        pixelArray = self.image.array()
-                        pixelValue = pixelArray[x,y]
+                # if 0 <= x < self.image.Columns:
+                #      if 0 <= y < self.image.Rows:
+                if 0 <= x < self.array.shape[0]:
+                    if 0 <= y < self.array.shape[1]:
+                        pixelValue = self.array[x,y]
                         text = "Signal ({}, {}) = {}".format(x, y, pixelValue)
         self.setText(text)
 

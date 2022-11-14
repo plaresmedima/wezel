@@ -7,12 +7,7 @@ IMAGE_VIEWER = 4
 
 def all(parent):
    
-    parent.action(SeriesDev, text = 'Series (dev)')
-    parent.action(RegionDev, text = 'Region (dev)')
-    parent.separator()
-    parent.action(Image)
-    parent.action(Series)
-    parent.action(Region)
+    parent.action(Series, text = 'Series')
     parent.action(Array4D, text = '4D Array')
     parent.action(HeaderDICOM, text='DICOM Header')
     parent.separator()
@@ -20,87 +15,18 @@ def all(parent):
     parent.action(TileWindows, text='Tile windows')
 
 
-class SeriesDev(wezel.Action):
-
-    def enable(self, app):
-        
-        if app.__class__.__name__ != 'Windows':
-            return False
-        return app.nr_selected(SERIES_VIEWER) != 0
-
-    def run(self, app):
-
-        for series in app.get_selected(SERIES_VIEWER):
-
-            viewer = wezel.widgets.SeriesViewerDev(series)
-            viewer.dataWritten.connect(app.treeView.setFolder)
-            app.addAsSubWindow(viewer, title=series.label())
-
-class RegionDev(wezel.Action):
-
-    def enable(self, app):
-        
-        if app.__class__.__name__ != 'Windows':
-            return False
-        return app.nr_selected(SERIES_VIEWER) != 0
-
-    def run(self, app):
-
-        for series in app.get_selected(SERIES_VIEWER):
-
-            viewer = wezel.widgets.RegionViewerDev(series)
-            viewer.dataWritten.connect(app.treeView.setFolder)
-            app.addAsSubWindow(viewer, title=series.label())
-
-
-class Region(wezel.Action):
-
-    def enable(self, app):
-        
-        if app.__class__.__name__ != 'Windows':
-            return False
-        return app.nr_selected(SERIES_VIEWER) != 0
-
-    def run(self, app):
-
-        for series in app.get_selected(SERIES_VIEWER):
-
-            viewer = wezel.widgets.SeriesViewerROI()
-            app.addAsSubWindow(viewer, title=series.label())
-            viewer.dataWritten.connect(app.treeView.setFolder)
-            viewer.setData(series)
-            
-
-class Image(wezel.Action):
-
-    def enable(self, app):
-        
-        if not hasattr(app, 'folder'):
-            return False
-        return app.nr_selected(IMAGE_VIEWER) != 0
-
-    def run(self, app):
-
-        for image in app.get_selected(IMAGE_VIEWER):
-            app.display(image)
-
 
 class Series(wezel.Action):
 
     def enable(self, app):
-        
-        if not hasattr(app, 'folder'):
+        if app.__class__.__name__ != 'Windows':
             return False
         return app.nr_selected(SERIES_VIEWER) != 0
 
     def run(self, app):
-
         for series in app.get_selected(SERIES_VIEWER):
-            app.display(series)
+            app.display(series)            
 
-
-
-            
 
 class Array4D(wezel.Action):
 
@@ -115,6 +41,7 @@ class Array4D(wezel.Action):
         series = app.get_selected(3)[0]
         array, _ = series.array(['SliceLocation', 'AcquisitionTime'], pixels_first=True)
         array = np.squeeze(array[...,0])
+        app.status.hide()
         if array.ndim < 4:
             app.dialog.information('Please select a series with >1 slice location and acquisition time.')
         else:
@@ -133,8 +60,6 @@ class HeaderDICOM(wezel.Action):
        for series in app.get_selected(SERIES_VIEWER):
             viewer = wezel.widgets.SeriesViewerMetaData(series)
             app.addAsSubWindow(viewer, title=series.label())
-
-
 
 
 class CloseWindows(wezel.Action):

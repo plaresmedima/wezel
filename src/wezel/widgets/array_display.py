@@ -1,12 +1,10 @@
-__all__ = ['FourDimViewer']
-
 import numpy as np
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QSplitter, 
 )
-from .. import widgets as widgets
+from wezel import widgets
 
 class FourDimViewer(QSplitter):
     """
@@ -22,30 +20,28 @@ class FourDimViewer(QSplitter):
 
     def __init__(self, status=None, array=None, zcoords=None, tcoords=None, zlabel='z', tlabel='t'): 
         super().__init__()
-
         self.status = status
-        self._defineWidgets()
-        self._defineConnections()
-        self._defineLayout()
+        self._setWidgets()
+        self._setLayout()
+        self._setConnections()
         self._setViewTool()
-        self.setData(array=array, zcoords=zcoords, tcoords=tcoords, zlabel=zlabel, tlabel=tlabel, fit=True)
+        self.setData(
+            array=array, 
+            zcoords=zcoords, 
+            tcoords=tcoords, 
+            zlabel=zlabel, 
+            tlabel=tlabel, 
+            fit=True,
+        )
         
-    def _defineWidgets(self):
-
+    def _setWidgets(self):
         self.viewToolBox = widgets.ArrayViewToolBox()
         self.view = widgets.ArrayView()
         self.viewSlider = widgets.IndexSlider()
         self.plot = widgets.PlotCurve()
         self.plotSlider = widgets.IndexSlider()
 
-    def _defineConnections(self):
-
-        self.viewToolBox.newTool.connect(self._setViewTool)
-        self.view.mousePositionMoved.connect(self._mouseMoved)
-        self.viewSlider.valueChanged.connect(self._refresh)
-        self.plotSlider.valueChanged.connect(self._refresh)
-
-    def _defineLayout(self):
+    def _setLayout(self):
 
         # Left panel for viewing images
 
@@ -54,20 +50,18 @@ class FourDimViewer(QSplitter):
         layout.setSpacing(0)
         layout.setAlignment(Qt.AlignLeft  | Qt.AlignVCenter)
         layout.addWidget(self.viewToolBox)
-
         self.toolBar = QWidget() 
         self.toolBar.setStyleSheet("background-color: white")  
         self.toolBar.setLayout(layout)
-
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         layout.addWidget(self.toolBar)
         layout.addWidget(self.view) 
         layout.addWidget(self.viewSlider) 
-
         leftPanel = QWidget() 
         leftPanel.setLayout(layout)
+        self.addWidget(leftPanel)
 
         # Right Panel for viewing curve plots
 
@@ -76,14 +70,15 @@ class FourDimViewer(QSplitter):
         layout.setSpacing(0)
         layout.addWidget(self.plot) 
         layout.addWidget(self.plotSlider) 
-
         rightPanel = QWidget() 
         rightPanel.setLayout(layout)
-
-        # Putting both panels together
-
-        self.addWidget(leftPanel)
         self.addWidget(rightPanel)
+
+    def _setConnections(self):
+        self.viewToolBox.newTool.connect(self._setViewTool)
+        self.view.mousePositionMoved.connect(self._mouseMoved)
+        self.viewSlider.valueChanged.connect(self._refresh)
+        self.plotSlider.valueChanged.connect(self._refresh)
 
     def setData(self, array=None, 
         zcoords=None, tcoords=None, 
@@ -137,12 +132,10 @@ class FourDimViewer(QSplitter):
         self.status.message(msg)
 
     def _setViewTool(self):
-
         tool = self.viewToolBox.getTool()
         self.view.setEventHandler(tool)
 
     def _mouseMoved(self):
-
         self._setStatus()
         tool = self.viewToolBox.getTool()
         x = tool.x
