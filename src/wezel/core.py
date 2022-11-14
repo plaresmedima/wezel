@@ -2,10 +2,52 @@ __all__ = ['Main', 'App', 'Action', 'MenuBar', 'Menu']
 
 import sys
 
+from PyQt5.QtCore import *
 from PyQt5.QtWidgets import QMainWindow, QAction, QMenu, QMenuBar
 from PyQt5.QtGui import QIcon
 
-import wezel.widgets as widgets
+import wezel.icons as icons
+
+# Examples of style sheets
+# https://doc.qt.io/qtforpython/overviews/stylesheet-examples.html
+# 
+
+STYLESHEET = """ 
+    QMdiArea {
+        background-color: rgb(32, 32, 32);
+    }
+    QDockWidget {
+        border: 0px;
+    }
+    QScrollBar:vertical {
+        border: 0px ;
+        background: black;
+        width: 10px;
+    }
+    QScrollBar::handle:vertical {
+        background: rgb(32, 32, 32);
+        min-height: 20px;
+    }
+    QMainWindow {
+        background: rgb(128, 128, 128);
+    }
+    QMainWindow::separator {
+        width: 2px; /* when vertical */
+        height: 2px; /* when horizontal */
+    }
+    QMenuBar {
+        background-color: rgb(128, 128, 128); 
+    }
+    QTreeView {
+        background: rgb(32, 32, 32);
+    }
+    QTreeView::item { 
+        color: rgb(128, 128, 128);
+    }
+    QTreeView::item:selected { 
+        background-color: rgb(32, 32, 64);
+    }
+    """
 
 
 class Main(QMainWindow):
@@ -16,10 +58,11 @@ class Main(QMainWindow):
         super().__init__()
 
         self.wezel = wezel
+        #self.setStyleSheet(STYLESHEET)
         self.setWindowTitle("Wezel")
-        self.setWindowIcon(QIcon(widgets.icons.favicon))
+        self.setWindowIcon(QIcon(icons.favicon))
 
-    def closeEvent(self, event): # dummy for now
+    def closeEvent(self, event): 
         accept = self.wezel.app.close()
         if accept:
             event.accept()
@@ -172,8 +215,8 @@ class Action(QAction):
         text = None,
         shortcut = None,
         tooltip = None, 
-        icon = None, 
-        options = None):
+        icon = None,  
+        **kwargs):
         """parent: App, Menu or MenuBar"""
         super().__init__()
 
@@ -192,10 +235,9 @@ class Action(QAction):
         if shortcut is not None: self.setShortcut(shortcut)
         if tooltip is not None: self.setToolTip(tooltip)
 
-        # Optional set of constants that can be used to customize
-        # the action - can be used to generalise the scope of an action. 
-        # options can be any data type.
-        self.options = options
+        # Dictionary with optional settings
+        for option in kwargs:
+            self.__dict__[option] = kwargs[option]
 
     def enable(self, app):
         return True

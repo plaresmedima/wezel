@@ -6,16 +6,15 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "wezel"
-version = "0.0.16"
+version = "0.1.0"
 dependencies = [
   "PyQt5<=5.13.1",  # found some resolution issues with later versions
   "dbdicom",
   "matplotlib",
   "numpy",
   "pandas",
-  "pyqtgraph<=0.10.0",  # found some image display issues with later versions
   "importlib-resources>=1.1.0",
-  "opencv-python",
+  "opencv-python<=4.5.3.56", # hack to fix a bug in building executable
   "scikit-image"
 ]
 

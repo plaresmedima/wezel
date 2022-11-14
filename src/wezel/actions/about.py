@@ -4,7 +4,7 @@ import wezel
 
 def all(parent):
 
-    parent.action(About, text='Wezel', icon=wezel.widgets.icons.question_mark) 
+    parent.action(About, text='Wezel', icon=wezel.icons.question_mark) 
 
 
 class About(wezel.Action):

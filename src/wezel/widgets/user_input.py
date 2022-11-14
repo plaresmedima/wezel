@@ -1,6 +1,6 @@
 """This module contains classes for the creation of a custom widget 
     for a pop-up dialog window with one or more input widgets to accept input data."""
-__all__ = ['ParameterInputDialog']
+
 
 from ast import literal_eval
 
@@ -65,9 +65,9 @@ class ParameterInputDialog(QDialog):
             QBtn = QDialogButtonBox.Ok | QDialogButtonBox.Cancel   #OK and Cancel button
             #QBtn = QDialogButtonBox.Ok    #OK button only
             self.buttonBox = QDialogButtonBox(QBtn)
-            self.buttonBox.accepted.connect(self.accept)   #OK button
-            self.buttonBox.rejected.connect(self.close)  #Cancel button
-            self.closeDialog = False
+            self.buttonBox.accepted.connect(self.clickedOK)   #OK button
+            self.buttonBox.rejected.connect(self.clickedCancel)  #Cancel button
+            #self.closeDialog = False
             self.layout = QFormLayout()
             if helpText:
                 self.helpTextLbl = QLabel("<H4>" + helpText  +"</H4>")
@@ -260,14 +260,23 @@ class ParameterInputDialog(QDialog):
             return paramList[0], paramList[1], paramList[2], paramList[3]
 
 
-    def close(self):
-        self.closeDialog =True
-        #Now programmatically click OK to close the dialog
+    # def close(self): # OK button clicked
+    #     self.button = 'OK'
+    #     #self.closeDialog =True
+    #     #Now programmatically click OK to close the dialog
+    #     self.accept()
+
+    def clickedOK(self): # OK button clicked
+        self.button = 'OK'
+        self.accept()
+    
+    def clickedCancel(self): # Cancel button clicked
+        self.button = 'Cancel'
         self.accept()
 
 
-    def _closeInputDialog(self):
-            return self.closeDialog
+    # def _closeInputDialog(self):
+    #         return self.closeDialog
 
 
     def _processOutput(self, fields, listParams):
@@ -280,7 +289,7 @@ class ParameterInputDialog(QDialog):
                 outputList.append(param)
     
         if outputList is None: 
-            return 1, fields
+            return fields
         else:
             # Overwrite the value key with the returned parameter
             for f, field in enumerate(fields):
@@ -302,7 +311,7 @@ class ParameterInputDialog(QDialog):
     
                 elif field["type"] == "float":
                     field["value"] = outputList[f]
-            return 0, fields
+            return fields
 
 
     def returnListParameterValues(self):

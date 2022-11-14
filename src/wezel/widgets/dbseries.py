@@ -1,6 +1,5 @@
-__all__ = ['SeriesColors', 'ImageSliders']
-
 import pandas as pd
+import timeit
 
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import (
@@ -9,98 +8,23 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QIcon
 
 from .. import widgets as widgets
-
-class SeriesColors(QWidget):
-    """Widget to set and manage color and window settings of a Series"""
-
-    valueChanged = pyqtSignal()  # emitted when the color settings are changed by the widget
-
-    def __init__(self):
-        super().__init__()
-
-        self._setWidgets()
-        self._setConnections()
-        self._setLayout()
-
-    def _setWidgets(self):
-
-        self.mode = widgets.LockUnlockButton(toolTip = 'Lock image settings')
-        self.colors = widgets.SelectImageColorTable()
-        self.brightness = widgets.ImageBrightness()
-        self.contrast = widgets.ImageContrast()
-        self.save = widgets.SaveImageButton()
-
-    def setData(self, series, image):
-
-        self.series = series
-        self.colors.setData(image)
-        self.brightness.setData(image)
-        self.contrast.setData(image)
-        self.save.setData(image)
-
-    def setValue(self):
-
-        # self.colors.setValue()
-        self.brightness.setValue()
-        self.contrast.setValue()
-
-    def setImage(self, image):
-        """Assigns a new image to the color tools
-        
-        If the settings are locked, the color settings
-        of the image are updated based on the current values 
-        and a signal is emitted that the image properties have changed.
-
-        If the settings are not locked then they are set to 
-        the values of the new image.
-        """
-
-        self.colors.setData(image)
-        self.brightness.setData(image, set=not self.mode.isLocked)
-        self.contrast.setData(image, set=not self.mode.isLocked)
-        self.save.setData(image)
-#        if self.mode.isLocked: # image has been updated based on color settings
-#            self.valueChanged.emit()
-
-    def _setConnections(self):
-
-        self.brightness.valueChanged.connect(self.valueChanged.emit)
-        self.contrast.valueChanged.connect(self.valueChanged.emit)
-        self.colors.newColorTable.connect(self.valueChanged.emit)
-
-    def _setLayout(self):
-
-        layout = QHBoxLayout()
-        layout.setContentsMargins(0,0,0,0)
-        layout.setSpacing(0)
-        layout.addWidget(self.mode)
-    #    layout.addWidget(self.colors)
-        layout.addWidget(self.brightness)
-        layout.addWidget(self.contrast)
-    #    layout.addWidget(self.save)
-        
-        #self.setStyleSheet("background-color: white")
-        self.setLayout(layout)
+import wezel.icons as icons
 
 
-class ImageSliders(QWidget):
+class SeriesSliders(QWidget):
     """Widget with sliders to navigate through a DICOM series."""
 
-    valueChanged = pyqtSignal()
+    valueChanged = pyqtSignal(object)
 
     def __init__(self, series=None, image=None, dimensions=[]):  
         super().__init__()
-
         self._blockSignals = False
-
         if dimensions == []:
-            self.sliderTags = ["AcquisitionTime", "SliceLocation"]
+            self.sliderTags = ["SliceLocation","AcquisitionTime"]
         else: 
             self.sliderTags = dimensions
-
         self._setWidgets()
         self._setLayout()
-
         if series is not None:
             self.setData(series, image)
 
@@ -109,7 +33,7 @@ class ImageSliders(QWidget):
         self.slidersButton = QPushButton()
         self.slidersButton.setToolTip("Display Multiple Sliders")
         self.slidersButton.setCheckable(True)
-        self.slidersButton.setIcon(QIcon(widgets.icons.slider_icon))
+        self.slidersButton.setIcon(QIcon(icons.slider_icon))
         self.slidersButton.clicked.connect(self._slidersButtonClicked)  
 
         self.instanceSlider = widgets.LabelSlider("", range(1))
@@ -133,48 +57,31 @@ class ImageSliders(QWidget):
         self._blockSignals = block
 
     def setData(self, series=None, image=None, blockSignals=False):
-
         restore = self._blockSignals
         self._blockSignals = blockSignals
         self.series = series
         self._readDataFrame()
         self._setSliderValueLists()
-        self.image = image
         if image is None:
             if self.series is not None:
-                self.image = self.series.children(0)
-        self._setSliderValues()
-        self._sliderValueChanged()  
+                image = self.series.instance()
+        self.setImage(image)  
         self._blockSignals = restore          
 
-    def setSeries(self, series): # Obsolete?
-
+    def setSeries(self, series): 
         self.series = series
         self._readDataFrame()
         self._setSliderValueLists()
-        self.image = self.series.children(0)
-        self.setImage(self.image)
+        image = self.series.instance()
+        self.setImage(image)
 
-    def setImage(self, image):  # Obsolete?
-
+    def setImage(self, image): 
+        self.blockSignals(True) 
         self.image = image
         self._setSliderValues()
         self._sliderValueChanged()
+        self.blockSignals(False) 
 
-    def getSeries(self):
-
-        return self.series
-
-    def getImage(self):
-
-        return self.image
-
-    def _setSliderValueLists(self):
-
-        for slider in self._activeSliders:
-            values = self.dataFrame[slider.label].unique().tolist()
-            values.sort()
-            slider.setValues(values)
 
     def _readDataFrame(self):
         """Read the dataframe for the series.
@@ -190,14 +97,16 @@ class ImageSliders(QWidget):
         # If all required tags are in the register,
         # then just extract the register for the series;
         # else read the data from disk.
-        tags = list(set(tags + list(self.series.folder.dataframe)))
-        if set(tags) == set(self.series.folder.dataframe):
-            self.dataFrame = self.series.data()
-        else: 
-            self.dataFrame = self.series.read_dataframe(tags)  
+        columns = list(self.series.manager.columns)
+        tags = list(set(tags + columns))
+        # if set(tags) == set(columns): # integrated in dbdicom read_dataframe
+        #     self.dataFrame = self.series.register()
+        # else: 
+        #     self.dataFrame = self.series.read_dataframe(tags)  
+        self.dataFrame = self.series.read_dataframe(tags)  
         self.dataFrame.sort_values("InstanceNumber", inplace=True)
-        self.dataFrame.dropna(axis=1, inplace=True)  
-        self.dataFrame.reset_index()
+        #self.dataFrame.dropna(axis=1, inplace=True)  
+        #self.dataFrame.reset_index()
         # remove tags with one unique value  
         for tag in self.sliderTags:        
             if tag in self.dataFrame: 
@@ -210,12 +119,19 @@ class ImageSliders(QWidget):
                 self.sliderTags.remove(tag)
 
 
+    def _setSliderValueLists(self):
+        for slider in self._activeSliders:
+            values = self.dataFrame[slider.label].unique().tolist()
+            values.sort()
+            slider.setValues(values)
+
+
     def _slidersButtonClicked(self):
         """Show or hide the other sliders that can be added."""
 
         if self.slidersButton.isChecked(): 
             # Build Checkbox sliders
-            self.slidersButton.setStyleSheet("background-color: red")
+            #self.slidersButton.setStyleSheet("background-color: red")
             for tag in self.sliderTags:
                 tagValues = self.dataFrame[tag].unique().tolist()
                 try:
@@ -229,9 +145,6 @@ class ImageSliders(QWidget):
                 self.sliders.append(slider)
         else: 
             # Delete CheckBox sliders
-            self.slidersButton.setStyleSheet(
-                "background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #CCCCBB, stop: 1 #FFFFFF)"
-            )
             for slider in self.sliders[1:]:
                 slider.deleteLater()
             self.sliders = self.sliders[:1]
@@ -252,18 +165,34 @@ class ImageSliders(QWidget):
         self._setActiveSliderValues()
         self._setMainSliderValue()
 
-    def move(self, slider, direction):
+    def move(self, slider='first', direction=1, key='up'):
         """
         Move the sliders by one step forwards or backwards.
 
         Arguments
         ---------
+        Specify either slider + direction, or key.
+
         slider : either first or second slider
         direction : either +1 (forwards) or -1 (backwards)
+        key: arrow (left, right, up or down)
         """
+        # Translate keyboard arrow hits to slider movement
+        if key is not None:
+            if key == 'left':
+                slider = 'first'
+                direction = -1
+            elif key == 'right':
+                slider = 'first'
+                direction = 1
+            elif key == 'up':
+                slider = 'second'
+                direction = 1
+            elif key == 'down':
+                slider = 'second'
+                direction = -1
         active = self._activeSliders
         if self.sliders[0].isHidden():
-
             if slider == 'first':
                 sldr = active[0]
                 index = sldr.index() + direction
@@ -302,7 +231,7 @@ class ImageSliders(QWidget):
 
         if self.image is None: 
             return
-        find = self.dataFrame.SOPInstanceUID == self.image.UID[-1]
+        find = self.dataFrame.SOPInstanceUID == self.image.uid
         row = self.dataFrame.loc[find]
         for slider in self._activeSliders:
             value = row[slider.label].values[0]
@@ -316,7 +245,7 @@ class ImageSliders(QWidget):
         if len(imageUIDs) <= 1:
             self.sliders[0].hide()
         else:
-            index = imageUIDs.index(self.image.UID[-1])
+            index = imageUIDs.index(self.image.uid)
             self.sliders[0].setValue(index)
             self.sliders[0].show()
 
@@ -328,13 +257,13 @@ class ImageSliders(QWidget):
             self.image = None
             self.sliders[0].hide()
         elif len(imageUIDs) == 1:
-            self._set_image(imageUIDs[0])
+            self.image = self.series.instance(imageUIDs[0])
             self.sliders[0].hide()
         else:
             index = self.sliders[0].value()
-            self._set_image(imageUIDs[index])
+            self.image = self.series.instance(imageUIDs[index])
         if not self._blockSignals:
-            self.valueChanged.emit()
+            self.valueChanged.emit(self.image)
 
     def _sliderValueChanged(self):  
         """Change the selected image"""
@@ -344,25 +273,16 @@ class ImageSliders(QWidget):
             self.image = None
             self.sliders[0].hide()
         elif len(imageUIDs) == 1:
-            #self.image = self.series.children(SOPInstanceUID = imageUIDs[0])[0]
-            self._set_image(imageUIDs[0])
+            self.image = self.series.instance(imageUIDs[0])
             self.sliders[0].hide()
         else:
             self.sliders[0].setValues(range(len(imageUIDs)))
             index = self.sliders[0].value()
-            # self.image = self.series.children(SOPInstanceUID = imageUIDs[index])[0]
-            self._set_image(imageUIDs[index])
+            self.image = self.series.instance(imageUIDs[index])
             self.sliders[0].show()
         if not self._blockSignals:
-            self.valueChanged.emit()
+            self.valueChanged.emit(self.image)
 
-    def _set_image(self, SOPInstanceUID):
-        """
-        Set image based on its UID
-        """
-        df = self.dataFrame[self.dataFrame.SOPInstanceUID == SOPInstanceUID]
-        self.image = self.series.dicm.object(self.series.folder, df.iloc[0], 4)
-#        self.image = self.series.children(SOPInstanceUID = imageUIDs[index])[0]
 
     def _getAllSelectedImages(self):
         """Get the list of all image files selected by the optional sliders"""

@@ -1,5 +1,3 @@
-__all__ = ['IndexSlider', 'LabelSlider', 'CheckBoxSlider']
-
 from PyQt5.QtCore import  Qt, pyqtSignal
 from PyQt5.QtWidgets import (
     QLabel, 
