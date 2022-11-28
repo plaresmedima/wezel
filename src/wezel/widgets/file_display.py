@@ -1,14 +1,9 @@
-from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import (
-    QWidget,
-    QHBoxLayout,
-    QVBoxLayout, 
+from PyQt5.QtWidgets import ( 
     QLabel, 
-    QToolBar,
 )
-from .. import widgets as widget
-import wezel.icons as icons
+
+from wezel import icons
 
 class ImageLabel(QLabel):
 

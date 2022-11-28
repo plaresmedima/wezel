@@ -220,7 +220,7 @@ class ArrayItem(QGraphicsObject):
 
 
 class ArrayViewCursor():
-    """Base class for ImageView Cursor Tools.
+    """Base class for ArrayView Cursor Tools.
     
     Features
     --------
@@ -253,7 +253,7 @@ class ArrayViewCursor():
         self.y = 0
 
     def setView(self, imageView):
-        """Assign an ImageView instance to handle"""
+        """Assign an ArrayView instance to handle"""
 
         self.view = imageView
         self.view.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)

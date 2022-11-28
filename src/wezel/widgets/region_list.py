@@ -1,23 +1,28 @@
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import (
+    QAction,
     QWidget, 
-    QComboBox, 
-    QHBoxLayout, 
+    QComboBox, QToolBar, 
+    QHBoxLayout, QVBoxLayout,
     QPushButton)
 
-import wezel.icons as icons
+from wezel import icons, widgets
 
 class RegionList(QWidget):
     """Manages a list of regions on the same underlay series"""
     currentRegionChanged = pyqtSignal()
 
-    def __init__(self):
+    def __init__(self, layout='Horizontal'):
         super().__init__()
         self.regions = []
+        self.series = None
         self._defineWidgets()
         self._defineConnections()
-        self._defineLayout()
+        if layout=='Vertical':
+            self._defineLayoutVertical()
+        elif layout == 'Horizontal':
+            self._defineLayout()
 
     def _defineWidgets(self):
         self.comboBox = QComboBox()
@@ -28,36 +33,63 @@ class RegionList(QWidget):
         self.comboBox.setInsertPolicy(QComboBox.InsertAtCurrent)
         self.comboBox.setDuplicatesEnabled(True)
         self.comboBox.setEnabled(False)
-#        self.comboBox.addItems(self._items())
-#        self.comboBox.setCurrentIndex(0)
-        self.btnLoad = QPushButton()
+        self.comboBox.setFixedWidth(115)
+        #self.btnLoad = QPushButton()
+        self.btnLoad = QAction()
         self.btnLoad.setToolTip('Load new ROIs')
         self.btnLoad.setIcon(QIcon(icons.application_import))
-        self.btnNew = QPushButton() 
+        #self.btnNew = QPushButton() 
+        self.btnNew = QAction() 
         self.btnNew.setToolTip('Create a new ROI')
         self.btnNew.setIcon(QIcon(icons.plus))
-        self.btnDelete = QPushButton() 
+        #self.btnDelete = QPushButton() 
+        self.btnDelete = QAction() 
         self.btnDelete.setToolTip('Delete the current ROI')
         self.btnDelete.setIcon(QIcon(icons.minus))
         self.btnDelete.setEnabled(False)
 
+    def _defineLayoutVertical(self):
+        column = QVBoxLayout()
+        column.setContentsMargins(0, 0, 0, 0)
+        column.setSpacing(0)
+        column.addWidget(self.comboBox, alignment=Qt.AlignLeft)
+        #row = QHBoxLayout()
+        #row.setContentsMargins(0, 0, 0, 0)
+        #row.setSpacing(0)
+        row = QToolBar()
+        row.addAction(self.btnLoad)
+        row.addAction(self.btnNew)
+        row.addAction(self.btnDelete)
+        column.addWidget(row)
+        self.setLayout(column)
+
     def _defineLayout(self):
+        btns = QToolBar()
+        btns.addWidget(self.btnLoad)
+        btns.addWidget(self.btnNew)
+        btns.addWidget(self.btnDelete)
         layout = QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
-        layout.addWidget(self.btnLoad, alignment=Qt.AlignLeft)
-        layout.addWidget(self.btnNew, alignment=Qt.AlignLeft)
-        layout.addWidget(self.btnDelete, alignment=Qt.AlignLeft)
+        layout.addWidget(btns, alignment=Qt.AlignLeft)
+        # layout.addWidget(self.btnLoad, alignment=Qt.AlignLeft)
+        # layout.addWidget(self.btnNew, alignment=Qt.AlignLeft)
+        # layout.addWidget(self.btnDelete, alignment=Qt.AlignLeft)
         layout.addWidget(self.comboBox, alignment=Qt.AlignLeft)
         self.setLayout(layout)
 
     def _defineConnections(self):
         self.comboBox.currentIndexChanged.connect(self.currentRegionChanged.emit)
-        self.btnLoad.clicked.connect(self._loadRegion)
-        self.btnNew.clicked.connect(self._newRegion)
-        self.btnDelete.clicked.connect(self._deleteRegion)
+        self.btnLoad.triggered.connect(self._loadRegion)
+        self.btnNew.triggered.connect(self._newRegion)
+        self.btnDelete.triggered.connect(self._deleteRegion)
+        # self.btnLoad.clicked.connect(self._loadRegion)
+        # self.btnNew.clicked.connect(self._newRegion)
+        # self.btnDelete.clicked.connect(self._deleteRegion)
 
     def setRegions(self, regions):
+        if regions is None:
+            return
         self.regions = [region.read() for region in regions]
         self.comboBox.blockSignals(True)
         self.comboBox.clear()
@@ -115,6 +147,19 @@ class RegionList(QWidget):
             text = self.comboBox.itemText(i)
             region.SeriesDescription = text
         return self.regions != []
+
+    def addRegion(self, region):
+        if region is None:
+            return
+        region.read()
+        self.regions.append(region) # add to the list
+        description = region.SeriesDescription
+        self.comboBox.blockSignals(True) #update the widget
+        self.comboBox.addItem(description)
+        self.comboBox.setCurrentIndex(len(self.regions)-1)
+        self.comboBox.blockSignals(False)
+        self.comboBox.setEnabled(True)
+        self.btnDelete.setEnabled(True)
         
     def _newRegion(self):
         region = self.series.new_sibling()
@@ -160,13 +205,12 @@ class RegionList(QWidget):
         seriesList = self.series.parent().children()
         seriesLabels = [series.SeriesDescription for series in seriesList]
         # Ask the user to select series to import as regions
-        cancel, input = self.series.dialog.input(
-            {"label":"Series:", "type":"listview", "list": seriesLabels},
-            title = "Please select series to import as Regions", 
-        )
-        if cancel: 
+        input = widgets.UserInput(
+            {"label":"Series:", "type":"listview", "list": seriesLabels}, 
+            title = "Please select regions to load")
+        if input.cancel:
             return
-        selectedSeries = [seriesList[i] for i in input[0]["value"]]
+        selectedSeries = [seriesList[i] for i in input.values[0]["value"]]
         # Overlay each of the selected series on the displayed series
         self.comboBox.blockSignals(True)
         for series in selectedSeries:

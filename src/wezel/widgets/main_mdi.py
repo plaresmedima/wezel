@@ -10,6 +10,7 @@ class MainMultipleDocumentInterface(QMdiArea):
     def __init__(self):
         super().__init__()
 
+        self.activeWindow = None
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.setBackground(QBrush(Qt.black))
@@ -43,6 +44,7 @@ class MainMultipleDocumentInterface(QMdiArea):
         self.addSubWindow(subWindow)
         if hasattr(widget, 'closed'):
             widget.closed.connect(subWindow.close)
+        self.activeWindow = subWindow
         return subWindow
         
     def closeSubWindow(self, subWindowName):
@@ -57,33 +59,33 @@ class MainMultipleDocumentInterface(QMdiArea):
                 subWindow.close() 
 
 
-class Message(QMdiSubWindow):
+# class Message(QMdiSubWindow):
 
-    def __init__(self, message=None, title=None):
+#     def __init__(self, message=None, title=None):
             
-        super().__init__()
+#         super().__init__()
 
-        self.label = QLabel()
+#         self.label = QLabel()
 
-        layout = QVBoxLayout()
-        layout.setAlignment(Qt.AlignCenter)
-        layout.addWidget(self.label)
+#         layout = QVBoxLayout()
+#         layout.setAlignment(Qt.AlignCenter)
+#         layout.addWidget(self.label)
 
-        self.widget = QWidget()
-        self.widget.setLayout(layout)
+#         self.widget = QWidget()
+#         self.widget.setLayout(layout)
 
-        self.setAttribute(Qt.WA_DeleteOnClose)
-        self.setWidget(self.widget)
+#         self.setAttribute(Qt.WA_DeleteOnClose)
+#         self.setWidget(self.widget)
 
-        if message is not None:
-            self.display(message, title=title)
+#         if message is not None:
+#             self.display(message, title=title)
 
-    def display(self, message, title=None):
+#     def display(self, message, title=None):
 
-        self.label.setText(message)
-        self.label.adjustSize() 
-        if title is not None:
-            self.setWindowTitle(title)
-        self.show()
+#         self.label.setText(message)
+#         self.label.adjustSize() 
+#         if title is not None:
+#             self.setWindowTitle(title)
+#         self.show()
 
 

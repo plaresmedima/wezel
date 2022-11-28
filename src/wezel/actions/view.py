@@ -1,4 +1,6 @@
+from PyQt5.QtCore import Qt
 import numpy as np
+
 import wezel
 
 #Named constants
@@ -7,15 +9,35 @@ IMAGE_VIEWER = 4
 
 def all(parent):
    
+    parent.action(DataBase, text = 'Database')
     parent.action(Series, text = 'Series')
     parent.action(Array4D, text = '4D Array')
     parent.action(HeaderDICOM, text='DICOM Header')
     parent.separator()
+    parent.action(ToolBar, text='Tool bar')
     parent.action(CloseWindows, text='Close windows')
     parent.action(TileWindows, text='Tile windows')
 
 
+class ToolBar(wezel.Action):
+    def enable(self, app):
+        return True
+    def run(self, app):
+        app.toolBarDockWidget.show()
 
+class DataBase(wezel.Action):
+
+    def enable(self, app):
+        if app.treeViewDockWidget is None:
+            return False
+        #return not app.treeViewDockWidget.isVisible()
+        return True
+
+    def run(self, app):
+        app.treeViewDockWidget.show()
+        app.menubar.enable()
+
+        
 class Series(wezel.Action):
 
     def enable(self, app):
@@ -25,7 +47,8 @@ class Series(wezel.Action):
 
     def run(self, app):
         for series in app.get_selected(SERIES_VIEWER):
-            app.display(series)            
+            app.display(series)      
+        app.central.tileSubWindows()      
 
 
 class Array4D(wezel.Action):

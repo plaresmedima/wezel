@@ -4,24 +4,16 @@ in `wezel` applications.
 
 """
 
-#from .series_display_dev import *
-#from .folder import *
 #from .log_to_GUI import *
 
 from .dbimage import (
-    LockUnlockButton,
-    ImageColors, 
-    SelectImageColorMap,
-    RestoreImageButton, 
-    SaveImageButton, 
-    ExportImageButton, 
-    DeleteImageButton, 
-    PixelValueLabel, 
+    ImageWindow,
     ImageBrightness, 
     ImageContrast,
 )
 from .dbseries import (
     SeriesSliders,
+    SeriesCanvas,
 )
 from .array_display import (
     FourDimViewer,
@@ -33,24 +25,6 @@ from .array_view import (
 from .curve_plotters import (
     PlotCurve,
 )
-from .image_view import (
-    ImageView, 
-    ImageViewCursor, 
-    ImageViewZoom,
-)
-from .mask_view import (
-    MaskView, 
-    MaskViewBrush, 
-    MaskViewPenFreehand,
-    MaskViewPenRectangle, 
-    MaskViewPenPolygon, 
-    MaskViewPenCircle,
-    MaskViewRegionGrowing,
-    MaskViewDeleteROI,
-    MaskViewEdgeDetection,
-    MaskViewErode,
-    MaskViewDilate,
-)
 from .sliders import (
     IndexSlider, 
     LabelSlider, 
@@ -58,31 +32,21 @@ from .sliders import (
 )
 from .main_mdi import (
     MainMultipleDocumentInterface, 
-    Message,
-)
-from .drawing_tools import (
-    ToolBox, 
-    MaskViewToolBox,
 )
 from .message import (
     Dialog, 
     StatusBar,
+    UserInput,
 )
-from .folder_fast import (
+from .dbdatabase import (
     DICOMFolderTree,
 )
 from .region_list import (
     RegionList,
 )
-from .region_draw import (
-    SeriesViewerROI,
-)
-from .image_display import (
+from .file_display import (
     ImageLabel,
 )
-from .user_input import (
-    ParameterInputDialog,
-)
-from .view_meta_data import (
+from .dicom_header import (
     SeriesViewerMetaData,
 )

@@ -41,6 +41,7 @@ class Open(wezel.Action):
         app.open(path)
         app.status.hide()
         app.status.cursorToNormal()
+        
 
 
 class Close(wezel.Action):

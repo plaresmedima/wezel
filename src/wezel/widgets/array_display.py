@@ -38,6 +38,7 @@ class FourDimViewer(QSplitter):
         self.viewToolBox = widgets.ArrayViewToolBox()
         self.view = widgets.ArrayView()
         self.viewSlider = widgets.IndexSlider()
+        self.canvas = widgets.SeriesCanvas()
         self.plot = widgets.PlotCurve()
         self.plotSlider = widgets.IndexSlider()
 

@@ -3,12 +3,11 @@ import timeit
 
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import (
-    QWidget, QHBoxLayout, QPushButton,
+    QWidget, QHBoxLayout, QVBoxLayout, QPushButton,
     )
 from PyQt5.QtGui import QIcon
 
-from .. import widgets as widgets
-import wezel.icons as icons
+from wezel import widgets, canvas, icons
 
 
 class SeriesSliders(QWidget):
@@ -178,6 +177,7 @@ class SeriesSliders(QWidget):
         key: arrow (left, right, up or down)
         """
         # Translate keyboard arrow hits to slider movement
+        self._blockSignals = True
         if key is not None:
             if key == 'left':
                 slider = 'first'
@@ -225,6 +225,7 @@ class SeriesSliders(QWidget):
                     index = sldr.index() + direction
                     if sldr.setIndex(index):
                         self._mainSliderValueChanged()
+        self._blockSignals = False
 
 
     def _setActiveSliderValues(self):
@@ -308,3 +309,74 @@ class SeriesSliders(QWidget):
             if slider.checkBox.isChecked():
                 activeSliders.append(slider)
         return activeSliders
+    
+
+
+class SeriesCanvas(QWidget):
+
+    newImage = pyqtSignal(object)
+    mousePositionMoved = pyqtSignal(int, int)
+
+    def __init__(self):
+        super().__init__()
+    #    self.regions = None
+        self._setWidgets()
+        self._setLayout()
+        self._setConnections()
+#        self.setImageSeries(series)
+        self.setEnabled(False)
+
+    def _setWidgets(self):
+        self.sliders = widgets.SeriesSliders()
+        self.canvas = canvas.Canvas()
+
+    def _setLayout(self):
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        layout.addWidget(self.canvas)
+        layout.addWidget(self.sliders)
+        self.setLayout(layout)
+
+    def _setConnections(self):
+        self.canvas.arrowKeyPress.connect(lambda arrow: self.arrowKeyPress(arrow))
+        self.canvas.mousePositionMoved.connect(lambda x, y: self.mousePositionMoved.emit(x,y))
+        self.sliders.valueChanged.connect(self.changeCanvasImage)
+
+    def closeEvent(self, event): 
+        if self.canvas.toolBar is not None:
+            self.canvas.toolBar.setEnabled(False)
+        if not self.isEnabled():
+            return
+        if not self.sliders.series.exists():
+            return
+        self.canvas.saveMask()
+
+    def setFilter(self, filter):
+        self.canvas.setFilter(filter)
+        
+    def setImageSeries(self, series):
+        self.sliders.setData(series)
+        self.setCanvasImage()
+        self.setEnabled(True)
+
+    def setCanvasImage(self):
+        image = self.sliders.image
+        if image is not None:
+            image.read()
+        self.canvas.setImage(image)
+
+    def setMaskSeries(self, series):
+        self.canvas.maskSeries = series
+        self.canvas.setMask(None, color=1, opacity=0.5)
+
+    def changeCanvasImage(self):
+        self.canvas.saveMask()
+        self.newImage.emit(self.sliders.image)
+        self.setCanvasImage()
+        
+    def arrowKeyPress(self, key):
+        self.canvas.saveMask()
+        self.sliders.move(key=key)
+        self.newImage.emit(self.sliders.image)
+        self.setCanvasImage()

@@ -2,6 +2,11 @@ import os
 import sys
 import venv
 
+# to build an executable
+# pyinstaller --name wezel --clean --onefile --noconsole --additional-hooks-dir=. exec.py
+# with splash screen
+# pyinstaller --name wezel --clean --onefile --noconsole --additional-hooks-dir=. --splash wezel.jpg exec.py
+
 def distribute():
     """Upload new version on PyPI
     
