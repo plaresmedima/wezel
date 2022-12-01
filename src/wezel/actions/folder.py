@@ -21,12 +21,6 @@ def all(parent):
 
 class Open(wezel.Action):
 
-    def enable(self, app):
-
-        if not hasattr(app, 'folder'):
-            return False
-        return True
-
     def run(self, app):
         """
         Open a DICOM folder and update display.
@@ -48,16 +42,12 @@ class Close(wezel.Action):
     """
     Close wezel.
     """ 
-    def enable(self, app):
-
-        if not hasattr(app, 'folder'):
-            return False  
+    def enable(self, app): 
         if app.folder is None:
             return False
         return app.folder.manager.is_open()
 
     def run(self, app):
-
         closed = app.folder.close()
         if closed: 
             app.close()
@@ -65,10 +55,7 @@ class Close(wezel.Action):
 
 class Read(wezel.Action):
 
-    def enable(self, app):
-
-        if app.__class__.__name__ != 'Windows':
-            return False 
+    def enable(self, app): 
         if app.folder is None:
             return False  
         return app.folder.manager.is_open()
@@ -87,9 +74,6 @@ class Read(wezel.Action):
 class Restore(wezel.Action):
 
     def enable(self, app):
-        
-        if not hasattr(app, 'folder'):
-            return False
         if app.folder is None:
             return False
         return app.folder.manager.is_open()
@@ -105,9 +89,6 @@ class Restore(wezel.Action):
 class Save(wezel.Action):
 
     def enable(self, app):
-
-        if not hasattr(app, 'folder'):
-            return False 
         if app.folder is None:
             return False  
         return app.folder.manager.is_open()
@@ -120,12 +101,6 @@ class Save(wezel.Action):
 
 
 class OpenSubFolders(wezel.Action):
-
-    def enable(self, app):
-
-        if not hasattr(app, 'folder'):
-            return False
-        return True
 
     def run(self, app):
         """
@@ -158,9 +133,6 @@ class ExportAsDicom(wezel.Action):
     """Export selected series"""
 
     def enable(self, app):
-
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected(3) != 0
 
     def run(self, app):
@@ -179,13 +151,9 @@ class ExportAsCsv(wezel.Action):
     """Export selected series"""
 
     def enable(self, app):
-
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected(3) != 0
 
     def run(self, app):
-
         series = app.get_selected(3)
         if series == []:
             app.dialog.information("Please select at least one series")
@@ -200,13 +168,9 @@ class ExportAsPng(wezel.Action):
     """Export selected series"""
 
     def enable(self, app):
-
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected(3) != 0
 
     def run(self, app):
-
         series = app.get_selected(3)
         if series == []:
             app.dialog.information("Please select at least one series")
@@ -221,13 +185,9 @@ class ExportAsNifti(wezel.Action):
     """Export selected series"""
 
     def enable(self, app):
-
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected(3) != 0
 
     def run(self, app):
-
         series = app.get_selected(3)
         if series == []:
             app.dialog.information("Please select at least one series")

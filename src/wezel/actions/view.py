@@ -41,8 +41,6 @@ class DataBase(wezel.Action):
 class Series(wezel.Action):
 
     def enable(self, app):
-        if app.__class__.__name__ != 'Windows':
-            return False
         return app.nr_selected(SERIES_VIEWER) != 0
 
     def run(self, app):
@@ -54,9 +52,6 @@ class Series(wezel.Action):
 class Array4D(wezel.Action):
 
     def enable(self, app):
-        
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected(3) != 0
 
     def run(self, app):
@@ -75,8 +70,6 @@ class Array4D(wezel.Action):
 class HeaderDICOM(wezel.Action):
 
     def enable(self, app):
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected(SERIES_VIEWER) != 0
 
     def run(self, app):
@@ -86,18 +79,10 @@ class HeaderDICOM(wezel.Action):
 
 
 class CloseWindows(wezel.Action):
-
-    def enable(self, app):
-        return app.__class__.__name__ == 'Windows'
-
     def run(self, app):
         app.central.closeAllSubWindows()
 
 
 class TileWindows(wezel.Action):
-
-    def enable(self, app):
-        return app.__class__.__name__ == 'Windows'
-
     def run(self, app):
         app.central.tileSubWindows()

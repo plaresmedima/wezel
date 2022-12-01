@@ -180,8 +180,8 @@ class MaskPenFreehand(MaskPen):
         # Called by the canvas after the filter is set to a scene
         #item = self.scene().parent().maskItem
         #nx, ny = item.mask.shape[0], item.mask.shape[1]
-        item = self.scene().parent().imageItem
-        nx, ny = item.image.Columns, item.image.Rows
+        cnvs = self.scene().parent()
+        nx, ny = cnvs.image.Columns, cnvs.image.Rows
         x, y = np.arange(0.5, 0.5+nx), np.arange(0.5, 0.5+ny)
         self.xc, self.yc = np.meshgrid(x, y, indexing='ij')
         self.locations = list(zip(self.xc.flatten(), self.yc.flatten()))
@@ -451,9 +451,9 @@ class MaskThreshold(canvas.FilterItem):
         self.setActionPick()
 
     def initialize(self):
-        item = self.scene().parent().imageItem
-        self.center, self.width = item.image.window
-        self.array = item.image.get_pixel_array()
+        cnvs = self.scene().parent()
+        self.center, self.width = cnvs.image.window
+        self.array = cnvs.image.get_pixel_array()
         self.min = np.amin(self.array)
         self.max = np.amax(self.array)
         self.range = self.max-self.min
@@ -515,8 +515,8 @@ class MaskPaintByNumbers(MaskBrush):
         self.icon = QIcon(pixMap)
 
     def initialize(self):
-        item = self.scene().parent().imageItem
-        self.array = item.image.get_pixel_array()
+        cnvs = self.scene().parent()
+        self.array = cnvs.image.get_pixel_array()
 
     def paintPixels(self):
         item = self.scene().parent().maskItem
@@ -780,17 +780,17 @@ class MaskKidneyEdgeDetection(canvas.FilterItem):
         self.setActionPick()
 
     def initialize(self):
-        item = self.scene().parent().imageItem
-        self.array = item.image.get_pixel_array()
+        cnvs = self.scene().parent()
+        self.array = cnvs.image.get_pixel_array()
 
     def mousePressEvent(self, event):
         self.x = int(event.pos().x())
         self.y = int(event.pos().y())
-        imageItem = self.scene().parent().imageItem
-        maskItem = self.scene().parent().maskItem
+        cnvs = self.scene().parent()
+        maskItem = cnvs.maskItem
         if event.button() == Qt.LeftButton:
             p = [self.x, self.y]
-            pixelSize = imageItem.image.PixelSpacing
+            pixelSize = cnvs.image.PixelSpacing
             pixels = canvas.utils.kidneySegmentation(self.array, p[1], p[0], pixelSize)
             if pixels is not None:
                 maskItem.mask = np.logical_or( maskItem.mask, pixels.astype(np.bool8))

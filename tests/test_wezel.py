@@ -56,8 +56,8 @@ def test_launch():
     tmp = tristan
 
     app = wezel.app()
-    app.set_app(wezel.apps.dicom.Windows)
-    #app.open(tmp)
+    #app.set_app(wezel.apps.dicom.Windows)
+    app.open(tmp)
     #app.set_menu(wezel.menus.test)
     app.show()
     

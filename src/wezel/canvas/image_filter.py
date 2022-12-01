@@ -23,7 +23,7 @@ class ImageWindow(canvas.FilterItem):
         """Change intensity and contrast"""
 
         cnvs = self.scene().parent()
-        image = cnvs.imageItem.image
+        image = cnvs.image
         image.mute()
         min = image.SmallestImagePixelValue
         max = image.LargestImagePixelValue
@@ -49,10 +49,12 @@ class ImageWindow(canvas.FilterItem):
         a0 = 1.0/64
         vx = v0 + a0*width
         width = width - vx * dx
-        image.WindowWidth = width if width>1 else 1
+        width = width if width>1 else 1
+        image.WindowWidth = width
 
-        cnvs.imageItem.setQImage()
-        cnvs.imageItem.update()
+        cnvs.imageItem.setWindow(center, width)
+        cnvs.imageItem.setDisplay()
+        #cnvs.imageItem.update()
 #        cnvs.imageUpdated.emit(image)
         if cnvs.toolBar is not None:
             cnvs.toolBar.window.setData(image, set=True)
@@ -97,7 +99,18 @@ class ImageWindow(canvas.FilterItem):
 
     def setColorMap(self, cmap):
         self.pick()
-        self.scene().parent().imageItem.setColormap(cmap)
+        cnvs = self.scene().parent()
+        image = cnvs.image
+        if image is None: # image is corrupted
+            return
+        image.mute()
+        if cmap == 'Greyscale':
+            image.colormap = None
+        else:
+            image.colormap = cmap
+        image.unmute()
+        cnvs.imageItem.setLUT(image.lut)
+        cnvs.imageItem.setDisplay()
 
     def getColorMap(self):
         menu = self.actionPick.menu()

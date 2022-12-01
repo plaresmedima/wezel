@@ -14,6 +14,8 @@ from wezel.canvas.canvas import (
     MaskItem,
     FilterItem,
     FilterSet,
+)
+from wezel.canvas.toolbar import (
     ToolBar,
 )
 from wezel.canvas.scene_filter import(

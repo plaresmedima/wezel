@@ -380,3 +380,6 @@ class SeriesCanvas(QWidget):
         self.sliders.move(key=key)
         self.newImage.emit(self.sliders.image)
         self.setCanvasImage()
+
+    def array(self):
+        return self.canvas.array()

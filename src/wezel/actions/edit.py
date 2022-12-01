@@ -34,9 +34,6 @@ def all(parent):
 class Copy(wezel.Action):
 
     def enable(self, app):
-
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected(self.generation) != 0
 
     def run(self, app):
@@ -52,8 +49,6 @@ class Copy(wezel.Action):
 class Delete(wezel.Action):
 
     def enable(self, app):
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected(self.generation) != 0
 
     def run(self, app):
@@ -68,8 +63,6 @@ class Delete(wezel.Action):
 class DeleteSeries(wezel.Action):
 
     def enable(self, app):
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected('Series') != 0
 
     def run(self, app):
@@ -82,8 +75,6 @@ class DeleteSeries(wezel.Action):
 class DeleteStudies(wezel.Action):
 
     def enable(self, app):
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected('Studies') != 0
 
     def run(self, app):
@@ -96,8 +87,6 @@ class DeleteStudies(wezel.Action):
 class CopySeries(wezel.Action):
 
     def enable(self, app):
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected('Series') != 0
 
     def run(self, app):
@@ -119,8 +108,6 @@ class CopySeries(wezel.Action):
 class MoveSeries(wezel.Action):
 
     def enable(self, app):
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected('Series') != 0
 
     def run(self, app):
@@ -142,8 +129,6 @@ class MoveSeries(wezel.Action):
 class MoveStudies(wezel.Action):
 
     def enable(self, app):
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected('Studies') != 0
 
     def run(self, app):
@@ -165,8 +150,6 @@ class MoveStudies(wezel.Action):
 class CopyStudies(wezel.Action):
 
     def enable(self, app):
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected('Studies') != 0
 
     def run(self, app):
@@ -188,8 +171,6 @@ class CopyStudies(wezel.Action):
 class NewSeries(wezel.Action):
 
     def enable(self, app):
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected('Studies') != 0
 
     def run(self, app): 
@@ -203,8 +184,6 @@ class NewSeries(wezel.Action):
 class NewStudy(wezel.Action):
 
     def enable(self, app):
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected('Patients') != 0
 
     def run(self, app): 
@@ -218,8 +197,6 @@ class NewStudy(wezel.Action):
 class NewPatient(wezel.Action):
 
     def enable(self, app):
-        if not hasattr(app, 'folder'):
-            return False
         return True
 
     def run(self, app): 
@@ -231,9 +208,6 @@ class NewPatient(wezel.Action):
 class MergeSeries(wezel.Action):
 
     def enable(self, app):
-
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected('Series') != 0
 
     def run(self, app): 
@@ -249,8 +223,6 @@ class MergeSeries(wezel.Action):
 class MergeStudies(wezel.Action):
 
     def enable(self, app):
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected('Studies') != 0
 
     def run(self, app): 
@@ -263,8 +235,6 @@ class MergeStudies(wezel.Action):
 class MergePatients(wezel.Action):
 
     def enable(self, app):
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected('Patients') != 0
 
     def run(self, app): 
@@ -278,8 +248,6 @@ class MergePatients(wezel.Action):
 class GroupSeries(wezel.Action):
 
     def enable(self, app):
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected('Series') != 0
 
     def run(self, app): 
@@ -293,8 +261,6 @@ class GroupSeries(wezel.Action):
 class GroupStudies(wezel.Action):
 
     def enable(self, app):
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected('Studies') != 0
 
     def run(self, app): 
@@ -309,8 +275,6 @@ class GroupStudies(wezel.Action):
 class SeriesRename(wezel.Action):
 
     def enable(self, app):
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected('Series') != 0
 
     def run(self, app): 
@@ -328,8 +292,6 @@ class SeriesRename(wezel.Action):
 class StudiesRename(wezel.Action):
 
     def enable(self, app):
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected('Studies') != 0
 
     def run(self, app): 
@@ -346,8 +308,6 @@ class StudiesRename(wezel.Action):
 class PatientsRename(wezel.Action):
 
     def enable(self, app):
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected('Patients') != 0
 
     def run(self, app): 
@@ -364,9 +324,6 @@ class PatientsRename(wezel.Action):
 class SeriesExtract(wezel.Action):
 
     def enable(self, app):
-
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected(3) != 0
 
     def run(self, app):

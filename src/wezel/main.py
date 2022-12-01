@@ -1,40 +1,37 @@
-__all__ = ['app', 'build', 'install']
-
 import os
 import sys
 import venv
-import logging
+#import logging
 
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon
+# from PyQt5.QtWidgets import QApplication
+# from PyQt5.QtCore import Qt
+# from PyQt5.QtGui import QIcon
 
-import wezel
+# import wezel
 
-QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
-QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
-
-
-class Wezel:
-
-    def __init__(self):
-        self.app = None
-        self.log = logger()
-        self.QApp = QApplication(sys.argv)
-        self.QApp.setWindowIcon(QIcon(wezel.icons.favicon))
-        self.status = wezel.widgets.StatusBar()
-        self.main = wezel.core.Main(self)
-        self.main.setStatusBar(self.status)
-        self.dialog = wezel.widgets.Dialog(self.main)
-        self.app = wezel.apps.dicom.Windows(self)
+# QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+# QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
 
 
-def app(application=None):
+# class Wezel:
 
-    wsl = Wezel().app
-    if application is not None:
-        wsl.set_app(application)
-    return wsl
+#     def __init__(self):
+#         self.app = None
+#         self.log = logger()
+#         self.QApp = QApplication(sys.argv)
+#         self.QApp.setWindowIcon(QIcon(wezel.icons.favicon))
+#         self.status = wezel.widgets.StatusBar()
+#         self.main = wezel.core.Main(self)
+#         self.main.setStatusBar(self.status)
+#         self.dialog = wezel.widgets.Dialog(self.main)
+#         self.app = wezel.core.Windows(self)
+
+from wezel.core import Wezel
+
+
+def app():
+
+    return Wezel()
 
 
 
@@ -145,18 +142,18 @@ def build(project, onefile=True, terminal=False, name='my_app', data_folders=[],
 #    post_installation_build_cleanup()
 
 
-def logger():
+# def logger():
     
-    LOG_FILE_NAME = "wezel_log.log"
-    # creates some sort of conflict with mdreg - commenting out for now
-#    if os.path.exists(LOG_FILE_NAME):
-#        os.remove(LOG_FILE_NAME)
-    LOG_FORMAT = "%(levelname)s %(asctime)s - %(message)s"
-    logging.basicConfig(
-        filename = LOG_FILE_NAME, 
-        level = logging.INFO, 
-        format = LOG_FORMAT)
-    return logging.getLogger(__name__)
+#     LOG_FILE_NAME = "wezel_log.log"
+#     # creates some sort of conflict with mdreg - commenting out for now
+# #    if os.path.exists(LOG_FILE_NAME):
+# #        os.remove(LOG_FILE_NAME)
+#     LOG_FORMAT = "%(levelname)s %(asctime)s - %(message)s"
+#     logging.basicConfig(
+#         filename = LOG_FILE_NAME, 
+#         level = logging.INFO, 
+#         format = LOG_FORMAT)
+#     return logging.getLogger(__name__)
 
 
 if __name__ == '__main__':
