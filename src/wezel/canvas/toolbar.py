@@ -14,6 +14,9 @@ class ToolBar(QWidget):
     def __init__(self, parent=None, filters=None):
         super().__init__(parent)
 
+        self.seriesCanvas = None
+        self.canvas = None
+
         if filters is not None:
             self.filters = filters
         else:
@@ -25,15 +28,15 @@ class ToolBar(QWidget):
         self.setActionZoomTo()
 
         # displayed in toolbar
-        self.setRegionList()
+        self.regionList = widgets.RegionList(layout=None)
         self.setImageWindow()
         self.setActionFitItemAndZoom()
         self.setActionZoomIn()
         self.setActionZoomOut()
         self.setActionOpacity()
         self.setActionSetDefaultColor()
-        self.setActionSave()
-        self.setActionRestore()
+        self.setActionUndo()
+        self.setActionRedo()
         self.setActionErase()
 
         # Add to toolbar
@@ -100,10 +103,10 @@ class ToolBar(QWidget):
         w.addAction(self.regionList.btnDelete)
         framegrid.addWidget(w,1,2)
         w = QToolBar()
-        w.addAction(self.actionSave)
+        w.addAction(self.actionUndo)
         framegrid.addWidget(w,2,0)
         w = QToolBar()
-        w.addAction(self.actionRestore)
+        w.addAction(self.actionRedo)
         framegrid.addWidget(w,2,1)
         w = QToolBar()
         w.addAction(self.actionErase)
@@ -215,20 +218,12 @@ class ToolBar(QWidget):
         frame.setLayout(framegrid)
         return frame
 
-    def setRegionList(self):
-        self.regionList = widgets.RegionList(layout=None)
-        self.regionList.currentRegionChanged.connect(self.currentRegionChanged)
-        
-    def currentRegionChanged(self):
-        self.seriesCanvas.canvas.saveMask()
-        self.seriesCanvas.setMaskSeries(self.regionList.region())
-        self.seriesCanvas.setCanvasImage()
-
     def setImageWindow(self):
         self.window = widgets.ImageWindow(layout=False)
         self.window.valueChanged.connect(lambda v: self.imageWindowValueChanged(v))
 
     def imageWindowValueChanged(self, v):
+        self.seriesCanvas.setWindow(v[0], v[1])
         self.canvas.imageItem.setWindow(v[0], v[1])
         self.canvas.imageItem.setDisplay()
         
@@ -253,26 +248,45 @@ class ToolBar(QWidget):
         ]
 
     def setSeriesCanvas(self, seriesCanvas):
+        if seriesCanvas == self.seriesCanvas:
+            return
         self.seriesCanvas = seriesCanvas
-        self.regionList.series = seriesCanvas.sliders.series
-    #    self.regionList.setRegions(seriesCanvas.regions)
+        self.regionList.setSeriesCanvas(seriesCanvas)
         self.setCanvas(seriesCanvas.canvas)
         seriesCanvas.newImage.connect(lambda image: self.newImage(image))
+        seriesCanvas.newRegion.connect(self.newRegion)
+        seriesCanvas.maskChanged.connect(self.setRedoUndoEnabled)
+        mask = seriesCanvas.mask()
+        if mask is not None:
+            opacity = self.opacity()
+            seriesCanvas.canvas.setMask(mask, color=1, opacity=opacity)
 
     def setCanvas(self, canvas):
+        if canvas == self.canvas:
+            return
         self.canvas = canvas
         self.canvas.toolBar = self
         self.setEnabled(True)
         self.canvas.setFilter(self.group.checkedAction().filter)
-        self.canvas.newMaskSeries.connect(lambda series: self.regionList.addRegion(series))
-        self.window.setData(canvas.image, set=True)
-        self.regionList.addRegion(canvas.maskSeries)
+        self.window.setData(canvas.array(), canvas.center(), canvas.width(), set=True)
+    
+    def newRegion(self):
+        self.setRedoUndoEnabled()
+        self.regionList.setView()
 
     def newImage(self, image):
-        self.window.setData(image)
-        self.filters[2].setData(image, set=not self.window.mode.isLocked)
-        for filter in self.filters:
-            filter.updateAction(image)
+        self.setRedoUndoEnabled()
+        if self.window.mode.isLocked:
+            v = self.window.getValue()
+            cmap = self.filters[2].getColorMap()
+            self.seriesCanvas.setWindow(v[0], v[1])
+            self.seriesCanvas.setColormap(cmap)
+        else:
+            self.window.setData(
+                image.array(), 
+                self.seriesCanvas.center(), 
+                self.seriesCanvas.width())
+            self.filters[2].setChecked(self.seriesCanvas.colormap())
 
     def opacity(self):
         menu = self.actionOpacity.menu()
@@ -310,13 +324,33 @@ class ToolBar(QWidget):
         self.actionFitItemAndZoom.triggered.connect(lambda: self.canvas.fitItem())
         self.actionFitItemAndZoom.setMenu(self.menuZoomTo())
 
-    def setActionSave(self):
-        self.actionSave = QAction(QIcon(icons.disk), 'Save..', self)
-        self.actionSave.triggered.connect(lambda: self.canvas.save())
+    def setActionUndo(self):
+        self.actionUndo = QAction(QIcon(icons.arrow_curve_180_left), 'Undo..', self)
+        self.actionUndo.triggered.connect(self.undo)
+        self.actionUndo.setEnabled(False)
 
-    def setActionRestore(self):
-        self.actionRestore = QAction(QIcon(icons.arrow_curve_180_left), 'Restore..', self)
-        self.actionRestore.triggered.connect(lambda: self.canvas.restore())
+    def setActionRedo(self):
+        self.actionRedo = QAction(QIcon(icons.arrow_curve), 'Redo..', self)
+        self.actionRedo.triggered.connect(self.redo)
+        self.actionRedo.setEnabled(False)
+
+    def setRedoUndoEnabled(self):
+        item = self.canvas.maskItem
+        enable = item._current!=0 and item._current is not None
+        self.actionUndo.setEnabled(enable)
+        enable = item._current!=len(item._bin)-1 and item._current is not None
+        self.actionRedo.setEnabled(enable)
+
+    def undo(self):
+        item = self.canvas.maskItem
+        item.undo()
+        self.setRedoUndoEnabled()
+
+    def redo(self):
+        item = self.canvas.maskItem
+        item.redo()
+        self.setRedoUndoEnabled()
+
 
     def setActionErase(self):
         self.actionErase = QAction(QIcon(icons.cross_script), 'Erase..', self)
@@ -348,33 +382,37 @@ class ToolBar(QWidget):
         icon = QIcon(icons.layer_transparent)
         self.actionOpacity = QAction(icon, 'Transparency', self)
         self.actionOpacity.setMenu(menu)
-        self.actionOpacity.triggered.connect(lambda: self.canvas.maskItem.toggleOpacity())
-        
+        self.actionOpacity.triggered.connect(lambda: self.toggleOpacity())
+        #self.actionOpacity.triggered.connect(lambda: self.canvas.maskItem.toggleOpacity())
+
+    def toggleOpacity(self):
+        if self.canvas.maskItem is None:
+            return
+        if self.canvas.maskItem.opacity() <= 0.25:
+            opacity = 0.75
+        else: 
+            opacity = 0.25
+        self.canvas.maskItem.setOpacity(opacity)
+        self.setOpacity(opacity)
+
     def setActionSetDefaultColor(self):
-        self.actionSetDefaultColor = QAction(QIcon(icons.contrast_low), 'Default', self)
+        self.actionSetDefaultColor = QAction(QIcon(icons.contrast_low), 'Greyscale', self)
         self.actionSetDefaultColor.setToolTip('Set to default greyscale')
         self.actionSetDefaultColor.triggered.connect(lambda: self.setDefaultColor())
 
     def setDefaultColor(self):
-        image = self.canvas.image
-        if image is None: # image is corrupted
-            return
-        image.mute()
-        array = image.array()
+        array = self.canvas.array()
         min = np.min(array)
         max = np.max(array)
         center = (max+min)/2
         width = 0.9*(max-min)
-        image.WindowCenter = center
-        image.WindowWidth = width
-        image.colormap = None
-        #cnvs = self.scene().parent()
-        #cnvs.imageUpdated.emit(image)
-        image.unmute()
+        self.seriesCanvas.setWindow(center, width)
+        self.seriesCanvas.setColormap('Greyscale')
         self.canvas.imageItem.setWindow(center, width)
-        self.canvas.imageItem.setLUT(image.lut)
+        self.canvas.imageItem.setLUT(self.seriesCanvas.lut())
         self.canvas.imageItem.setDisplay()
-        self.window.setData(image, set=True)
+        self.window.setData(array, center, width, set=True)
+        self.filters[2].setChecked('Greyscale')
 
     def menuZoomTo(self, parent=None):
         menu = QMenu(parent)

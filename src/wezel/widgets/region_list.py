@@ -11,12 +11,10 @@ from wezel import icons, widgets
 
 class RegionList(QWidget):
     """Manages a list of regions on the same underlay series"""
-    currentRegionChanged = pyqtSignal()
 
     def __init__(self, layout='Horizontal'):
         super().__init__()
-        self.regions = []
-        self.series = None
+        self.seriesCanvas = None
         self._defineWidgets()
         self._defineConnections()
         if layout=='Vertical':
@@ -78,148 +76,47 @@ class RegionList(QWidget):
         layout.addWidget(self.comboBox, alignment=Qt.AlignLeft)
         self.setLayout(layout)
 
+    def setView(self):
+        regions = self.seriesCanvas.regionNames()
+        self.comboBox.blockSignals(True)
+        self.comboBox.clear()
+        self.comboBox.addItems(regions)
+        self.comboBox.setEnabled(regions != [])
+        if regions != []:
+            i = self.seriesCanvas.currentIndex()
+            self.comboBox.setCurrentIndex(i)
+            self.currentIndex = i
+        self.comboBox.blockSignals(False)
+        self.btnDelete.setEnabled(regions != [])
+
     def _defineConnections(self):
-        self.comboBox.currentIndexChanged.connect(self.currentRegionChanged.emit)
+        self.comboBox.currentIndexChanged.connect(self.currentIndexChanged)
+        self.comboBox.editTextChanged.connect(lambda text: self.editTextChanged(text))
         self.btnLoad.triggered.connect(self._loadRegion)
         self.btnNew.triggered.connect(self._newRegion)
         self.btnDelete.triggered.connect(self._deleteRegion)
-        # self.btnLoad.clicked.connect(self._loadRegion)
-        # self.btnNew.clicked.connect(self._newRegion)
-        # self.btnDelete.clicked.connect(self._deleteRegion)
 
-    def setRegions(self, regions):
-        if regions is None:
-            return
-        self.regions = [region.read() for region in regions]
-        self.comboBox.blockSignals(True)
-        self.comboBox.clear()
-        self.comboBox.addItems(self._items())
-        self.comboBox.setCurrentIndex(0)
-        self.comboBox.setEnabled(self.regions!=[])
-        self.comboBox.blockSignals(False)
-        self.btnDelete.setEnabled(self.regions!=[])
+    def currentIndexChanged(self):
+        self.currentIndex = self.comboBox.currentIndex()
+        self.seriesCanvas.setCurrentRegion(self.currentIndex)
 
-    def getMask(self, image):
-        """Get the mask corresponding to a given image"""
-        if image is None: 
-            return
-        if self.region() is None: 
-            return
-        # make it an option to specify attributes here
-        maskList = self.region().instances(sort=False, SliceLocation=image.SliceLocation) 
-        if maskList != []: 
-            return maskList[0]
+    def editTextChanged(self, text):
+        if self.currentIndex == self.comboBox.currentIndex():
+            self.seriesCanvas.setCurrentRegionName(text)
+            self.setView()
 
-    def refresh(self):
-        regions = [r for r in self.regions if r.exists()]
-        if len(regions) != len(self.regions):
-            currentRegion = self.region()
-            self.setRegions(regions)
-            try:
-                i=regions.index(currentRegion)
-                changed = False
-            except:
-                i=0
-                changed = True
-            self.comboBox.setCurrentIndex(i)
-            if changed:
-                self.currentRegionChanged.emit()
-  
-    def region(self):
-        if self.regions == []:
-            return None
-        return self.regions[self.comboBox.currentIndex()]
+    def setSeriesCanvas(self, seriesCanvas):
+        self.seriesCanvas = seriesCanvas
+        self.setView()
 
-    def _items(self):
-        items = []
-        for region in self.regions:
-            if region.empty():
-                item = 'New Region'
-            else:
-                item = region.SeriesDescription
-                if isinstance(item, list):
-                    item = item[0]
-            items.append(item)
-        return items
-
-    def saveRegions(self):
-        for i, region in enumerate(self.regions):
-            text = self.comboBox.itemText(i)
-            region.SeriesDescription = text
-        return self.regions != []
-
-    def addRegion(self, region):
-        if region is None:
-            return
-        region.read()
-        self.regions.append(region) # add to the list
-        description = region.SeriesDescription
-        self.comboBox.blockSignals(True) #update the widget
-        self.comboBox.addItem(description)
-        self.comboBox.setCurrentIndex(len(self.regions)-1)
-        self.comboBox.blockSignals(False)
-        self.comboBox.setEnabled(True)
-        self.btnDelete.setEnabled(True)
-        
     def _newRegion(self):
-        region = self.series.new_sibling()
-        region.read()
-        self.regions.append(region) # add to the list
-        description = "New Region"
-        count = 2
-        while -1 != self.comboBox.findText(description, flags=Qt.MatchContains):
-            description = "New Region" + ' [' + str(count).zfill(2) + ']'
-            count += 1
-        self.comboBox.blockSignals(True) #update the widget
-        self.comboBox.addItem(description)
-        self.comboBox.setCurrentIndex(len(self.regions)-1)
-        self.comboBox.blockSignals(False)
-        self.comboBox.setEnabled(True)
-        self.btnDelete.setEnabled(True)
-        self.currentRegionChanged.emit()
+        self.seriesCanvas.addRegion()
+        self.setView()
         
     def _deleteRegion(self): # deletes it from the list 
-        currentIndex = self.comboBox.currentIndex()
-        region = self.region()
-        # Drop from the list and delete from database
-        self.regions.remove(region) 
-        region.remove()
-        # Update the widget
-        self.comboBox.blockSignals(True) 
-        self.comboBox.removeItem(currentIndex)
-        self.comboBox.setEnabled(self.regions != [])
-        self.btnDelete.setEnabled(self.regions != [])
-        if self.regions == []:
-            self.comboBox.setCurrentIndex(0)
-        else:
-            if currentIndex >= len(self.regions)-1:
-                newIndex = len(self.regions)-1
-            else:
-                newIndex = currentIndex+1
-            self.comboBox.setCurrentIndex(newIndex)
-        self.comboBox.blockSignals(False)
-        self.currentRegionChanged.emit()
-
+        self.seriesCanvas.removeCurrentRegion()
+        self.setView()
+        
     def _loadRegion(self):
-        # Build list of series for all series in the same study
-        seriesList = self.series.parent().children()
-        seriesLabels = [series.SeriesDescription for series in seriesList]
-        # Ask the user to select series to import as regions
-        input = widgets.UserInput(
-            {"label":"Series:", "type":"listview", "list": seriesLabels}, 
-            title = "Please select regions to load")
-        if input.cancel:
-            return
-        selectedSeries = [seriesList[i] for i in input.values[0]["value"]]
-        # Overlay each of the selected series on the displayed series
-        self.comboBox.blockSignals(True)
-        for series in selectedSeries:
-            #series.read()
-            region = series.map_mask_to(self.series)
-            self.regions.append(region)
-            self.comboBox.addItem(region.SeriesDescription)
-        series.status.hide()
-        self.comboBox.setCurrentIndex(len(self.regions)-1)
-        self.comboBox.blockSignals(False)
-        self.comboBox.setEnabled(True)
-        self.currentRegionChanged.emit()
+        self.seriesCanvas.loadRegion()
+        self.setView()

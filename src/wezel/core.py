@@ -123,13 +123,18 @@ class Main(QMainWindow):
         self.setMenuBar(self.menubar)
 
     def setSubWindow(self, subWindow):
-        # activeWindow = self.central.activeWindow
-        # if activeWindow is not None:
-        #     activeWidget = activeWindow.widget()
-        #     if activeWidget.__class__.__name__ == 'SeriesCanvas':
-        #         activeWidget.regions = self.toolBar.regionList.regions
+
+        if self.central.activeWindow == subWindow:
+            return
+        activeWindow = self.central.activeWindow
+        if activeWindow is not None:
+            activeWidget = activeWindow.widget()
+            if activeWidget.__class__.__name__ == 'SeriesCanvas':
+                activeWidget.saveState()
         self.central.activeWindow = subWindow
-        if self.folder is None:
+        # if self.folder is None:
+        #     return
+        if subWindow is None:
             return
         widget = subWindow.widget()
         if widget.__class__.__name__ == 'SeriesCanvas':
@@ -140,6 +145,7 @@ class Main(QMainWindow):
             status = self.status, 
             dialog = self.dialog)
         self.display(self.folder)
+        self.status.hide()
 
     def close(self):
         """Closes the application."""
@@ -167,13 +173,6 @@ class Main(QMainWindow):
         self.status.hide()
         #self.status.message()
 
-    def addAsSubWindow(self, widget, title=None, icon=None):
-        """
-        displays a widget as a subwindow in the MDI. 
-        
-        Returns the subwindow
-        """ 
-        self.central.addWidget(widget, title=title, icon=icon)
         
     def display(self, object):
 
@@ -193,7 +192,8 @@ class Main(QMainWindow):
             seriesCanvas.mousePositionMoved.connect(
                 lambda x, y: self.status.pixelValue(x,y,seriesCanvas.array())
             )
-            self.addAsSubWindow(seriesCanvas, title=object.label())
+            seriesCanvas.closed.connect(self.treeView.setFolder)
+            self.central.addWidget(seriesCanvas, title=object.label())
             self.central.tileSubWindows()
             self.toolBar.setSeriesCanvas(seriesCanvas)
             self.toolBarDockWidget.show()
@@ -215,52 +215,6 @@ class Main(QMainWindow):
             return 0
         return self.treeView.nr_selected(generation)
     
-    
-    # def set_data(self, folder):
-    #     if self.folder is not None:
-    #         if self.folder.close():
-    #             self.central.closeAllSubWindows()
-    #         else:
-    #             return
-    #     self.folder = folder
-    #     if self.treeView is None:
-    #         self.display(folder)
-    #     else:
-    #         self.treeView.setFolder(folder)
-    #     self.menubar.enable()
-
-    # def addSubWindow(self, subWindow):
-
-    #     self.central.addSubWindow(subWindow) 
-
-    # def closeAllSubWindows(self):
-    #     """
-    #     Closes all open windows.
-    #     """
-    #     self.central.closeAllSubWindows()
-
-    # def closeSubWindow(self, subWindowName):
-    #     """
-    #     Closes all subwindows with a given name
-    #     """   
-    #     self.central.closeSubWindow(subWindowName)
-
-    # def tileSubWindows(self):
-    #     """
-    #     Tiles all open windows.
-    #     """
-    #     self.central.tileSubWindows()
-
-    # def addAsDockWidget(self, widget):
-
-    #     #dockwidget = QDockWidget(self.main, Qt.SubWindow)
-    #     dockwidget = QDockWidget()
-    #     #dockwidget.setAllowedAreas(Qt.LeftDockWidgetArea)
-    #     #dockwidget.setWindowTitle('DICOM database')
-    #     #dockwidget.setFeatures(QDockWidget.NoDockWidgetFeatures)
-    #     #dockwidget.setObjectName(widget.__class__.__name__)
-    #     dockwidget.setWidget(widget)
-    #     self.main.addDockWidget(Qt.LeftDockWidgetArea, dockwidget)
 
 
 class MenuBar(QMenuBar):

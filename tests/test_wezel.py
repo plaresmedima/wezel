@@ -52,8 +52,8 @@ def test_build():
 def test_launch():
 
     #tmp = create_tmp_database(onefile)
-    #tmp = create_tmp_database(rider)
-    tmp = tristan
+    tmp = create_tmp_database(rider)
+    #tmp = tristan
 
     app = wezel.app()
     #app.set_app(wezel.apps.dicom.Windows)

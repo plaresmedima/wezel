@@ -65,7 +65,7 @@ class Read(wezel.Action):
         Read the open DICOM folder.
         """
         app.status.cursorToHourglass()
-        app.closeAllSubWindows()
+        app.central.closeAllSubWindows()
         app.folder.scan()
         app.status.cursorToNormal() 
         app.refresh()

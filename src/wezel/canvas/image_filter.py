@@ -17,48 +17,40 @@ class ImageWindow(canvas.FilterItem):
         self.icon = QIcon(pixMap)
         self.toolTip = 'Select color scale window..'
         self.text = 'Window' 
+        self._min = None
+        self._max = None
         self.setActionPick()
 
     def window(self, dx, dy):
         """Change intensity and contrast"""
 
         cnvs = self.scene().parent()
-        image = cnvs.image
-        image.mute()
-        min = image.SmallestImagePixelValue
-        max = image.LargestImagePixelValue
-        if (min is None) or (max is None):
-            array = image.get_pixel_array()
-            min = np.amin(array)
-            max = np.amax(array)
-            image.SmallestImagePixelValue = min
-            image.LargestImagePixelValue = max
+        item = cnvs.imageItem
+        if self._min is None:
+            self._min = np.amin(item._array)
+            self._max = np.amax(item._array)
        
         # Move 1024 to change the center over the full range
         # Speed is faster further away from the center of the range
-        center = image.WindowCenter 
-        v0 = (max-min)/1024
+        center = item._center 
+        v0 = (self._max-self._min)/1024
         a0 = 1.0/256
-        vy = v0 + a0*abs((center - (min+(max-min)/2.0)))
+        vy = v0 + a0*abs((center - (self._min+(self._max-self._min)/2.0)))
         center = center + vy * dy
-        image.WindowCenter = center
 
         # Changing the width is faster at larger widths
-        width = image.WindowWidth
-        v0 = (max-min)/512
+        width = item._width
+        v0 = (self._max-self._min)/512
         a0 = 1.0/64
         vx = v0 + a0*width
         width = width - vx * dx
         width = width if width>1 else 1
-        image.WindowWidth = width
 
-        cnvs.imageItem.setWindow(center, width)
-        cnvs.imageItem.setDisplay()
-        #cnvs.imageItem.update()
-#        cnvs.imageUpdated.emit(image)
+        cnvs.parent().setWindow(center, width)
+        item.setWindow(center, width)
+        item.setDisplay()
         if cnvs.toolBar is not None:
-            cnvs.toolBar.window.setData(image, set=True)
-        image.unmute()
+            cnvs.toolBar.window.setData(item._array, center, width, set=True)
 
     def mouseMoveEvent(self, event):
         self.x = int(event.pos().x())
@@ -82,8 +74,8 @@ class ImageWindow(canvas.FilterItem):
         menu.setTitle('Set colormap..')
         menu.triggered.connect(lambda action: self.setColorMap(action.cmap))
         actionGroup = QActionGroup(menu)
-        default = None
-        self.addActionSetColormap(menu, actionGroup, None, default)
+        default = 'Greyscale'
+        self.addActionSetColormap(menu, actionGroup, default, default)
         self.addSeparator(menu)
         COLORMAPS = canvas.COLORMAPS
         for group in range(5):
@@ -94,22 +86,11 @@ class ImageWindow(canvas.FilterItem):
             self.addActionSetColormap(menu, actionGroup, cmap, default)
         return menu
 
-    def setData(self, image, set=None):
-        pass
-
     def setColorMap(self, cmap):
         self.pick()
         cnvs = self.scene().parent()
-        image = cnvs.image
-        if image is None: # image is corrupted
-            return
-        image.mute()
-        if cmap == 'Greyscale':
-            image.colormap = None
-        else:
-            image.colormap = cmap
-        image.unmute()
-        cnvs.imageItem.setLUT(image.lut)
+        cnvs.parent().setColormap(cmap)
+        cnvs.imageItem.setLUT(cnvs.parent().lut())
         cnvs.imageItem.setDisplay()
 
     def getColorMap(self):
@@ -117,30 +98,17 @@ class ImageWindow(canvas.FilterItem):
         for action in menu.actions():
             if not action.isSeparator():
                 if action.isChecked():
-                    return action.cmap
+                    return action.cmap      
 
-    def setData(self, image, set=True):
-        if image is None:
-            return
-        if set:  # adjust selection value to image cmap
-            self.updateAction(image)
-        else:    # adjust image cmap to selection 
-            image.colormap = self.getColorMap()       
-
-    def updateAction(self, image, cmap=None):
+    def setChecked(self, cmap):
         menu = self.actionPick.menu()
-        if cmap is None:
-            cmap = image.colormap
         for action in menu.actions():
             if not action.isSeparator():
                 checked = action.cmap == cmap
                 action.setChecked(checked)
     
     def addActionSetColormap(self, menu, actionGroup, cmap, current):
-        text = cmap
-        if text is None:
-            text = 'Greyscale'
-        action = QAction(text)
+        action = QAction(cmap)
         action.setCheckable(True)
         action.setChecked(cmap == current)
         action.cmap = cmap

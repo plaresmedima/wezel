@@ -31,7 +31,7 @@ class MainMultipleDocumentInterface(QMdiArea):
 
         subWindow = QMdiSubWindow()
         subWindow.setWidget(widget)
-        subWindow.setObjectName(widget.__class__.__name__)
+        #subWindow.setObjectName(widget.__class__.__name__)
         subWindow.setWindowFlags(
             Qt.CustomizeWindowHint | 
             Qt.WindowCloseButtonHint | 
@@ -57,35 +57,3 @@ class MainMultipleDocumentInterface(QMdiArea):
         for subWindow in self.subWindowList():
             if subWindow.objectName() == subWindowName:
                 subWindow.close() 
-
-
-# class Message(QMdiSubWindow):
-
-#     def __init__(self, message=None, title=None):
-            
-#         super().__init__()
-
-#         self.label = QLabel()
-
-#         layout = QVBoxLayout()
-#         layout.setAlignment(Qt.AlignCenter)
-#         layout.addWidget(self.label)
-
-#         self.widget = QWidget()
-#         self.widget.setLayout(layout)
-
-#         self.setAttribute(Qt.WA_DeleteOnClose)
-#         self.setWidget(self.widget)
-
-#         if message is not None:
-#             self.display(message, title=title)
-
-#     def display(self, message, title=None):
-
-#         self.label.setText(message)
-#         self.label.adjustSize() 
-#         if title is not None:
-#             self.setWindowTitle(title)
-#         self.show()
-
-

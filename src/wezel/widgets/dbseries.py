@@ -1,5 +1,7 @@
 import pandas as pd
-import timeit
+import random
+from matplotlib import cm
+import numpy as np
 
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import (
@@ -314,34 +316,23 @@ class SeriesSliders(QWidget):
 
 class SeriesCanvas(QWidget):
 
+    closed = pyqtSignal()
+    newRegion = pyqtSignal()
     newImage = pyqtSignal(object)
     mousePositionMoved = pyqtSignal(int, int)
+    maskChanged = pyqtSignal()
 
     def __init__(self):
         super().__init__()
-    #    self.regions = None
-        self._setWidgets()
-        self._setLayout()
-        self._setConnections()
-#        self.setImageSeries(series)
-        self.setEnabled(False)
-
-    def _setWidgets(self):
         self.sliders = widgets.SeriesSliders()
-        self.canvas = canvas.Canvas()
-
-    def _setLayout(self):
-        layout = QVBoxLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
-        layout.addWidget(self.canvas)
-        layout.addWidget(self.sliders)
-        self.setLayout(layout)
-
-    def _setConnections(self):
+        self.sliders.valueChanged.connect(self.changeCanvasImage)
+        self.canvas = canvas.Canvas(self)
         self.canvas.arrowKeyPress.connect(lambda arrow: self.arrowKeyPress(arrow))
         self.canvas.mousePositionMoved.connect(lambda x, y: self.mousePositionMoved.emit(x,y))
-        self.sliders.valueChanged.connect(self.changeCanvasImage)
+        self.canvas.maskChanged.connect(self.maskChanged.emit)
+        self.setEnabled(False)
+        self._model = SeriesCanvasModel()
+        self._view = SeriesCanvasView(self)
 
     def closeEvent(self, event): 
         if self.canvas.toolBar is not None:
@@ -350,12 +341,23 @@ class SeriesCanvas(QWidget):
             return
         if not self.sliders.series.exists():
             return
-        self.canvas.saveMask()
+        for region in self._model._regions:
+            series = self.sliders.series.new_sibling(SeriesDescription=region['name'])
+            for image in self.sliders.series.instances():
+                uid = image.SOPInstanceUID
+                if uid in region:
+                    array = region[uid].astype(np.float32)
+                    mask = image.copy_to_series(series)
+                    mask.set_array(array)
+                    mask.WindowCenter = 0.5
+                    mask.WindowWidth = 1.0
+        self.closed.emit()
 
     def setFilter(self, filter):
         self.canvas.setFilter(filter)
         
     def setImageSeries(self, series):
+        self._model._series = series
         self.sliders.setData(series)
         self.setCanvasImage()
         self.setEnabled(True)
@@ -364,22 +366,279 @@ class SeriesCanvas(QWidget):
         image = self.sliders.image
         if image is not None:
             image.read()
-        self.canvas.setImage(image)
+            self._model.setImage(image)
+            self.canvas.setImage(            
+                image.array(), 
+                self.center(), 
+                self.width(), 
+                self.lut())
+            image.clear()
 
-    def setMaskSeries(self, series):
-        self.canvas.maskSeries = series
-        self.canvas.setMask(None, color=1, opacity=0.5)
+    def saveState(self):
+        bin = self.canvas.mask()
+        self._model.setMask(bin)
 
     def changeCanvasImage(self):
-        self.canvas.saveMask()
-        self.newImage.emit(self.sliders.image)
-        self.setCanvasImage()
+#        self.canvas.saveMask()
+        bin = self.canvas.mask()
+        if bin is not None:
+            if self._model._regions == []:
+                self.addRegion()
+                self.newRegion.emit()
+        self._model.setMask(bin)
+        image = self.sliders.image
+        image.read()
+        self._model.setImage(image)
+        self.canvas.setImage(            
+            image.array(), 
+            self.center(), 
+            self.width(), 
+            self.lut())
+        mask = self.mask()
+        self.canvas.setMask(mask, color=self._model.color())
+        self.newImage.emit(image)
+        image.clear()
         
     def arrowKeyPress(self, key):
-        self.canvas.saveMask()
+        #self.canvas.saveMask()
         self.sliders.move(key=key)
-        self.newImage.emit(self.sliders.image)
-        self.setCanvasImage()
+        #self.newImage.emit(self.sliders.image)
+        self.changeCanvasImage()
+
+    def removeCurrentRegion(self):
+        currentIndex = self.currentIndex()
+        self._model._regions.remove(self._model._currentRegion)
+        if self._model._regions == []:
+            self._model._currentRegion = None
+            self.canvas.setMask(None)
+        else:
+            if currentIndex >= len(self._model._regions)-1:
+                currentIndex = -1
+            self._model._currentRegion = self._model._regions[currentIndex]
+            self.canvas.setMask(self.mask(), color=self._model.color())
+        self.newRegion.emit()
+
+    def addRegion(self):
+        if self._model._regions != []:
+            self._model.setMask(self.canvas.mask())
+        self._model.addRegion()
+        self.canvas.setMask(None, color=self._model.color())
+        self.newRegion.emit()
+
+    def setCurrentRegion(self, index):
+        self._model.setMask(self.canvas.mask())
+        self._model._currentRegion = self._model._regions[index]
+        self.canvas.setMask(self.mask(), color=self._model.color())
+        self.newRegion.emit()
+
+    def setCurrentRegionName(self, name):
+        self._model._currentRegion['name'] = name
+
+    def loadRegion(self):
+        # Build list of series for all series in the same study
+        seriesList = self.sliders.series.parent().children()
+        seriesLabels = [series.SeriesDescription for series in seriesList]
+        # Ask the user to select series to import as regions
+        input = widgets.UserInput(
+            {"label":"Series:", "type":"listview", "list": seriesLabels}, 
+            title = "Please select regions to load")
+        if input.cancel:
+            return
+        selectedSeries = [seriesList[i] for i in input.values[0]["value"]]
+        # Overlay each of the selected series on the displayed series
+        for series in selectedSeries:
+            # Create overlay
+            region = series.map_mask_to(self.sliders.series)
+            # Add new region
+            newRegion = {'name': series.SeriesDescription, 'color': self._model.newColor()}
+            self._model._regions.append(newRegion)
+            self._model._currentRegion = newRegion
+            # Find masks for each image
+            for image in self.sliders.series.instances():
+                maskList = region.instances(sort=False, SliceLocation=image.SliceLocation) 
+                if maskList != []:
+                    newRegion[image.SOPInstanceUID] = maskList[0].array() != 0
+        # Show new mask
+        self.canvas.setMask(self.mask(), color=self._model.color())
+        self.sliders.series.status.hide()
+
+    #
+    # Interface for model functions
+    #
 
     def array(self):
         return self.canvas.array()
+
+    def center(self):
+        return self._model.center()
+
+    def width(self):
+        return self._model.width()
+
+    def lut(self):
+        return self._model.lut()
+
+    def colormap(self):
+        return self._model.colormap()
+
+    def regionNames(self):
+        return self._model.regionNames()
+
+    def currentIndex(self):
+        if self._model._regions == []:
+            return -1
+        current = self._model._currentRegion
+        return self._model._regions.index(current)
+
+    def currentRegion(self):
+        return self._model._currentRegion
+
+    def mask(self):
+        return self._model.mask()
+
+    def setColormap(self, cmap):
+        self._model.setColormap(cmap)
+
+    def setWindow(self, center, width):
+        self._model.setWindow(center, width)
+
+    def setLUT(self, lut):
+        self._model.setLUT(lut)
+
+
+class SeriesCanvasView():
+    def __init__(self, widget):
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        layout.addWidget(widget.canvas)
+        layout.addWidget(widget.sliders)
+        widget.setLayout(layout)
+
+
+class SeriesCanvasModel:
+    def __init__(self):
+
+        # Dictionary of regions
+        # Each region is a dictionary
+        # mask = region[uid]
+        # mask = binary image
+        self._series = None
+        self._center = {}
+        self._width = {}
+        self._lut = {}
+        self._cmap = {}
+        self._regions = []
+        self._currentRegion = None # dict
+        self._currentImage = None # uid
+
+    def center(self):
+        return self._center[self._currentImage]
+
+    def width(self):
+        return self._width[self._currentImage]
+
+    def lut(self):
+        return self._lut[self._currentImage]
+
+    def colormap(self):
+        return self._cmap[self._currentImage]
+
+    def setColormap(self, cmap):
+        if cmap == 'Greyscale':
+            G = np.linspace(0.0, 1.0, num=256)
+            RGB = np.transpose([G, G, G])
+        else:
+            RGBA = cm.ScalarMappable(cmap=cmap).to_rgba(np.arange(256))
+            RGB = RGBA[:,:3]
+        self._cmap[self._currentImage] = cmap
+        self._lut[self._currentImage] = RGB
+
+    def setWindow(self, center, width):
+        self._center[self._currentImage] = center
+        self._width[self._currentImage] = width
+
+    def setLUT(self, lut):
+        self._lut[self._currentImage] = lut
+
+    def setImage(self, image):
+        uid = image.SOPInstanceUID
+        self._currentImage = uid
+        if uid in self._center.keys():
+            return
+        self._center[uid] = image.WindowCenter
+        self._width[uid] = image.WindowWidth
+        self._lut[uid] = image.lut
+        self._cmap[uid] = image.colormap
+
+    def color(self):
+        if self._currentRegion is None:
+            return 0
+        return self._currentRegion['color']
+
+    def mask(self):
+        if self._currentRegion is None:
+            return
+        if self._currentImage in self._currentRegion:
+            return self._currentRegion[self._currentImage]
+
+    def setMask(self, bin):
+        if self._currentRegion is None:
+            return
+        self._currentRegion[self._currentImage] = bin
+
+    def regionNames(self):
+        return [r['name'] for r in self._regions]
+
+    def regionColors(self):
+        return [r['color'] for r in self._regions]
+
+    def addRegion(self):
+        # Find unique name
+        newName = "New Region"
+        allNames = self.regionNames()
+        count = 0
+        while newName in allNames:
+            count += 1 
+            newName = 'New Region [' + str(count).zfill(3) + ']'
+        
+        # Add new region
+        newRegion = {'name': newName, 'color': self.newColor()}
+        self._regions.append(newRegion)
+        self._currentRegion = newRegion
+
+    def newColor(self):
+        # Find unique color
+        allColors = self.regionColors()
+        colorIndex = 0
+        color = self.colorFromIndex(colorIndex)
+        while color in allColors:
+            colorIndex += 1
+            color = self.colorFromIndex(colorIndex)
+        return color
+
+    def colorFromIndex(self, color):
+        if color == 0:
+            return [255, 0, 0]
+        if color == 1:
+            return [0, 255, 0]
+        if color == 2:
+            return [0, 0, 255]
+        if color == 3:
+            return [0, 255, 255]
+        if color == 4:
+            return [255, 0, 255]
+        if color == 5:
+            return [255, 255, 0]
+        if color == 6:
+            return [0, 128, 255]
+        if color == 7:
+            return [255, 0, 128]
+        if color == 8:
+            return [128, 255, 0]
+        return [
+            random.randint(0,255), 
+            random.randint(0,255), 
+            random.randint(0,255)]
+
+

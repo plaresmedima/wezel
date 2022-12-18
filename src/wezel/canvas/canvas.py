@@ -1,11 +1,12 @@
+import random
 import numpy as np
+import copy
 
 from PyQt5.QtCore import Qt, pyqtSignal, QRectF
 from PyQt5.QtWidgets import (QGraphicsObject, QGraphicsItem,
     QAction, QMenu, QGraphicsView, QGraphicsScene, QActionGroup)
 from PyQt5.QtGui import QPixmap, QBrush, QIcon, qRgb, QTransform, QCursor, QImage
 
-import dbdicom
 from wezel import canvas, icons
 
 
@@ -16,6 +17,7 @@ class Canvas(QGraphicsView):
     newMaskSeries = pyqtSignal(object)
     mousePositionMoved = pyqtSignal(int, int)
     arrowKeyPress = pyqtSignal(str)
+    maskChanged = pyqtSignal()
 
     def __init__(self, parent=None): 
         super().__init__(parent)
@@ -28,7 +30,6 @@ class Canvas(QGraphicsView):
         # would like to do: dbdicom.zeros((128, 128))[0,:,:]
         self.maskSeries = None
         self.toolBar = None
-        self.image = None
 
     def item(self, n):
         for item in self.scene().items():
@@ -46,41 +47,38 @@ class Canvas(QGraphicsView):
     @property
     def filterItem(self):
         return self.item(2)
+
+    def array(self):
+        return self.imageItem._array
+    def center(self):
+        return self.imageItem._center
+    def width(self):
+        return self.imageItem._width
     
-    def setImage(self, image, **kwargs):
+    def setImage(self, array, center, width, lut):
         self.removeItem(self.imageItem)
-        if image is not None:
-            image.read()
-        self.image = image
-        item = canvas.ImageItem(image, **kwargs)
+        item = canvas.ImageItem(array, center, width, lut)
         self.scene().addItem(item)
         item.setZValue(0)
         filter = self.filterItem
         if filter is not None:
             filter.prepareGeometryChange()
             filter.boundingRectangle = self.scene().sceneRect()
-        mask = self.findMask()
-        if self.toolBar is None:
-            opacity=0.5
-        else:
-            opacity=self.toolBar.opacity()
-        self.setMask(mask, color=1, opacity=opacity)
+        # mask = self.findMask()
+        # if self.toolBar is None:
+        #     opacity=0.5
+        # else:
+        #     opacity=self.toolBar.opacity()
+        self.setMask(None)
         return item
 
-    def setMask(self, image=None, color=0, opacity=0.5):
-        if self.imageItem is None:
-            error_msg = 'Create an imageItem before creating a maskItem'
-            raise ValueError(error_msg)
-        if image is not None:
-            shape = ['Columns', 'Rows']
-            if image[shape] != self.image[shape]:
-                image.clear()
-                error_msg = 'The mask must have the same dimensions as the image'
-                raise ValueError(error_msg)
+    def setMask(self, mask, color=0, opacity=0.5):
         self.removeItem(self.maskItem)
-        item = canvas.MaskItem(self.imageItem, image, opacity=opacity, color=color)
-        #self.scene().addItem(item)
+        # if image is not None:
+        #     image = image.array() != 0
+        item = canvas.MaskItem(self.imageItem, mask, opacity=opacity, color=color)
         item.setZValue(1)
+        item.maskChanged.connect(self.maskChanged.emit)
         return item
 
     def setFilter(self, filter=None):
@@ -96,54 +94,9 @@ class Canvas(QGraphicsView):
         filter.boundingRectangle = self.scene().sceneRect()
         filter.initialize()
 
-    def findMask(self):
-        image = self.image
-        if image is None:
-            return None
-        if self.maskSeries is None:
-            return None
-        maskList = self.maskSeries.instances(sort=False, SliceLocation=image.SliceLocation) 
-        if maskList != []: 
-            return maskList[0]
-        else:
-            return None        
-
-    def getMask(self):
-        # called by maskItem when mask needs to be saved but none exists
-        mask = self.findMask()
-        if mask is None:
-            image = self.image
-            if image is not None:
-                if self.maskSeries is None:
-                    self.maskSeries = image.new_pibling()
-                    self.newMaskSeries.emit(self.maskSeries)
-                mask = image.copy_to_series(self.maskSeries)
-                mask.read()
-                mask.WindowCenter = 1
-                mask.WindowWidth = 2
-        return mask
-
-    def saveMask(self):
-        self.maskItem.save()
-
-    def save(self):
-        image = self.image
-        if image is None: # image is corrupted
-            return
-        image.mute()
-        image.save()
-        image.unmute()
-        self.maskItem.save()
-
-    def restore(self):
-        image = self.image
-        if image is None: # image is corrupted
-            return
-        image.restore()
-        self.imageItem.setData(image)
-        #self.imageItem.update()
-        self.maskItem.restore()
-
+    def mask(self):
+        return self.maskItem.bin()
+     
     def zoomTo(self, factor):
         self.setTransform(QTransform())
         self.scale(factor, factor)
@@ -184,11 +137,11 @@ class AnyItem(QGraphicsObject):
 class ImageItem(AnyItem):
     """Displays an image.
     """
-    def __init__(self, image): 
+    def __init__(self, array, center, width, lut): 
         super().__init__()
         #self.setFlag(QGraphicsItem.ItemIsSelectable)
         self.setOpacity(1.0)
-        self.setData(image)
+        self.setData(array, center, width, lut)
         self.setDisplay()
 
     def paint(self, painter, option, widget):
@@ -197,11 +150,11 @@ class ImageItem(AnyItem):
             return
         painter.drawImage(0, 0, self._qImage)
 
-    def setData(self, image):
+    def setData(self, array, center, width, lut):
         try:
-            self.setArray(image.array())
-            self.setWindow(image.WindowCenter, image.WindowWidth)
-            self.setLUT(image.lut)
+            self.setArray(array)
+            self.setWindow(center, width)
+            self.setLUT(lut)
         except: # image is corrupted
             self._array = None
             self._width = None
@@ -219,8 +172,8 @@ class ImageItem(AnyItem):
         self.boundingRectangle = QRectF(0, 0, nx, ny)
         # QImage requires transpose
         self._BGRA = np.empty((ny, nx, 4), dtype=np.ubyte)
-        # Alpha channel - set transparent by default
-        self._BGRA[:,:,3] = 255 
+        # Alpha channel - required but not used
+        self._BGRA[:,:,3] = 0 
         # QImage points to self._BGRA in memory - does not need to be updated
         self._qImage = QImage(self._BGRA, self._BGRA.shape[1], self._BGRA.shape[0], QImage.Format_RGB32)
 
@@ -247,9 +200,10 @@ class ImageItem(AnyItem):
             # Create RGB array by indexing LUT with pixel array
             lut = 255*lut 
             self._lut = lut.astype(np.ubyte)     
-        #self.setQImage()
 
     def setDisplay(self):
+        if self._BGRA is None: # image is corrupted
+            return
         if self._lut is None:
             # Greyscale image
             for c in range(3):
@@ -264,123 +218,139 @@ class ImageItem(AnyItem):
         return self._array    
 
 
-
 class MaskItem(AnyItem):
     """Displays a mask as an overlay on an image.
     """
-    def __init__(self, imageItem, image=None, opacity=0.75, color=0): 
+    maskChanged = pyqtSignal()
+
+    def __init__(self, imageItem, mask, opacity=0.75, color=0): 
         super().__init__(imageItem)
-        self.image = image
-        self.mask = None
-        self.qImage = None
-        self._RGB = self.RGB(color)
-        #self.boundingRectangle = QRectF(0, 0, image.Columns, image.Rows) 
+        self._bin = []
+        self._current = None
+        self._BGRA = None
+        self._qImage = None
+        self._BGR = list(reversed(self.RGB(color)))
         self.boundingRectangle = None
-        self._hasChanged = False
-        self.setMask()
+        self.setData(mask)
         self.setOpacity(opacity)
-  
+
     def boundingRect(self): 
         """Abstract method - must be overridden."""
         if self.boundingRectangle is None:
             self.boundingRectangle = self.parentItem().boundingRect()
         return self.boundingRectangle
 
-    def toggleOpacity(self):
-        if self.opacity() <= 0.25:
-            opacity = 0.75
-        else: 
-            opacity = 0.25
-        self.setOpacity(opacity)
-        toolBar = self.scene().parent().toolBar
-        if toolBar is not None:
-            toolBar.setOpacity(opacity)
-
     def paint(self, painter, option, widget):
         """Executed by GraphicsView when calling update()"""
-        painter.drawImage(0, 0, self.qImage)
+        if self._qImage is not None:
+            painter.drawImage(0, 0, self._qImage)
+
+    def setBin(self, bin):
+        self._bin[self._current] = bin
+
+    def bin(self):
+        if self._current == None:
+            return
+        return self._bin[self._current]
+
+    def setData(self, mask):
+        #array = mask.array()
+        #self._bin = array != 0
+        if mask is None:
+            return
+        self._bin = [mask != 0]
+        self._current = 0
+        shape = (self.bin().shape[1], self.bin().shape[0], 4)
+        self._BGRA = np.zeros(shape, dtype=np.ubyte)
+        self._qImage = QImage(self._BGRA, self._BGRA.shape[1], self._BGRA.shape[0], QImage.Format_ARGB32)
+        self.setDisplay()
+
+    def initMask(self):
+        rect = self.boundingRect()
+        dx, dy = rect.width(), rect.height()
+        self._bin = [np.zeros((int(dx), int(dy)), dtype=bool)]
+        self._current = 0
+        shape = (self.bin().shape[1], self.bin().shape[0], 4)
+        self._BGRA = np.zeros(shape, dtype=np.ubyte)
+        self._qImage = QImage(self._BGRA, self._BGRA.shape[1], self._BGRA.shape[0], QImage.Format_ARGB32)
+
+    def setDisplay(self):
+        if self._bin == []:
+            return
+        LUT = np.array([0,1], dtype=np.ubyte)
+        mask = self.bin().astype(np.ubyte)
+        mask = np.transpose(mask)
+        mask = LUT[mask]
+        for c in range(3):
+            if self._BGR[c] != 0:
+                self._BGRA[:,:,c] = mask*self._BGR[c]
+        self._BGRA[:,:,3] = mask*255
+        self.update()
+        self.maskChanged.emit()
+
+    def setPixel(self, x, y, value):
+        if self._bin == []:
+            self.initMask()
+        self.bin()[x,y] = value
+        if value: 
+            self._BGRA[y,x,:3] = self._BGR
+            self._BGRA[y,x,3] = 255
+        else:
+            self._BGRA[y,x,:] = 0
+
+    def extend(self):
+        if self._bin == []:
+            self.initMask()
+        bin = copy.deepcopy(self.bin())
+        self._bin = self._bin[:self._current+1]
+        self._bin.append(bin)
+        self._current += 1
+        self.maskChanged.emit()
+
+    def undo(self):
+        if self._current == None:
+            return
+        if self._current != 0:
+            self._current -= 1
+            self.setDisplay()
+    
+    def redo(self):
+        if self._current == None:
+            return
+        if self._current != len(self._bin)-1:
+            self._current += 1
+            self.setDisplay()
+         
+    def erase(self):
+        self.extend()
+        self.bin().fill(False)
+        self.setDisplay()
 
     def RGB(self, color):
+        if isinstance(color, list):
+            return color
         if color == 0:
-            return (255, 0, 0)
+            return [255, 0, 0]
         if color == 1:
-            return (0, 255, 0)
+            return [0, 255, 0]
         if color == 2:
-            return (0, 0, 255)
+            return [0, 0, 255]
         if color == 3:
-            return (0, 255, 255)
+            return [0, 255, 255]
         if color == 4:
-            return (255, 0, 255)
+            return [255, 0, 255]
         if color == 5:
-            return (255, 255, 0)
+            return [255, 255, 0]
         if color == 6:
-            return (0, 128, 255)
+            return [0, 128, 255]
         if color == 7:
-            return (255, 0, 128)
+            return [255, 0, 128]
         if color == 8:
-            return (128, 255, 0)
-        return (color[0], color[1], color[2])
-
-    def setMask(self):
-        if self.image is not None:
-            array = self.image.array()
-            self.mask = array != 0
-        else:
-            rect = self.boundingRect()
-            dx, dy = rect.width(), rect.height()
-            self.mask = np.zeros((int(dx), int(dy)), dtype=bool)
-        shape = (self.mask.shape[1], self.mask.shape[0], 4)
-        self.BGRA = np.zeros(shape, dtype=np.ubyte)
-        self.BGRA[:,:,3] = 255 # Alpha channel - required by QImage
-        self.setQImage()
-        self._hasChanged = False
-
-    def setQImage(self):
-        #QImage expects transpose
-        mask = self.mask.astype(np.ubyte).T
-        for c in range(3):
-            if self._RGB[2-c] != 0:
-                LUT = np.array([0,self._RGB[2-c]], dtype=np.ubyte)
-                self.BGRA[:,:,c] = LUT[mask]
-        #self.qImage = canvas.makeQImage(self.BGRA)
-        self.qImage = QImage(self.BGRA, self.BGRA.shape[1], self.BGRA.shape[0], QImage.Format_RGB32)
-
-    def save(self):
-        if not self._hasChanged:
-            return
-        if self.image is None: 
-            self.image = self.scene().parent().getMask()
-        array = self.mask.astype(np.float32)
-        self.image.mute()
-        self.image.set_pixel_array(array)
-        self.image.unmute()
-        self._hasChanged = False
-
-    def restore(self):
-        self.setMask()
-        self.update()
-
-    def erase(self):
-        self.mask.fill(False)
-        self.setQImage()
-        self.update()
-        self._hasChanged = True
-
-    # def setActionErase(self):
-    #     self.actionErase = QAction(QIcon(icons.cross_script), 'Erase..', self)
-    #     self.actionErase.triggered.connect(self.erase)
-
-    def setPixel(self, x, y, value=None):
-        if value is None:
-            value = self.mask[x, y]
-        else:
-            self.mask[x,y] = value
-        if value: 
-            color = qRgb(self._RGB[0], self._RGB[1], self._RGB[2])
-        else:
-            color = qRgb(0, 0, 0)
-        self.qImage.setPixel(x, y, color)
-        self._hasChanged = True
+            return [128, 255, 0]
+        return [
+            random.randint(0,255), 
+            random.randint(0,255), 
+            random.randint(0,255)]
 
 
 class FilterItem(AnyItem):
@@ -410,9 +380,6 @@ class FilterItem(AnyItem):
             self.actionPick.setMenu(menu)
 
     def menuOptions(self):
-        return
-
-    def updateAction(self, image):
         return
 
     def initialize(self):
@@ -543,7 +510,5 @@ class FilterSet():
             menu.addAction(action)
         return menu
 
-    def updateAction(self, image):
-        return
 
 

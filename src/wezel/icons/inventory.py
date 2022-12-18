@@ -3,6 +3,7 @@ __all__ = [
     'slider_icon', 
     'application_import',
     'arrow_curve_180_left',
+    'arrow_curve',
     'arrow_in',
     'arrow_move',
     'arrow_out',
@@ -84,6 +85,7 @@ question_mark = str(f.joinpath('question-mark.png'))
 f = importlib_resources.files('wezel.icons.fugue_icons')
 
 application_import = str(f.joinpath('application-import.png'))
+arrow_curve = str(f.joinpath('arrow-curve.png'))
 arrow_curve_180_left = str(f.joinpath('arrow-curve-180-left.png'))
 arrow_in = str(f.joinpath('arrow-in.png'))
 arrow_move = str(f.joinpath('arrow-move.png'))

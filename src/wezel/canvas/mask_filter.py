@@ -60,6 +60,8 @@ class MaskBrush(canvas.FilterItem):
         self.y = int(event.pos().y())
         button = event.button()
         if button == Qt.LeftButton:
+            item = self.scene().parent().maskItem
+            item.extend()
             self.paintPixels()
 
     def mouseReleaseEvent(self, event):
@@ -79,14 +81,15 @@ class MaskBrush(canvas.FilterItem):
     def paintPixels(self):
         cnvs = self.scene().parent() 
         item = cnvs.maskItem
+        if item.bin() is None:
+            item.initMask()
         w = int((self.brushSize - 1)/2)
         for x in range(self.x-w, self.x+w+1, 1):
-            if 0 <= x < item.mask.shape[0]:
+            if 0 <= x < item.bin().shape[0]:
                 for y in range(self.y-w, self.y+w+1, 1):
-                    if 0 <= y < item.mask.shape[1]:
+                    if 0 <= y < item.bin().shape[1]:
                         item.setPixel(x, y, self.mode=="paint")
         item.update()
-        item._hasChanged = True
 
     def contextMenu(self):
         return self.actionPick.menu()
@@ -178,10 +181,8 @@ class MaskPenFreehand(MaskPen):
 
     def initialize(self):
         # Called by the canvas after the filter is set to a scene
-        #item = self.scene().parent().maskItem
-        #nx, ny = item.mask.shape[0], item.mask.shape[1]
-        cnvs = self.scene().parent()
-        nx, ny = cnvs.image.Columns, cnvs.image.Rows
+        item = self.scene().parent().imageItem
+        nx, ny = item._array.shape[0], item._array.shape[1]
         x, y = np.arange(0.5, 0.5+nx), np.arange(0.5, 0.5+ny)
         self.xc, self.yc = np.meshgrid(x, y, indexing='ij')
         self.locations = list(zip(self.xc.flatten(), self.yc.flatten()))
@@ -207,6 +208,8 @@ class MaskPenFreehand(MaskPen):
         self.x = int(event.pos().x())
         self.y = int(event.pos().y())
         if event.button() == Qt.LeftButton:
+            item = self.scene().parent().maskItem
+            item.extend()
             position = [event.pos().x(), event.pos().y()]
             self.path = [position]
 
@@ -233,20 +236,18 @@ class MaskPenFreehand(MaskPen):
         if len(self.path) == 0: 
             return
         item = self.scene().parent().maskItem
-        nx, ny = item.mask.shape[0], item.mask.shape[1]
+        nx, ny = item.bin().shape[0], item.bin().shape[1]
         roiPath = MplPath(self.path, closed=True)
         # This is the rate limiting step
         # Try using QPpolygonF instead
         bin = roiPath.contains_points(self.locations, radius=0.0).reshape((nx, ny))
         if self.mode == "draw":
-            item.mask = np.logical_or(item.mask, bin)
+            item.setBin(np.logical_or(item.bin(), bin))
         elif self.mode == "cut":
-            item.mask = np.logical_and(item.mask, np.logical_not(bin))
+            item.setBin(np.logical_and(item.bin(), np.logical_not(bin)))
         elif self.mode == "catch":
-            item.mask = np.logical_and(item.mask, bin)
-        item.setQImage()
-        item.update()
-        item._hasChanged = True
+            item.setBin(np.logical_and(item.bin(), bin))
+        item.setDisplay()
         
 
 class MaskPenPolygon(MaskPenFreehand):
@@ -298,6 +299,8 @@ class MaskPenPolygon(MaskPenFreehand):
         button = event.button()
         if button == Qt.LeftButton:
             if self.path is not None:
+                item = self.scene().parent().maskItem
+                item.extend()
                 self.path[-1] = [event.pos().x(), event.pos().y()]
                 self.fillPath()
                 item = self.scene().parent().maskItem
@@ -332,6 +335,8 @@ class MaskPenRectangle(MaskPenFreehand):
         self.x = int(event.pos().x())
         self.y = int(event.pos().y())
         if event.button() == Qt.LeftButton:
+            item = self.scene().parent().maskItem
+            item.extend()
             self.corner1 = [event.pos().x(), event.pos().y()]
 
     def mouseMoveEvent(self, event):
@@ -361,14 +366,12 @@ class MaskPenRectangle(MaskPenFreehand):
         recty = np.logical_and(min(y) <= self.yc, self.yc <= max(y))
         rect = np.logical_and(rectx, recty)
         if self.mode == "draw":
-            item.mask = np.logical_or(item.mask, rect)
+            item.setBin(np.logical_or(item.bin(), rect))
         elif self.mode == "cut":
-            item.mask = np.logical_and(item.mask, np.logical_not(rect))
+            item.setBin(np.logical_and(item.bin(), np.logical_not(rect)))
         elif self.mode == "catch":
-            item.mask = np.logical_and(item.mask, rect)
-        item.setQImage()
-        item.update()
-        item._hasChanged = True
+            item.setBin(np.logical_and(item.bin(), rect))
+        item.setDisplay()
 
 
 class MaskPenCircle(MaskPenFreehand):
@@ -382,7 +385,6 @@ class MaskPenCircle(MaskPenFreehand):
 
     def __init__(self, mode="draw"):
         super().__init__(mode=mode)
-
         self.iconInSet = QIcon(icons.layer_shape_ellipse)
         self.textInSet = 'Circle'
         self.center = None
@@ -402,6 +404,8 @@ class MaskPenCircle(MaskPenFreehand):
         self.x = int(event.pos().x())
         self.y = int(event.pos().y())
         if event.button() == Qt.LeftButton:
+            item = self.scene().parent().maskItem
+            item.extend()
             self.center = [event.pos().x(), event.pos().y()]
             self.radius = 0
 
@@ -429,14 +433,12 @@ class MaskPenCircle(MaskPenFreehand):
         item = self.scene().parent().maskItem
         d_sq = (self.xc-self.center[0])**2 + (self.yc-self.center[1])**2
         if self.mode == "draw":
-            item.mask = np.logical_or(item.mask, d_sq <= self.radius**2)
+            item.setBin(np.logical_or(item.bin(), d_sq <= self.radius**2))
         elif self.mode == "cut":
-            item.mask = np.logical_and(item.mask, d_sq > self.radius**2)
+            item.setBin(np.logical_and(item.bin(), d_sq > self.radius**2))
         elif self.mode == "catch":
-            item.mask = np.logical_and(item.mask, d_sq <= self.radius**2)
-        item.setQImage()
-        item.update()
-        item._hasChanged = True
+            item.setBin(np.logical_and(item.bin(), d_sq <= self.radius**2))
+        item.setDisplay()
 
 
 class MaskThreshold(canvas.FilterItem):
@@ -451,21 +453,28 @@ class MaskThreshold(canvas.FilterItem):
         self.setActionPick()
 
     def initialize(self):
-        cnvs = self.scene().parent()
-        self.center, self.width = cnvs.image.window
-        self.array = cnvs.image.get_pixel_array()
+        item = self.scene().parent().imageItem
+        self.center, self.width = item._center, item._width
+        self.array = item._array
         self.min = np.amin(self.array)
         self.max = np.amax(self.array)
         self.range = self.max-self.min
-        self.setMask()
+        #self.setData()
 
-    def setMask(self):
-        min, max = self.center-self.width/2, self.center+self.width/2
-        item = self.scene().parent().maskItem
-        item.mask = np.logical_and(min<=self.array, self.array<=max)
-        item.setQImage()
-        item.update()
-        item._hasChanged = True
+    def mousePressEvent(self, event):
+        self.x = int(event.pos().x())
+        self.y = int(event.pos().y())
+        if event.button() == Qt.LeftButton:
+            item = self.scene().parent().maskItem
+            item.extend()
+
+    def mouseMoveEvent(self, event):
+        self.x = int(event.pos().x())
+        self.y = int(event.pos().y())
+        button = event.buttons()
+        if button == Qt.LeftButton:
+            d = event.screenPos() - event.lastScreenPos()
+            self.window(d.x(), d.y())
 
     def window(self, dx, dy):
         """Change intensity and contrast"""
@@ -487,15 +496,12 @@ class MaskThreshold(canvas.FilterItem):
         width = width + vx * dx
         self.width = width if width>1 else 1
 
-        self.setMask()
+        # Update display
+        min, max = self.center-self.width/2, self.center+self.width/2
+        item = self.scene().parent().maskItem
+        item.setBin(np.logical_and(min<=self.array, self.array<=max))
+        item.setDisplay()
 
-    def mouseMoveEvent(self, event):
-        self.x = int(event.pos().x())
-        self.y = int(event.pos().y())
-        button = event.buttons()
-        if button == Qt.LeftButton:
-            d = event.screenPos() - event.lastScreenPos()
-            self.window(d.x(), d.y())
 
 
 class MaskPaintByNumbers(MaskBrush):
@@ -515,17 +521,19 @@ class MaskPaintByNumbers(MaskBrush):
         self.icon = QIcon(pixMap)
 
     def initialize(self):
-        cnvs = self.scene().parent()
-        self.array = cnvs.image.get_pixel_array()
+        #cnvs = self.scene().parent()
+        #self.array = cnvs.image.get_pixel_array()
+        item = self.scene().parent().imageItem
+        self.array = item._array
 
     def paintPixels(self):
         item = self.scene().parent().maskItem
         min = max = None 
         w = int((self.brushSize - 1)/2)
         for x in range(self.x-w, self.x+w+1, 1):
-            if 0 <= x < item.mask.shape[0]:
+            if 0 <= x < item.bin().shape[0]:
                 for y in range(self.y-w, self.y+w+1, 1):
-                    if 0 <= y < item.mask.shape[1]:
+                    if 0 <= y < item.bin().shape[1]:
                         v = self.array[x,y]
                         if min is None:
                             min = max = v
@@ -538,13 +546,11 @@ class MaskPaintByNumbers(MaskBrush):
             return
         if self.mode == 'paint':
             inrange = np.logical_and(min <= self.array, self.array <= max)
-            item.mask = np.logical_or(item.mask, inrange)
+            item.setBin(np.logical_or(item.bin(), inrange))
         else:
             inrange = np.logical_or(self.array < min, max < self.array)
-            item.mask = np.logical_and(item.mask, inrange)
-        item.setQImage()
-        item.update()
-        item._hasChanged = True
+            item.setBin(np.logical_and(item.bin(), inrange))
+        item.setDisplay()
 
 
 class MaskRegionGrowing(MaskPaintByNumbers):
@@ -574,9 +580,9 @@ class MaskRegionGrowing(MaskPaintByNumbers):
         min = max = None 
         w = int((self.brushSize - 1)/2)
         for x in range(self.x-w, self.x+w+1, 1):
-            if 0 <= x < item.mask.shape[0]:
+            if 0 <= x < item.bin().shape[0]:
                 for y in range(self.y-w, self.y+w+1, 1):
-                    if 0 <= y < item.mask.shape[1]:
+                    if 0 <= y < item.bin().shape[1]:
                         v = self.array[x,y]
                         if min is None:
                             min = max = v
@@ -586,12 +592,7 @@ class MaskRegionGrowing(MaskPaintByNumbers):
                             if v > max:
                                 max = v
                         seed.append([x,y])
-                        # if self.mode == 'paint':
-                        #     if not item.mask[x,y]:
-                        #         seed.append([x,y])
-                        # else:
-                        #     if item.mask[x,y]:
-                        #         seed.append([x,y])
+
         if min is None or max is None:
             return
         center = (max+min)/2
@@ -599,12 +600,10 @@ class MaskRegionGrowing(MaskPaintByNumbers):
         max, min = center+width, center-width
         # Grow to include all pixels in the same range
         if self.mode == 'paint':
-            canvas.utils.region_grow_add(self.array, item.mask, seed, min, max)
+            canvas.utils.region_grow_add(self.array, item.bin(), seed, min, max)
         else:
-            canvas.utils.region_grow_remove(self.array, item.mask, seed, min, max)
-        item.setQImage()
-        item.update()
-        item._hasChanged = True
+            canvas.utils.region_grow_remove(self.array, item.bin(), seed, min, max)
+        item.setDisplay()
 
     def setOptions(self, option):
         if 'tolerance' in option:
@@ -684,19 +683,18 @@ class MaskDilate(canvas.FilterItem):
         self.y = int(event.pos().y())
         item = self.scene().parent().maskItem
         if event.button() == Qt.LeftButton:
+            item.extend()
             p = [self.x, self.y]
-            mask = item.mask.astype(np.uint8)
-            if item.mask[p[0],p[1]]:
+            mask = item.bin().astype(np.uint8)
+            if item.bin()[p[0],p[1]]:
                 cluster = np.zeros(mask.shape, dtype=np.bool8)
                 cluster = canvas.utils.region_grow_add(mask, cluster, [p], 0.5, 1.5)
                 cluster = cv2.dilate(cluster.astype(np.uint8), self.kernel)
-                item.mask = np.logical_or(item.mask, cluster.astype(np.bool8))
+                item.setBin(np.logical_or(item.bin(), cluster.astype(np.bool8)))
             else:
                 mask = cv2.dilate(mask, self.kernel)
-                item.mask = mask.astype(np.bool8)
-            item.setQImage()
-            item.update()
-            item._hasChanged = True
+                item.setBin(mask.astype(np.bool8))
+            item.setDisplay()
         
     def mouseMoveEvent(self, event):
         self.x = int(event.pos().x())
@@ -752,20 +750,19 @@ class MaskShrink(MaskDilate):
         item = self.scene().parent().maskItem
         if event.button() == Qt.LeftButton:
             p = [self.x, self.y]
-            mask = item.mask.astype(np.uint8)
-            if item.mask[p[0],p[1]]:
+            item.extend()
+            mask = item.bin().astype(np.uint8)
+            if item.bin()[p[0],p[1]]:
                 # Find the selected cluster, take it out, erode it and put it back in
                 cluster = np.zeros(mask.shape, dtype=np.bool8)
                 cluster = canvas.utils.region_grow_add(mask, cluster, [p], 0.5, 1.5)
-                item.mask = np.logical_and(item.mask, np.logical_not(cluster))
+                item.setBin(np.logical_and(item.bin(), np.logical_not(cluster)))
                 cluster = cv2.erode(cluster.astype(np.uint8), self.kernel)
-                item.mask = np.logical_or(item.mask, cluster.astype(np.bool8))
+                item.setBin(np.logical_or(item.bin(), cluster.astype(np.bool8)))
             else:
                 mask = cv2.erode(mask, self.kernel)
-                item.mask = mask.astype(np.bool8)
-            item.setQImage()
-            item.update()
-            item._hasChanged = True
+                item.setBin(mask.astype(np.bool8))
+            item.setDisplay()
 
 
 class MaskKidneyEdgeDetection(canvas.FilterItem):
@@ -780,24 +777,20 @@ class MaskKidneyEdgeDetection(canvas.FilterItem):
         self.setActionPick()
 
     def initialize(self):
-        cnvs = self.scene().parent()
-        self.array = cnvs.image.get_pixel_array()
+        item = self.scene().parent().imageItem
+        self.array = item._array
 
     def mousePressEvent(self, event):
         self.x = int(event.pos().x())
         self.y = int(event.pos().y())
         cnvs = self.scene().parent()
-        maskItem = cnvs.maskItem
+        item = cnvs.maskItem
         if event.button() == Qt.LeftButton:
             p = [self.x, self.y]
-            pixelSize = cnvs.image.PixelSpacing
+            pixelSize = cnvs.parent().sliders.image.PixelSpacing
             pixels = canvas.utils.kidneySegmentation(self.array, p[1], p[0], pixelSize)
             if pixels is not None:
-                maskItem.mask = np.logical_or( maskItem.mask, pixels.astype(np.bool8))
-                maskItem.setQImage()
-                maskItem.update()
-                maskItem._hasChanged = True
-            
-    # def mouseMoveEvent(self, event):
-    #     self.x = int(event.pos().x())
-    #     self.y = int(event.pos().y())
+                item.extend()
+                item.setBin(np.logical_or(item.bin(), pixels.astype(np.bool8)))
+                item.setDisplay()
+
