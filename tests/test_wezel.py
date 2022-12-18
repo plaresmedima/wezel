@@ -60,6 +60,8 @@ def test_launch():
     app.open(tmp)
     #app.set_menu(wezel.menus.test)
     app.show()
+
+    remove_tmp_database(tmp)
     
 
 def test_DICOMFolderTree(interactive = True):

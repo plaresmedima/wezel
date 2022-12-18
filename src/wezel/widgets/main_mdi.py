@@ -1,4 +1,4 @@
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QIcon, QBrush
 from PyQt5.QtWidgets import (                         
     QMdiArea, QWidget, QVBoxLayout, 
@@ -29,7 +29,7 @@ class MainMultipleDocumentInterface(QMdiArea):
         application, makes it the central widget of an MDI subwindow 
         and displays that subwindow in the Wezel MDI""" 
 
-        subWindow = QMdiSubWindow()
+        subWindow = MainMdiSubWindow()
         subWindow.setWidget(widget)
         #subWindow.setObjectName(widget.__class__.__name__)
         subWindow.setWindowFlags(
@@ -42,18 +42,31 @@ class MainMultipleDocumentInterface(QMdiArea):
         if icon is not None:
             subWindow.setWindowIcon(QIcon(icon))
         self.addSubWindow(subWindow)
-        if hasattr(widget, 'closed'):
-            widget.closed.connect(subWindow.close)
         self.activeWindow = subWindow
         return subWindow
-        
-    def closeSubWindow(self, subWindowName):
+
+    def countSubWindowOpen(self, class_name):
+        """
+        Counts all subwindows of a given Class
+        """ 
+        count = 0
+        for subWindow in self.subWindowList():
+            widget = subWindow.widget()
+            if widget.__class__.__name__ == class_name:
+                count += 1
+        return count 
+
+    def closeSubWindow(self, class_name):
         """
         Closes all subwindows of a given Class
-
-        objectName (string): the value set by setObjectName(objectName)
-            when the SubWindow was created
         """   
         for subWindow in self.subWindowList():
-            if subWindow.objectName() == subWindowName:
+            widget = subWindow.widget()
+            if widget.__class__.__name__ == class_name:
                 subWindow.close() 
+
+
+class MainMdiSubWindow(QMdiSubWindow):
+    #closed = pyqtSignal()
+    def __init__(self, parent=None):
+        super().__init__(parent)

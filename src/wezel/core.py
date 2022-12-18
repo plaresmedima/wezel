@@ -130,7 +130,7 @@ class Main(QMainWindow):
         if activeWindow is not None:
             activeWidget = activeWindow.widget()
             if activeWidget.__class__.__name__ == 'SeriesCanvas':
-                activeWidget.saveState()
+                activeWidget.setMask()
         self.central.activeWindow = subWindow
         # if self.folder is None:
         #     return
@@ -171,6 +171,8 @@ class Main(QMainWindow):
         self.treeView.setFolder()
         self.menuBar().enable()
         self.status.hide()
+        if 0 == self.central.countSubWindowOpen('SeriesCanvas'):
+            self.toolBarDockWidget.hide()
         #self.status.message()
 
         
@@ -192,7 +194,8 @@ class Main(QMainWindow):
             seriesCanvas.mousePositionMoved.connect(
                 lambda x, y: self.status.pixelValue(x,y,seriesCanvas.array())
             )
-            seriesCanvas.closed.connect(self.treeView.setFolder)
+            seriesCanvas.closed.connect(lambda: self.central.removeSubWindow(seriesCanvas))
+            seriesCanvas.closed.connect(self.refresh)
             self.central.addWidget(seriesCanvas, title=object.label())
             self.central.tileSubWindows()
             self.toolBar.setSeriesCanvas(seriesCanvas)

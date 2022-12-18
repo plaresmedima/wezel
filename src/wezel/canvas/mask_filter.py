@@ -81,8 +81,8 @@ class MaskBrush(canvas.FilterItem):
     def paintPixels(self):
         cnvs = self.scene().parent() 
         item = cnvs.maskItem
-        if item.bin() is None:
-            item.initMask()
+        # if item.bin() is None:
+        #     item.initMask()
         w = int((self.brushSize - 1)/2)
         for x in range(self.x-w, self.x+w+1, 1):
             if 0 <= x < item.bin().shape[0]:

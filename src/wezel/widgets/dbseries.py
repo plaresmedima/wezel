@@ -329,30 +329,44 @@ class SeriesCanvas(QWidget):
         self.canvas = canvas.Canvas(self)
         self.canvas.arrowKeyPress.connect(lambda arrow: self.arrowKeyPress(arrow))
         self.canvas.mousePositionMoved.connect(lambda x, y: self.mousePositionMoved.emit(x,y))
-        self.canvas.maskChanged.connect(self.maskChanged.emit)
+        self.canvas.maskChanged.connect(self.slotMaskChanged)
         self.setEnabled(False)
         self._model = SeriesCanvasModel()
         self._view = SeriesCanvasView(self)
+
+    def slotMaskChanged(self):
+        if self._model._regions == []:
+            self._model.addRegion()
+            bin = self.canvas.mask()
+            clr = self.canvas.maskItem.color()
+            self._model.setMask(bin)
+            self._model.setColor(clr)
+            self.newRegion.emit()
+        self.maskChanged.emit()
 
     def closeEvent(self, event): 
         if self.canvas.toolBar is not None:
             self.canvas.toolBar.setEnabled(False)
         if not self.isEnabled():
             return
-        if not self.sliders.series.exists():
+        series = self.sliders.series
+        if not series.exists():
             return
+        images = series.instances()
         for region in self._model._regions:
-            series = self.sliders.series.new_sibling(SeriesDescription=region['name'])
-            for image in self.sliders.series.instances():
+            roi_series = series.new_sibling(SeriesDescription=region['name'])
+            for image in images:
                 uid = image.SOPInstanceUID
                 if uid in region:
                     array = region[uid].astype(np.float32)
-                    mask = image.copy_to_series(series)
+                    mask = image.copy_to(roi_series)
                     mask.set_array(array)
                     mask.WindowCenter = 0.5
                     mask.WindowWidth = 1.0
+        #self.destroy(destroyWindow=True)
+        #self.deleteLater()
         self.closed.emit()
-
+        
     def setFilter(self, filter):
         self.canvas.setFilter(filter)
         
@@ -373,10 +387,6 @@ class SeriesCanvas(QWidget):
                 self.width(), 
                 self.lut())
             image.clear()
-
-    def saveState(self):
-        bin = self.canvas.mask()
-        self._model.setMask(bin)
 
     def changeCanvasImage(self):
 #        self.canvas.saveMask()
@@ -400,9 +410,7 @@ class SeriesCanvas(QWidget):
         image.clear()
         
     def arrowKeyPress(self, key):
-        #self.canvas.saveMask()
         self.sliders.move(key=key)
-        #self.newImage.emit(self.sliders.image)
         self.changeCanvasImage()
 
     def removeCurrentRegion(self):
@@ -420,13 +428,16 @@ class SeriesCanvas(QWidget):
 
     def addRegion(self):
         if self._model._regions != []:
-            self._model.setMask(self.canvas.mask())
+            self.setMask()
         self._model.addRegion()
         self.canvas.setMask(None, color=self._model.color())
         self.newRegion.emit()
 
-    def setCurrentRegion(self, index):
+    def setMask(self):
         self._model.setMask(self.canvas.mask())
+
+    def setCurrentRegion(self, index):
+        self.setMask()
         self._model._currentRegion = self._model._regions[index]
         self.canvas.setMask(self.mask(), color=self._model.color())
         self.newRegion.emit()
@@ -450,7 +461,7 @@ class SeriesCanvas(QWidget):
             # Create overlay
             region = series.map_mask_to(self.sliders.series)
             # Add new region
-            newRegion = {'name': series.SeriesDescription, 'color': self._model.newColor()}
+            newRegion = {'name': region.SeriesDescription, 'color': self._model.newColor()}
             self._model._regions.append(newRegion)
             self._model._currentRegion = newRegion
             # Find masks for each image
@@ -518,11 +529,6 @@ class SeriesCanvasView():
 
 class SeriesCanvasModel:
     def __init__(self):
-
-        # Dictionary of regions
-        # Each region is a dictionary
-        # mask = region[uid]
-        # mask = binary image
         self._series = None
         self._center = {}
         self._width = {}
@@ -586,6 +592,11 @@ class SeriesCanvasModel:
         if self._currentRegion is None:
             return
         self._currentRegion[self._currentImage] = bin
+        
+    def setColor(self, RGB):
+        if self._currentRegion is None:
+            return
+        self._currentRegion['color'] = RGB
 
     def regionNames(self):
         return [r['name'] for r in self._regions]
@@ -601,7 +612,6 @@ class SeriesCanvasModel:
         while newName in allNames:
             count += 1 
             newName = 'New Region [' + str(count).zfill(3) + ']'
-        
         # Add new region
         newRegion = {'name': newName, 'color': self.newColor()}
         self._regions.append(newRegion)
@@ -618,6 +628,7 @@ class SeriesCanvasModel:
         return color
 
     def colorFromIndex(self, color):
+        # RGB color of the region
         if color == 0:
             return [255, 0, 0]
         if color == 1:

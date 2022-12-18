@@ -64,7 +64,7 @@ class Array4D(wezel.Action):
             app.dialog.information('Please select a series with >1 slice location and acquisition time.')
         else:
             viewer = wezel.widgets.FourDimViewer(app.status, array)
-            app.addAsSubWindow(viewer, title=series.label())
+            app.central.addWidget(viewer, title=series.label())
 
             
 class HeaderDICOM(wezel.Action):
@@ -75,7 +75,7 @@ class HeaderDICOM(wezel.Action):
     def run(self, app):
        for series in app.get_selected(SERIES_VIEWER):
             viewer = wezel.widgets.SeriesViewerMetaData(series)
-            app.addAsSubWindow(viewer, title=series.label())
+            app.central.addWidget(viewer, title=series.label())
 
 
 class CloseWindows(wezel.Action):

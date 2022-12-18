@@ -344,11 +344,13 @@ class ToolBar(QWidget):
     def undo(self):
         item = self.canvas.maskItem
         item.undo()
+        self.seriesCanvas.setMask()
         self.setRedoUndoEnabled()
 
     def redo(self):
         item = self.canvas.maskItem
         item.redo()
+        self.seriesCanvas.setMask()
         self.setRedoUndoEnabled()
 
 

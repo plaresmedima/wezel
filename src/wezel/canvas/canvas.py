@@ -234,6 +234,9 @@ class MaskItem(AnyItem):
         self.setData(mask)
         self.setOpacity(opacity)
 
+    def color(self):
+        return list(reversed(self._BGR))
+
     def boundingRect(self): 
         """Abstract method - must be overridden."""
         if self.boundingRectangle is None:
@@ -264,6 +267,7 @@ class MaskItem(AnyItem):
         self._BGRA = np.zeros(shape, dtype=np.ubyte)
         self._qImage = QImage(self._BGRA, self._BGRA.shape[1], self._BGRA.shape[0], QImage.Format_ARGB32)
         self.setDisplay()
+        self.maskChanged.emit()
 
     def initMask(self):
         rect = self.boundingRect()
@@ -289,8 +293,8 @@ class MaskItem(AnyItem):
         self.maskChanged.emit()
 
     def setPixel(self, x, y, value):
-        if self._bin == []:
-            self.initMask()
+        # if self._bin == []:
+        #     self.initMask()
         self.bin()[x,y] = value
         if value: 
             self._BGRA[y,x,:3] = self._BGR
