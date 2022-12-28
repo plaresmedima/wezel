@@ -1,5 +1,7 @@
 import numpy as np
-from PyQt5.QtGui import QImage
+#from PyQt5.QtGui import QImage
+
+from matplotlib import cm
 
 from skimage import feature
 import cv2 as cv2
@@ -74,27 +76,36 @@ COLORMAPS = [ # This needs to move to dbdicom - list of supported colormaps
         'tab10', 'tab20', 'tab20b', 'tab20c']),
 ]
 
-  
+def colormap_to_LUT(cmap):
+    if cmap is None:
+        cmap = 'Greyscale'
+    if cmap == 'Greyscale':
+        G = np.linspace(0.0, 1.0, num=256)
+        RGB = np.transpose([G, G, G])
+    else:
+        RGBA = cm.ScalarMappable(cmap=cmap).to_rgba(np.arange(256))
+        RGB = RGBA[:,:3]
+    return RGB
 
 # HELPER FUNCTION ADAPTED FROM pyQtGraph
 
 # THIS HAS BECOME OBSOLETE
-def makeQImage(imgData):
+# def makeQImage(imgData):
 
-    # if not imgData.flags['C_CONTIGUOUS']:
-    #     imgData = np.ascontiguousarray(imgData)
-    # else:
-    #     imgData = imgData.copy() 
+#     # if not imgData.flags['C_CONTIGUOUS']:
+#     #     imgData = np.ascontiguousarray(imgData)
+#     # else:
+#     #     imgData = imgData.copy() 
               
-    try:
-        img = QImage(imgData, imgData.shape[1], imgData.shape[0], QImage.Format_RGB32)
-    #    img = QImage(imgData.ctypes.data, imgData.shape[1], imgData.shape[0], QImage.Format_RGB32)
-    except:
-        img = QImage(memoryview(imgData), imgData.shape[1], imgData.shape[0], QImage.Format_RGB32)
+#     try:
+#         img = QImage(imgData, imgData.shape[1], imgData.shape[0], QImage.Format_RGB32)
+#     #    img = QImage(imgData.ctypes.data, imgData.shape[1], imgData.shape[0], QImage.Format_RGB32)
+#     except:
+#         img = QImage(memoryview(imgData), imgData.shape[1], imgData.shape[0], QImage.Format_RGB32)
                 
-    #img.data = imgData
+#     #img.data = imgData
     
-    return img 
+#     return img 
 
 
 def kidneySegmentation(img_array,pixelY,pixelX,pixelSize,side=None):

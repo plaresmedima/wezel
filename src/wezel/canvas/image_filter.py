@@ -46,9 +46,9 @@ class ImageWindow(canvas.FilterItem):
         width = width - vx * dx
         width = width if width>1 else 1
 
-        cnvs.parent().setWindow(center, width)
-        item.setWindow(center, width)
-        item.setDisplay()
+        cnvs.setWindow(center, width)
+        #item.setWindow(center, width)
+        #item.setDisplay()
         if cnvs.toolBar is not None:
             cnvs.toolBar.window.setData(item._array, center, width, set=True)
 
@@ -89,9 +89,9 @@ class ImageWindow(canvas.FilterItem):
     def setColorMap(self, cmap):
         self.pick()
         cnvs = self.scene().parent()
-        cnvs.parent().setColormap(cmap)
-        cnvs.imageItem.setLUT(cnvs.parent().lut())
-        cnvs.imageItem.setDisplay()
+        cnvs.setColormap(cmap)
+        # cnvs.imageItem.setLUT(cnvs.lut())
+        # cnvs.imageItem.setDisplay()
 
     def getColorMap(self):
         menu = self.actionPick.menu()

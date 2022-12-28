@@ -4,10 +4,12 @@
 """
 from wezel.canvas.utils import (
     COLORMAPS,
-    makeQImage,
+    #makeQImage,
+    colormap_to_LUT,
     region_grow_add, 
     region_grow_remove,
 )
+
 from wezel.canvas.canvas import (
     Canvas,
     ImageItem,
@@ -38,4 +40,7 @@ from wezel.canvas.mask_filter import(
     MaskDilate,
     MaskShrink,
     MaskKidneyEdgeDetection,
+)
+from wezel.canvas.series_canvas import (
+    SeriesCanvas,
 )

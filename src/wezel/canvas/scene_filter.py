@@ -9,19 +9,12 @@ class PanFilter(canvas.FilterItem):
     """
     def __init__(self): 
         super().__init__()
-        pixMap = QPixmap(icons.hand)
+        pixMap = QPixmap(icons.hand_point_090)
         self.cursor = QCursor(pixMap, hotX=4, hotY=0)
         self.icon = QIcon(pixMap)
         self.toolTip = 'Pan'
         self.text = 'Pan'
         self.setActionPick()
-
-    def pan(self, distance):
-        cnvs = self.scene().parent()
-        hBar = cnvs.horizontalScrollBar()
-        vBar = cnvs.verticalScrollBar()
-        hBar.setValue(hBar.value() - distance.x())
-        vBar.setValue(vBar.value() - distance.y())
 
     def mouseMoveEvent(self, event):
         self.x = int(event.pos().x())
@@ -30,6 +23,15 @@ class PanFilter(canvas.FilterItem):
         if button == Qt.LeftButton:
             distance = event.screenPos() - event.lastScreenPos()
             self.pan(distance)
+
+    def pan(self, distance):
+        cnvs = self.scene().parent()
+        hBar = cnvs.horizontalScrollBar()
+        vBar = cnvs.verticalScrollBar()
+        hBar.setValue(hBar.value() - distance.x())
+        vBar.setValue(vBar.value() - distance.y())
+
+
 
 
 class ZoomFilter(canvas.FilterItem):

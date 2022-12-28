@@ -5,7 +5,7 @@ import logging
 
 #from PyQt5.QtCore import *
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QApplication, QMainWindow, QAction, QMenu, QMenuBar, QDockWidget
+from PyQt5.QtWidgets import QWidget, QApplication, QMainWindow, QAction, QMenu, QMenuBar, QDockWidget
 from PyQt5.QtGui import QIcon
 
 import dbdicom as db
@@ -92,9 +92,10 @@ class Main(QMainWindow):
         self.status = wezel.widgets.StatusBar()
         self.setStatusBar(self.status)
 
-        self.toolBar = wezel.canvas.ToolBar()
+        #self.toolBar = wezel.canvas.ToolBar()
+        self.toolBar = {}
         self.toolBarDockWidget = QDockWidget()
-        self.toolBarDockWidget.setWidget(self.toolBar)
+        #self.toolBarDockWidget.setWidget(self.toolBar)
         self.addDockWidget(Qt.RightDockWidgetArea, self.toolBarDockWidget)
         self.toolBarDockWidget.hide()
 
@@ -106,7 +107,7 @@ class Main(QMainWindow):
         self.folder = None
         #self.central = QSplitter()
         self.central = wezel.widgets.MainMultipleDocumentInterface()
-        self.central.subWindowActivated.connect(lambda subWindow: self.setSubWindow(subWindow))
+        self.central.subWindowActivated.connect(lambda subWindow: self.activateSubWindow(subWindow))
         self.setCentralWidget(self.central)
 
         self.set_menu(wezel.menus.dicom)
@@ -121,24 +122,6 @@ class Main(QMainWindow):
     def set_menu(self, menu):
         self.menubar = MenuBar(self, menu)
         self.setMenuBar(self.menubar)
-
-    def setSubWindow(self, subWindow):
-
-        if self.central.activeWindow == subWindow:
-            return
-        activeWindow = self.central.activeWindow
-        if activeWindow is not None:
-            activeWidget = activeWindow.widget()
-            if activeWidget.__class__.__name__ == 'SeriesCanvas':
-                activeWidget.setMask()
-        self.central.activeWindow = subWindow
-        # if self.folder is None:
-        #     return
-        if subWindow is None:
-            return
-        widget = subWindow.widget()
-        if widget.__class__.__name__ == 'SeriesCanvas':
-            self.toolBar.setSeriesCanvas(widget)
 
     def open(self, path):
         self.folder = db.database(path=path, 
@@ -158,9 +141,7 @@ class Main(QMainWindow):
             self.treeViewDockWidget.hide()
             for subWindow in self.central.subWindowList():
                 self.central.removeSubWindow(subWindow)
-            #self.central.closeAllSubWindows()
             self.menuBar().enable()
-        #    self.set_app(apps.WezelWelcome)
         return accept
 
     def refresh(self):
@@ -171,13 +152,8 @@ class Main(QMainWindow):
         self.treeView.setFolder()
         self.menuBar().enable()
         self.status.hide()
-        if 0 == self.central.countSubWindowOpen('SeriesCanvas'):
-            self.toolBarDockWidget.hide()
-        #self.status.message()
-
         
     def display(self, object):
-
         if object.type() == 'Database':
             self.treeView = wezel.widgets.DICOMFolderTree(object)
             self.treeView.itemSelectionChanged.connect(self.menuBar().enable)
@@ -189,19 +165,51 @@ class Main(QMainWindow):
         elif object.type() == 'Study': # No Study Viewer yet
             pass
         elif object.type() == 'Series':
-            seriesCanvas = wezel.widgets.SeriesCanvas()
-            seriesCanvas.setImageSeries(object)
-            seriesCanvas.mousePositionMoved.connect(
-                lambda x, y: self.status.pixelValue(x,y,seriesCanvas.array())
-            )
-            seriesCanvas.closed.connect(lambda: self.central.removeSubWindow(seriesCanvas))
-            seriesCanvas.closed.connect(self.refresh)
-            self.central.addWidget(seriesCanvas, title=object.label())
-            self.central.tileSubWindows()
-            self.toolBar.setSeriesCanvas(seriesCanvas)
-            self.toolBarDockWidget.show()
+            seriesDisplay = wezel.widgets.SeriesDisplay()
+            seriesDisplay.setSeries(object)
+            self.addWidget(seriesDisplay, title=object.label())
+            #self.toolBar.setWidget(seriesDisplay.canvas)
+            #self.toolBarDockWidget.show()
         elif object.type() == 'Instance':
             pass
+
+    def addWidget(self, widget, title):
+        subWindow = self.central.addWidget(widget, title)
+        subWindow.closed.connect(lambda: self.closeSubWindow(subWindow))
+        self.central.tileSubWindows()
+        if widget.toolBarClass is not None:
+            if widget.toolBarClass.__name__ in self.toolBar:
+                toolBar = self.toolBar[widget.toolBarClass.__name__]
+            else:
+                toolBar =  widget.toolBarClass()
+                self.toolBar[widget.toolBarClass.__name__] = toolBar
+                self.toolBarDockWidget.setWidget(toolBar)
+            widget.setToolBar(toolBar)
+            self.toolBarDockWidget.show()
+
+    def closeSubWindow(self, subWindow):
+        self.central.removeSubWindow(subWindow)
+        self.central.tileSubWindows()
+        widget = subWindow.widget().__class__.__name__
+        if 0 == self.central.countSubWindow(widget):
+            self.toolBarDockWidget.hide()
+        self.refresh()
+
+    def activateSubWindow(self, subWindow):
+        if self.central.activeWindow == subWindow:
+            return
+        activeWindow = self.central.activeWindow
+        if activeWindow is not None:
+            activeWindow.widget().setActive(False)
+            #widget.setActive(False)
+            # if activeWidget.__class__.__name__ == 'SeriesDisplay':
+            #     activeWidget.canvas.saveMask()
+        self.central.activeWindow = subWindow
+        if subWindow is not None:
+            subWindow.widget().setActive(True)
+            # widget.setActive(True)
+            #if widget.__class__.__name__ == 'SeriesDisplay':
+            #    self.toolBar.setWidget(widget.canvas)
 
     def get_selected(self, generation):   
         if self.treeView is None: 
@@ -217,7 +225,27 @@ class Main(QMainWindow):
         if self.treeView is None: 
             return 0
         return self.treeView.nr_selected(generation)
-    
+
+
+class MainWidget(QWidget):
+    """Base class for widgets that are set as subWindow widgets"""
+
+    def __init__(self):
+        super().__init__()
+        self.toolBarClass = None
+        self.toolBar = None
+
+    def setToolBar(self, toolBar):
+        self.toolBar = toolBar
+        if toolBar is not None:
+            toolBar.setWidget(self)
+        
+    def setActive(self, active):
+        pass
+
+    def closeEvent(self, event):
+        pass
+
 
 
 class MenuBar(QMenuBar):

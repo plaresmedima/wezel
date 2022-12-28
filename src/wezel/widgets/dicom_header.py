@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import (QFileDialog, QLineEdit, QApplication,
 
 import pydicom
 import pandas as pd
+from wezel import MainWidget
 
 
 localStyleSheet = """
@@ -83,7 +84,7 @@ class ScrollLabel(QScrollArea):
         self.label.setText(text)
 
 
-class SeriesViewerMetaData(QWidget):
+class SeriesViewerMetaData(MainWidget):
     """Display DICOM Series Metadata in a table."""
 
     rowHeight = 4

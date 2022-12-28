@@ -25,6 +25,7 @@ class ToolBar(wezel.Action):
     def run(self, app):
         app.toolBarDockWidget.show()
 
+
 class DataBase(wezel.Action):
 
     def enable(self, app):
@@ -46,7 +47,7 @@ class Series(wezel.Action):
     def run(self, app):
         for series in app.get_selected(SERIES_VIEWER):
             app.display(series)      
-        app.central.tileSubWindows()      
+        #app.central.tileSubWindows()      
 
 
 class Array4D(wezel.Action):
@@ -55,16 +56,10 @@ class Array4D(wezel.Action):
         return app.nr_selected(3) != 0
 
     def run(self, app):
-
-        series = app.get_selected(3)[0]
-        array, _ = series.array(['SliceLocation', 'AcquisitionTime'], pixels_first=True)
-        array = np.squeeze(array[...,0])
-        app.status.hide()
-        if array.ndim < 4:
-            app.dialog.information('Please select a series with >1 slice location and acquisition time.')
-        else:
-            viewer = wezel.widgets.FourDimViewer(app.status, array)
-            app.central.addWidget(viewer, title=series.label())
+        for series in app.get_selected(SERIES_VIEWER):
+            viewer = wezel.widgets.SeriesDisplay4D()
+            viewer.setSeries(series)
+            app.addWidget(viewer, series.label())
 
             
 class HeaderDICOM(wezel.Action):
@@ -75,7 +70,7 @@ class HeaderDICOM(wezel.Action):
     def run(self, app):
        for series in app.get_selected(SERIES_VIEWER):
             viewer = wezel.widgets.SeriesViewerMetaData(series)
-            app.central.addWidget(viewer, title=series.label())
+            app.addWidget(viewer, series.label())
 
 
 class CloseWindows(wezel.Action):

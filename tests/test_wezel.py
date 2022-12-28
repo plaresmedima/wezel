@@ -52,8 +52,8 @@ def test_build():
 def test_launch():
 
     #tmp = create_tmp_database(onefile)
-    tmp = create_tmp_database(rider)
-    #tmp = tristan
+    #tmp = create_tmp_database(rider)
+    tmp = tristan
 
     app = wezel.app()
     #app.set_app(wezel.apps.dicom.Windows)
@@ -61,7 +61,7 @@ def test_launch():
     #app.set_menu(wezel.menus.test)
     app.show()
 
-    remove_tmp_database(tmp)
+    #remove_tmp_database(tmp)
     
 
 def test_DICOMFolderTree(interactive = True):

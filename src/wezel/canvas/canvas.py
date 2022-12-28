@@ -2,13 +2,14 @@ import random
 import numpy as np
 import copy
 
+
 from PyQt5.QtCore import Qt, pyqtSignal, QRectF
 from PyQt5.QtWidgets import (QGraphicsObject, QGraphicsItem,
     QAction, QMenu, QGraphicsView, QGraphicsScene, QActionGroup)
-from PyQt5.QtGui import QPixmap, QBrush, QIcon, qRgb, QTransform, QCursor, QImage
+from PyQt5.QtGui import QPixmap, QBrush, QIcon, QTransform, QCursor, QImage
 
 from wezel import canvas, icons
-
+from wezel.canvas.utils import colormap_to_LUT
 
 class Canvas(QGraphicsView):
     """Wrapper for ImageItem displaying it in a scrollable Widget"""
@@ -17,7 +18,7 @@ class Canvas(QGraphicsView):
     newMaskSeries = pyqtSignal(object)
     mousePositionMoved = pyqtSignal(int, int)
     arrowKeyPress = pyqtSignal(str)
-    maskChanged = pyqtSignal()
+    #maskChanged = pyqtSignal()
 
     def __init__(self, parent=None): 
         super().__init__(parent)
@@ -25,61 +26,64 @@ class Canvas(QGraphicsView):
         self.setBackgroundBrush(QBrush(Qt.black))
         self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
         self.setResizeAnchor(QGraphicsView.AnchorUnderMouse)
-
-        #self.defaultImage = dbdicom.zeros((128, 128)).instances()[0]
-        # would like to do: dbdicom.zeros((128, 128))[0,:,:]
-        self.maskSeries = None
         self.toolBar = None
+
+    def zoomTo(self, factor):
+        self.setTransform(QTransform())
+        self.scale(factor, factor)
 
     def item(self, n):
         for item in self.scene().items():
             if item.zValue() == n:
                 return item
+
     def removeItem(self, item):
         if item is not None:
             self.scene().removeItem(item)
+
     @property
     def imageItem(self):
         return self.item(0)
+
     @property
     def maskItem(self):
         return self.item(1)
+        
     @property
     def filterItem(self):
         return self.item(2)
 
-    def array(self):
-        return self.imageItem._array
-    def center(self):
-        return self.imageItem._center
-    def width(self):
-        return self.imageItem._width
-    
-    def setImage(self, array, center, width, lut):
+    # def mask(self):
+    #     return self.maskItem.bin
+
+    def setImage(self, array, center, width, cmap, lut=None):
+        if lut is None:
+            lut = colormap_to_LUT(cmap)
         self.removeItem(self.imageItem)
-        item = canvas.ImageItem(array, center, width, lut)
+        item = ImageItem(array, center, width, lut)
+        item._cmap = cmap
         self.scene().addItem(item)
         item.setZValue(0)
         filter = self.filterItem
         if filter is not None:
             filter.prepareGeometryChange()
             filter.boundingRectangle = self.scene().sceneRect()
-        # mask = self.findMask()
-        # if self.toolBar is None:
-        #     opacity=0.5
-        # else:
-        #     opacity=self.toolBar.opacity()
         self.setMask(None)
         return item
 
     def setMask(self, mask, color=0, opacity=0.5):
         self.removeItem(self.maskItem)
-        # if image is not None:
-        #     image = image.array() != 0
-        item = canvas.MaskItem(self.imageItem, mask, opacity=opacity, color=color)
+        if self.toolBar is not None:
+            #opacity = self.toolBar.opacity()
+            opacity = self.toolBar.actionOpacity.opacity()
+        item = MaskItem(self.imageItem, mask, opacity=opacity, color=color)
         item.setZValue(1)
-        item.maskChanged.connect(self.maskChanged.emit)
+        item.maskChanged.connect(self.slotMaskChanged)
         return item
+
+    def slotMaskChanged(self):
+        if self.toolBar is not None:
+            self.toolBar.maskChanged()
 
     def setFilter(self, filter=None):
         self.removeItem(self.filterItem)
@@ -94,13 +98,6 @@ class Canvas(QGraphicsView):
         filter.boundingRectangle = self.scene().sceneRect()
         filter.initialize()
 
-    def mask(self):
-        return self.maskItem.bin()
-     
-    def zoomTo(self, factor):
-        self.setTransform(QTransform())
-        self.scale(factor, factor)
-
     def fitItem(self):
         item = self.imageItem
         if item is None:
@@ -108,8 +105,40 @@ class Canvas(QGraphicsView):
         if item is not None:
             self.fitInView(item, Qt.KeepAspectRatio)
 
+    def setColormap(self, cmap=None):
+        if cmap is None:
+            cmap = 'Greyscale'
+        RGB = colormap_to_LUT(cmap)
+        self.imageItem._cmap = cmap
+        self.imageItem.setLUT(RGB)
+        self.imageItem.setDisplay()
+
+    def setWindow(self, center=None, width=None):
+        if (center is None) or (width is None):
+            array = self.imageItem._array
+            min = np.min(array)
+            max = np.max(array)
+        if center is None:
+            center = (max+min)/2
+        if width is None:
+            width = 0.9*(max-min)       
+        self.imageItem.setWindow(center, width)
+        self.imageItem.setDisplay()
+
     def array(self):
-        return self.imageItem.array()
+        return self.imageItem._array
+
+    def lut(self):
+        return self.imageItem._lut
+
+    def colormap(self):
+        return self.imageItem._cmap
+
+    def center(self):
+        return self.imageItem._center
+        
+    def width(self):
+        return self.imageItem._width
 
 
 class AnyItem(QGraphicsObject):
@@ -159,6 +188,7 @@ class ImageItem(AnyItem):
             self._array = None
             self._width = None
             self._center = None  
+            self._cmap = None
             self._lut = None 
             self._array_scaled = None
             self._BGRA = None
@@ -170,9 +200,7 @@ class ImageItem(AnyItem):
         if nx is None: # image is corrupted
             nx, ny = 0, 0
         self.boundingRectangle = QRectF(0, 0, nx, ny)
-        # QImage requires transpose
         self._BGRA = np.empty((ny, nx, 4), dtype=np.ubyte)
-        # Alpha channel - required but not used
         self._BGRA[:,:,3] = 0 
         # QImage points to self._BGRA in memory - does not need to be updated
         self._qImage = QImage(self._BGRA, self._BGRA.shape[1], self._BGRA.shape[0], QImage.Format_RGB32)
@@ -389,13 +417,6 @@ class FilterItem(AnyItem):
     def initialize(self):
         pass
 
-    # def pan(self, distance):
-    #     cnvs = self.scene().parent()
-    #     hBar = cnvs.horizontalScrollBar()
-    #     vBar = cnvs.verticalScrollBar()
-    #     hBar.setValue(hBar.value() - distance.x())
-    #     vBar.setValue(vBar.value() - distance.y())
-
     def keyPressEvent(self, event):
         cnvs = self.scene().parent()
         if event.key() == 16777234:
@@ -443,11 +464,6 @@ class FilterItem(AnyItem):
     def mouseMoveEvent(self, event):
         self.x = int(event.pos().x())
         self.y = int(event.pos().y())
-        # Do not pan in FilterItem
-        # button = event.buttons()
-        # if button == Qt.LeftButton:
-        #     distance = event.screenPos() - event.lastScreenPos()
-        #     self.pan(distance)
 
     def mouseReleaseEvent(self, event):
         self.x = int(event.pos().x())

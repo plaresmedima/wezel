@@ -11,19 +11,18 @@ from .dbimage import (
     ImageBrightness, 
     ImageContrast,
 )
-from .dbseries import (
+from .series_sliders import (
     SeriesSliders,
-    SeriesCanvas,
 )
-from .array_display import (
-    FourDimViewer,
+from .series_display import (
+    SeriesDisplay,
+    SeriesDisplay4D,
 )
-from .array_view import (
-    ArrayViewToolBox, 
-    ArrayView,
-)
-from .curve_plotters import (
+from .plot_curve import (
     PlotCurve,
+)
+from .qrangeslider import (
+    QRangeSlider,
 )
 from .sliders import (
     IndexSlider, 

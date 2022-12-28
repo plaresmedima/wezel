@@ -81,8 +81,6 @@ class MaskBrush(canvas.FilterItem):
     def paintPixels(self):
         cnvs = self.scene().parent() 
         item = cnvs.maskItem
-        # if item.bin() is None:
-        #     item.initMask()
         w = int((self.brushSize - 1)/2)
         for x in range(self.x-w, self.x+w+1, 1):
             if 0 <= x < item.bin().shape[0]:
@@ -476,6 +474,11 @@ class MaskThreshold(canvas.FilterItem):
             d = event.screenPos() - event.lastScreenPos()
             self.window(d.x(), d.y())
 
+    def mouseReleaseEvent(self, event):
+        self.x = int(event.pos().x())
+        self.y = int(event.pos().y())
+        self.update()
+
     def window(self, dx, dy):
         """Change intensity and contrast"""
        
@@ -498,8 +501,9 @@ class MaskThreshold(canvas.FilterItem):
 
         # Update display
         min, max = self.center-self.width/2, self.center+self.width/2
+        threshold = np.logical_and(min<=self.array, self.array<=max)
         item = self.scene().parent().maskItem
-        item.setBin(np.logical_and(min<=self.array, self.array<=max))
+        item.setBin(threshold)
         item.setDisplay()
 
 
