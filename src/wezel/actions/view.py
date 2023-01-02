@@ -10,18 +10,21 @@ IMAGE_VIEWER = 4
 def all(parent):
    
     parent.action(DataBase, text = 'Database')
-    parent.action(Series, text = 'Series')
-    parent.action(Array4D, text = '4D Array')
-    parent.action(HeaderDICOM, text='DICOM Header')
     parent.separator()
-    parent.action(ToolBar, text='Tool bar')
+    parent.action(Series, text = 'Series (2D)')
+    parent.action(Array4D, text = 'Series (2D + 1D)')
+    parent.action(HeaderDICOM, text = 'Series (Header)')
+    parent.separator()
+    parent.action(ToolBar, text='Toolbar')
     parent.action(CloseWindows, text='Close windows')
     parent.action(TileWindows, text='Tile windows')
 
 
 class ToolBar(wezel.Action):
+
     def enable(self, app):
-        return True
+        return app.toolBarDockWidget.isHidden()
+        
     def run(self, app):
         app.toolBarDockWidget.show()
 

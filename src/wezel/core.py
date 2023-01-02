@@ -92,10 +92,8 @@ class Main(QMainWindow):
         self.status = wezel.widgets.StatusBar()
         self.setStatusBar(self.status)
 
-        #self.toolBar = wezel.canvas.ToolBar()
         self.toolBar = {}
         self.toolBarDockWidget = QDockWidget()
-        #self.toolBarDockWidget.setWidget(self.toolBar)
         self.addDockWidget(Qt.RightDockWidgetArea, self.toolBarDockWidget)
         self.toolBarDockWidget.hide()
 
@@ -104,8 +102,7 @@ class Main(QMainWindow):
         self.addDockWidget(Qt.LeftDockWidgetArea, self.treeViewDockWidget)
         self.treeViewDockWidget.hide()
 
-        self.folder = None
-        #self.central = QSplitter()
+        self.folder = None # should be in TreeView
         self.central = wezel.widgets.MainMultipleDocumentInterface()
         self.central.subWindowActivated.connect(lambda subWindow: self.activateSubWindow(subWindow))
         self.setCentralWidget(self.central)
@@ -168,8 +165,6 @@ class Main(QMainWindow):
             seriesDisplay = wezel.widgets.SeriesDisplay()
             seriesDisplay.setSeries(object)
             self.addWidget(seriesDisplay, title=object.label())
-            #self.toolBar.setWidget(seriesDisplay.canvas)
-            #self.toolBarDockWidget.show()
         elif object.type() == 'Instance':
             pass
 
@@ -178,14 +173,16 @@ class Main(QMainWindow):
         subWindow.closed.connect(lambda: self.closeSubWindow(subWindow))
         self.central.tileSubWindows()
         if widget.toolBarClass is not None:
-            if widget.toolBarClass.__name__ in self.toolBar:
-                toolBar = self.toolBar[widget.toolBarClass.__name__]
+            toolBarName =  widget.toolBarClass.__name__
+            if toolBarName in self.toolBar:
+                toolBar = self.toolBar[toolBarName]
+                widget.setToolBar(toolBar)
             else:
                 toolBar =  widget.toolBarClass()
-                self.toolBar[widget.toolBarClass.__name__] = toolBar
+                self.toolBar[toolBarName] = toolBar
                 self.toolBarDockWidget.setWidget(toolBar)
-            widget.setToolBar(toolBar)
-            self.toolBarDockWidget.show()
+                widget.setToolBar(toolBar)
+                self.toolBarDockWidget.show()
 
     def closeSubWindow(self, subWindow):
         self.central.removeSubWindow(subWindow)
@@ -201,15 +198,9 @@ class Main(QMainWindow):
         activeWindow = self.central.activeWindow
         if activeWindow is not None:
             activeWindow.widget().setActive(False)
-            #widget.setActive(False)
-            # if activeWidget.__class__.__name__ == 'SeriesDisplay':
-            #     activeWidget.canvas.saveMask()
         self.central.activeWindow = subWindow
         if subWindow is not None:
             subWindow.widget().setActive(True)
-            # widget.setActive(True)
-            #if widget.__class__.__name__ == 'SeriesDisplay':
-            #    self.toolBar.setWidget(widget.canvas)
 
     def get_selected(self, generation):   
         if self.treeView is None: 
@@ -237,12 +228,20 @@ class MainWidget(QWidget):
 
     def setToolBar(self, toolBar):
         self.toolBar = toolBar
-        if toolBar is not None:
-            toolBar.setWidget(self)
+        self.setToolBarState()
+
+    def setToolBarState(self):
+        self.toolBar.setWidget(self)
         
     def setActive(self, active):
-        pass
-
+        if active:
+            if self.toolBar is not None:
+                self.setToolBarState()
+                subWindow = self.parentWidget()
+                mdiArea = subWindow.mdiArea()
+                mainWindow = mdiArea.parentWidget()
+                mainWindow.toolBarDockWidget.setWidget(self.toolBar)
+                
     def closeEvent(self, event):
         pass
 

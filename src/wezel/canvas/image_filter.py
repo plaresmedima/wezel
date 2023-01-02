@@ -1,13 +1,15 @@
 import numpy as np
 
-from PyQt5.QtCore import Qt, QRectF
-from PyQt5.QtWidgets import QAction, QMenu, QPushButton, QActionGroup
+from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtWidgets import QAction, QMenu, QActionGroup
 from PyQt5.QtGui import QPixmap, QCursor, QIcon
 
 from wezel import canvas, icons
 
 
 class ImageWindow(canvas.FilterItem):
+    windowChanged = pyqtSignal(object, float, float, bool)
+
     """Change contrast
     """
     def __init__(self): 
@@ -47,10 +49,7 @@ class ImageWindow(canvas.FilterItem):
         width = width if width>1 else 1
 
         cnvs.setWindow(center, width)
-        #item.setWindow(center, width)
-        #item.setDisplay()
-        if cnvs.toolBar is not None:
-            cnvs.toolBar.window.setData(item._array, center, width, set=True)
+        self.windowChanged.emit(item._array, center, width, True)
 
     def mouseMoveEvent(self, event):
         self.x = int(event.pos().x())
@@ -90,8 +89,6 @@ class ImageWindow(canvas.FilterItem):
         self.pick()
         cnvs = self.scene().parent()
         cnvs.setColormap(cmap)
-        # cnvs.imageItem.setLUT(cnvs.lut())
-        # cnvs.imageItem.setDisplay()
 
     def getColorMap(self):
         menu = self.actionPick.menu()

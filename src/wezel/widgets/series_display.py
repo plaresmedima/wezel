@@ -1,3 +1,4 @@
+import copy
 import numpy as np
 
 from PyQt5.QtCore import Qt
@@ -9,7 +10,6 @@ from PyQt5.QtWidgets import (
 )
 
 from wezel import widgets, canvas, MainWidget
-from wezel.canvas.utils import colormap_to_LUT
 
 
 class SeriesDisplay(MainWidget):
@@ -32,18 +32,12 @@ class SeriesDisplay(MainWidget):
         # Display
         self._view = SeriesDisplayView(self)
 
-    def setToolBar(self, toolBar):
-        self.toolBar = toolBar
-        if toolBar is not None:
-            toolBar.setWidget(self.canvas)
+    def setToolBarState(self):
+        self.toolBar.setWidget(self.canvas)
 
     def setActive(self, active):
-        if active:
-            if self.toolBar is not None:
-                self.toolBar.setWidget(self.canvas)
-            # if self.canvas.toolBar is not None:
-            #     self.canvas.toolBar.setWidget(self.canvas)
-        else:
+        super().setActive(active)
+        if not active:
             self.canvas.saveMask()
 
     def closeEvent(self, event):
@@ -51,20 +45,50 @@ class SeriesDisplay(MainWidget):
         
     def setSeries(self, series):
         self.sliders.setData(series)
-        image = self.sliders.image
         self.canvas._model._series = series
-        self.canvas.setImage(image)
+        image = self.sliders.image
+        if image is None:
+            return
+        image.read()
+        self.canvas.setArray(
+            image.array(),
+            image.SOPInstanceUID, 
+            image.WindowCenter, 
+            image.WindowWidth, 
+            image.colormap,
+        )
+        image.clear()
 
     def slidersChanged(self):
         image = self.sliders.image
-        self.canvas.changeCanvasImage(image)
+        if image is None:
+            return
+        image.read()
+        self.canvas.changeArray(
+            image.array(), 
+            image.SOPInstanceUID, 
+            image.WindowCenter, 
+            image.WindowWidth, 
+            image.colormap,
+        )
+        image.clear()
         
     def arrowKeyPress(self, key):
         image_before = self.sliders.image
         self.sliders.move(key=key)
         image_after = self.sliders.image
         if image_after != image_before:
-            self.canvas.changeCanvasImage(image_after)
+            if image_after is None:
+                return
+            image_after.read()
+            self.canvas.changeArray(
+                image_after.array(), 
+                image_after.SOPInstanceUID, 
+                image_after.WindowCenter, 
+                image_after.WindowWidth, 
+                image_after.colormap,
+            )
+            image_after.clear()
 
 
 class SeriesDisplayView():
@@ -102,24 +126,38 @@ class SeriesDisplay4D(MainWidget):
         # Connections
         self.canvas.arrowKeyPress.connect(lambda arrow: self.arrowKeyPress(arrow))
         self.canvas.mousePositionMoved.connect(lambda x, y: self.mouseMoved(x,y))
-        self.viewSlider.valueChanged.connect(self.refresh)
-        self.plotSlider.valueChanged.connect(self.refresh)
+        self.viewSlider.valueChanged.connect(self.imageChanged)
+        self.plotSlider.valueChanged.connect(self.plotChanged)
 
         # Display
         self._view = SeriesDisplay4DView(self)
 
-
     def setActive(self, active):
-        if active:
-            if self.toolBar is not None:
-                self.toolBar.setWidget(self)
-            # if self.canvas.toolBar is not None:
-            #     self.canvas.toolBar.setWidget(self.canvas)
-        else:
+        super().setActive(active)
+        if not active:
             self.canvas.saveMask()
 
     def closeEvent(self, event):
         self.canvas._model.saveRegions()
+
+    def imageChanged(self):
+        z = self.viewSlider.value()
+        t = self.plotSlider.value()
+        self.canvas.changeArray(
+            np.squeeze(self.array[:,:,z,t]),
+            self.uid[z,t], 
+            self.center[z,t], 
+            self.width[z,t], 
+            # self.lut[z,t], 
+            self.colormap[z,t],
+        )
+        self.setStatus()
+        self.setPlot() 
+
+
+    def plotChanged(self):
+        self.setStatus()
+        self.setPlot()        
 
     def arrowKeyPress(self, arrow):
         if arrow == 'left':
@@ -130,7 +168,7 @@ class SeriesDisplay4D(MainWidget):
             self.viewSlider.move('up')
         elif arrow == 'down':
             self.viewSlider.move('down')
-        self.refresh()
+        self.imageChanged()
 
     def mouseMoved(self, x, y):
         self.x = x
@@ -151,11 +189,12 @@ class SeriesDisplay4D(MainWidget):
         d = self.array.shape
         self.zcoords = np.empty((d[2],d[3]))
         self.tcoords = np.empty((d[2],d[3]))
-        self.uid = np.empty((d[2],d[3]), dtype=str)
+
+        self.uid = np.empty((d[2],d[3]), dtype=object)
         self.center = np.empty((d[2],d[3]))
         self.width = np.empty((d[2],d[3]))
-        self.colormap = np.empty((d[2],d[3]), dtype=str)
-        self.lut = np.empty((d[2],d[3]), dtype=object)
+        self.colormap = np.empty((d[2],d[3]), dtype=object)
+
         variables = sortby + ['SOPInstanceUID', 'WindowCenter', 'WindowWidth', 'colormap']
         cnt = 0
         total = d[2]*d[3]
@@ -170,7 +209,6 @@ class SeriesDisplay4D(MainWidget):
                 self.center[z,t] = values[3]
                 self.width[z,t] = values[4]
                 self.colormap[z,t] = values[5]
-                self.lut[z,t] = colormap_to_LUT(values[5])
         series.status.hide()
 
         self.viewSlider.setMaximum(array.shape[2]-1)
@@ -178,7 +216,6 @@ class SeriesDisplay4D(MainWidget):
         self.plot.setXlabel(self.tlabel)
         self.plot.setYlabel(series.SeriesDescription)
         self.plot.setXlim([np.amin(self.tcoords), np.amax(self.tcoords)])
-        #self.plot.setYlim([np.amin(array), np.amax(array)])
         self.plot.setYlim([np.amin(self.center-self.width/2), np.amax(self.center+self.width/2)])
 
         self.refresh()
@@ -208,6 +245,17 @@ class SeriesDisplay4D(MainWidget):
             msg += ', signal = ' + str(v)
         self.series.status.message(msg)
 
+    def setCanvas(self):
+        z = self.viewSlider.value()
+        t = self.plotSlider.value()
+        self.canvas.setArray(
+            np.squeeze(self.array[:,:,z,t]),
+            self.uid[z,t], 
+            self.center[z,t], 
+            self.width[z,t], 
+            self.colormap[z,t],
+        )
+
     def setPlot(self):
         if self.x is None:
             return
@@ -221,17 +269,6 @@ class SeriesDisplay4D(MainWidget):
             t = self.plotSlider.value()
             self.plot.setData(self.tcoords[z,:], self.array[x,y,z,:], index=t)
 
-    def setCanvas(self):
-        z = self.viewSlider.value()
-        t = self.plotSlider.value()
-        self.canvas.setArray(
-            np.squeeze(self.array[:,:,z,t]),
-            self.uid[z,t], 
-            self.center[z,t], 
-            self.width[z,t], 
-            self.lut[z,t], 
-            self.colormap[z,t],
-        )
 
 
 class SeriesDisplay4DView():
@@ -260,6 +297,7 @@ class SeriesDisplay4DView():
         splitter = QSplitter()
         splitter.addWidget(leftPanel)
         splitter.addWidget(rightPanel)
+        splitter.setSizes(2*[controller.geometry().width()/2])
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
@@ -268,22 +306,23 @@ class SeriesDisplay4DView():
 
 
 class SeriesDisplay4DToolBar(canvas.ToolBar):
+
     def __init__(self):
         super().__init__()
-        self.window.valueChanged.connect(lambda v: self.setYlim(v[0]-v[1]/2, v[0]+v[1]/2))
-
-    def setActive(self, active):
-        if active:
-            if self.toolBar is not None:
-                self.toolBar.setWidget(self)
-        else:
-            self.canvas.saveMask()
+        self.window.valueChanged.connect(self.setPlotRange)
+        self.actionSetDefaultColor.triggered.connect(self.setPlotRange)
+        self.filters[2].windowChanged.connect(self.setPlotRange)
 
     def setWidget(self, widget):
         super().setWidget(widget.canvas)
         self.plot = widget.plot
         self.widget = widget
 
-    def setYlim(self, xmin, xmax):
+    def setPlotRange(self):
+        center = self.canvas.center()
+        width = self.canvas.width()
+        xmin = center - width/2
+        xmax = center + width/2
         self.plot.setYlim([xmin, xmax])
         self.widget.setPlot()
+

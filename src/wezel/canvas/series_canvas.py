@@ -3,6 +3,7 @@ import numpy as np
 from PyQt5.QtCore import pyqtSignal
 
 from wezel import widgets, canvas
+from wezel.canvas.utils import colormap_to_LUT
 
 class SeriesCanvas(canvas.Canvas):
 
@@ -17,51 +18,58 @@ class SeriesCanvas(canvas.Canvas):
             self._model.setColor(clr)
             if self.toolBar is not None:
                 self.toolBar.newRegion()
-            #self.newRegion.emit()
         self.saveMask()
         if self.toolBar is not None:
             self.toolBar.maskChanged()
 
-    def setArray(self, array, uid, center, width, lut, colormap):
-        self._model.setArray(uid, center, width, lut, colormap)
-        super().setImage(array, center, width, colormap, lut=lut)
 
-    def setImage(self, image):
-        if image is None:
-            return
-        image.read()
-        self._model.setImage(image)
-        super().setImage(            
-            image.array(), 
+    def setArray(self, array, uid, center, width, colormap):
+        self._model.setArray(
+            uid, 
+            center, 
+            width, 
+            colormap,
+        )
+        super().setImage(
+            array, 
             self._model.center(), 
             self._model.width(), 
-            self._model.colormap())
-        image.clear()
+            self._model.colormap(),
+        )
 
-    def changeCanvasImage(self, image):
-        if image is None:
-            return
-        image.read()
+    def changeArray(self, array, uid, center, width, colormap):
+
+        # Save current mask
         bin = self.maskItem.bin()
         if bin is not None:
             if self._model._regions == []:
                 self.addRegion()
-                #self.newRegion.emit()
                 if self.toolBar is not None:
                     self.toolBar.newRegion()
         self._model.setMask(bin)
-        self._model.setImage(image)
-        #self.newImage.emit(image)
+
+        # update toolbar and display
+        self._model.setArray(
+            uid,
+            center,
+            width,
+            colormap)
         if self.toolBar is not None:
-            self.toolBar.newImage(image)
-        super().setImage(            
-            image.array(), 
+            self.toolBar.setArray(
+                array,
+                self._model.center(), 
+                self._model.width(), 
+                self._model.colormap())
+        super().setImage(
+            array, 
             self._model.center(), 
             self._model.width(), 
             self._model.colormap())
+
+        # get new mask
         mask = self._model.mask()
         self.setMask(mask, color=self._model.color())
-        image.clear()
+
 
     def removeCurrentRegion(self):
         currentIndex = self.currentIndex()
@@ -156,24 +164,14 @@ class SeriesCanvasModel:
         self._center[self._currentImage] = center
         self._width[self._currentImage] = width
 
-    def setArray(self, uid, center, width, lut, colormap):
+    def setArray(self, uid, center, width, colormap):
         self._currentImage = uid
         if uid in self._center.keys():
             return
         self._center[uid] = center
         self._width[uid] = width
-        self._lut[uid] = lut
+        self._lut[uid] = colormap_to_LUT(colormap)
         self._cmap[uid] = colormap
-
-    def setImage(self, image):
-        uid = image.SOPInstanceUID
-        self._currentImage = uid
-        if uid in self._center.keys():
-            return
-        self._center[uid] = image.WindowCenter
-        self._width[uid] = image.WindowWidth
-        self._lut[uid] = image.lut
-        self._cmap[uid] = image.colormap
 
     def color(self):
         if self._currentRegion is None:
@@ -260,7 +258,8 @@ class SeriesCanvasModel:
         for region in self._regions:
             if len(region.keys()) > 2:
                 roi_series = series.new_sibling(SeriesDescription=region['name'])
-                for image in images:
+                for cnt, image in enumerate(images):
+                    series.status.progress(cnt+1, len(images), 'Saving region '+ region['name'])
                     uid = image.SOPInstanceUID
                     if uid in region:
                         array = region[uid].astype(np.float32)
@@ -268,6 +267,7 @@ class SeriesCanvasModel:
                         mask.set_array(array)
                         mask.WindowCenter = 0.5
                         mask.WindowWidth = 1.0
+        series.status.hide()
 
     def loadRegion(self):
         # Build list of series for all series in the same study

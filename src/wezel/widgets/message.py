@@ -205,105 +205,89 @@ class UserInput(QDialog):
   helpText - optional help text to be displayed above the input widgets.
   """
     def __init__(self, *fields, title="Input Parameters", helpText=None):
-        try:
-            super().__init__()
-            self.fields = fields
-            self.setWindowTitle(title)
-            #Hide ? help button
-            #self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
-            self.setWindowFlag(QtCore.Qt.WindowContextHelpButtonHint, False)
-            #Hide top right hand corner X close button
-            #self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowCloseButtonHint)
-            self.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, False)
-            # The following line creates a Customized Window where there are no close and help buttons - relevant for MacOS
-            # Consider Qt.FramelessWindowHint if it works for Mac OS
-            self.setWindowFlag(QtCore.Qt.CustomizeWindowHint, True)
-            QBtn = QDialogButtonBox.Ok | QDialogButtonBox.Cancel   #OK and Cancel button
-            #QBtn = QDialogButtonBox.Ok    #OK button only
-            self.buttonBox = QDialogButtonBox(QBtn)
-            self.buttonBox.accepted.connect(self.clickedOK)   #OK button
-            self.buttonBox.rejected.connect(self.clickedCancel)  #Cancel button
-            #self.closeDialog = False
-            self.layout = QFormLayout()
-            if helpText:
-                self.helpTextLbl = QLabel("<H4>" + helpText  +"</H4>")
-                self.helpTextLbl.setWordWrap(True)
-                self.layout.addRow(self.helpTextLbl)
-            self.listWidget = []
-            listCounter = 0
-            paramDict, lists = self._processInput(*fields)
-            for key in paramDict:
-                paramType, value1, value2, value3 = self._getParamData(paramDict[key])
-                if paramType.lower() not in ("integer", "float", "string", "dropdownlist", "listview"):
-                    #This unit test is for developers who mistype the above 5 parameter 
-                    #types when they are developing new WEZEL tools that need
-                    #an input dialog
-                    raise IncorrectParameterTypeError
-                if paramType == "integer":
-                    self.input = QSpinBox()
-                    if value2:
-                        self.input.setMinimum(int(value2))
-                    if value3:
-                        self.input.setMaximum(int(value3))
-                    if value1:
-                        self.input.setValue(int(value1))
-                elif paramType == "float":
-                    self.input = QDoubleSpinBox()
-                    if value2:
-                        self.input.setMinimum(float(value2))
-                    if value3:
-                        self.input.setMaximum(float(value3))
-                    if value1:
-                        self.input.setValue(float(value1))
-                elif paramType == "string":
-                    self.input = QLineEdit()
-                    if key=="Password": self.input.setEchoMode(QLineEdit.Password)
-                    if value1:
-                        self.input.setText(value1)
-                    else:
-                        self.input.setPlaceholderText("Enter your text")
-                    #uncomment to set an input mask
-                    #self.input.setInputMask('000.000.000.000;_')
-                elif paramType == "dropdownlist":
-                    self.input = QComboBox()
-                    self.input.addItems(lists[listCounter])
-                    listCounter += 1
-                    if value1:
-                        self.input.setCurrentIndex(int(value1))   
-                elif paramType == "listview":
-                    self.input = QListWidget()
-                    self.input.setSelectionMode(QAbstractItemView.ExtendedSelection)
-                    self.input.addItems(lists[listCounter])
-                    #self.input.setFlags(item.flags() | Qt.ItemIsUserCheckable)
-                    #self.input.setCheckState(Qt.Unchecked)
-                    # scroll bar 
-                    scrollBar = QScrollBar(self) 
-                    # setting vertical scroll bar to it 
-                    self.input.setVerticalScrollBar(scrollBar)
-                    self.input.setMinimumHeight(self.input.sizeHintForColumn(0))
-                    self.input.setMinimumWidth(self.input.sizeHintForColumn(0))
-                    listCounter += 1
-                    
-                self.layout.addRow(key, self.input)
-                self.listWidget.append(self.input)
-            self.layout.addRow("", self.buttonBox)
-            self.setLayout(self.layout)
-            self.exec_()  #display input dialog
-            self.cancel = self.button=='Cancel'
-            self.values = self.returnListParameterValues()
-        except IncorrectParameterTypeError:
-            str1 = 'Cannot procede because the parameter type for an input field '
-            str2 = 'in the parameter input dialog is incorrect. ' 
-            str3 = chr(34) + paramType + chr(34)+  ' was used. '
-            str4 = 'Permitted types are' + chr(34) + 'integer,' + chr(34) + 'float' + chr(34) 
-            str5 = ' and ' + chr(34) + 'string' + chr(34) + ' input as strings.'
-            warningString =  str1 + str2 + str3 + str4 + str5
-            print(warningString)
-            #logger.info('UserInput - ' + warningString)
-            QMessageBox().critical( self,  "Parameter Input Dialog", warningString, QMessageBox.Ok)
-        except Exception as e:
-            print('Error in class UserInput.__init__: ' + str(e))
-            #logger.error('Error in class UserInput.__init__: ' + str(e)) 
+        super().__init__()
+        self.fields = fields
+        self.setWindowTitle(title)
+        #Hide ? help button
+        #self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
+        self.setWindowFlag(QtCore.Qt.WindowContextHelpButtonHint, False)
+        #Hide top right hand corner X close button
+        #self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowCloseButtonHint)
+        self.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, False)
+        # The following line creates a Customized Window where there are no close and help buttons - relevant for MacOS
+        # Consider Qt.FramelessWindowHint if it works for Mac OS
+        self.setWindowFlag(QtCore.Qt.CustomizeWindowHint, True)
+        QBtn = QDialogButtonBox.Ok | QDialogButtonBox.Cancel   #OK and Cancel button
+        #QBtn = QDialogButtonBox.Ok    #OK button only
+        self.buttonBox = QDialogButtonBox(QBtn)
+        self.buttonBox.accepted.connect(self.clickedOK)   #OK button
+        self.buttonBox.rejected.connect(self.clickedCancel)  #Cancel button
+        #self.closeDialog = False
+        self.layout = QFormLayout()
+        if helpText:
+            self.helpTextLbl = QLabel("<H4>" + helpText  +"</H4>")
+            self.helpTextLbl.setWordWrap(True)
+            self.layout.addRow(self.helpTextLbl)
+        self.listWidget = []
+        listCounter = 0
+        paramDict, lists = self._processInput(*fields)
+        for key in paramDict:
+            paramType, value1, value2, value3 = self._getParamData(paramDict[key])
+            if paramType.lower() not in ("integer", "float", "string", "dropdownlist", "listview"):
+                raise IncorrectParameterTypeError
+            if paramType == "integer":
+                self.input = QSpinBox()
+                if value2:
+                    self.input.setMinimum(int(value2))
+                if value3:
+                    self.input.setMaximum(int(value3))
+                if value1:
+                    self.input.setValue(int(value1))
+            elif paramType == "float":
+                self.input = QDoubleSpinBox()
+                if value2:
+                    self.input.setMinimum(float(value2))
+                if value3:
+                    self.input.setMaximum(float(value3))
+                if value1:
+                    self.input.setValue(float(value1))
+            elif paramType == "string":
+                self.input = QLineEdit()
+                if key=="Password": self.input.setEchoMode(QLineEdit.Password)
+                if value1:
+                    self.input.setText(value1)
+                else:
+                    self.input.setPlaceholderText("Enter your text")
+                #uncomment to set an input mask
+                #self.input.setInputMask('000.000.000.000;_')
+            elif paramType == "dropdownlist":
+                self.input = QComboBox()
+                self.input.addItems(lists[listCounter])
+                listCounter += 1
+                if value1:
+                    self.input.setCurrentIndex(int(value1))   
+            elif paramType == "listview":
+                self.input = QListWidget()
+                self.input.setSelectionMode(QAbstractItemView.ExtendedSelection)
+                self.input.addItems(lists[listCounter])
+                #self.input.setFlags(item.flags() | Qt.ItemIsUserCheckable)
+                #self.input.setCheckState(Qt.Unchecked)
+                # scroll bar 
+                scrollBar = QScrollBar(self) 
+                # setting vertical scroll bar to it 
+                self.input.setVerticalScrollBar(scrollBar)
+                self.input.setMinimumHeight(self.input.sizeHintForColumn(0))
+                self.input.setMinimumWidth(self.input.sizeHintForColumn(0))
+                listCounter += 1
+                
+            self.layout.addRow(key, self.input)
+            self.listWidget.append(self.input)
+        self.layout.addRow("", self.buttonBox)
+        self.setLayout(self.layout)
+        self.exec_()  #display input dialog
+        self.cancel = self.button=='Cancel'
+        self.values = self.returnListParameterValues()
+
 
 
     def _processInput(self, *fields):
@@ -334,10 +318,12 @@ class UserInput(QDialog):
                 field['value'] = [0]
 
             elif field["type"] == "dropdownlist":
-                if "value" not in field: field["value"] = 0
+                if "value" not in field: 
+                    field["value"] = 0
 
             elif field["type"] == "string":
-                if "value" not in field: field["value"] = "Hello"
+                if "value" not in field: 
+                    field["value"] = "Hello"
 
             elif field["type"] == "integer":
                 if "minimum" not in field: 
@@ -397,9 +383,11 @@ class UserInput(QDialog):
         lists = []
         for field in fields:
             if field["type"] == "listview":
-                lists.append(field["list"])
+                lists.append([str(v) for v in field["list"]])
+                #lists.append(field["list"])
             elif field["type"] == "dropdownlist":
-                lists.append(field["list"])
+                lists.append([str(v) for v in field["list"]])
+                #lists.append(field["list"])
         return dict, lists
 
 
@@ -454,12 +442,16 @@ class UserInput(QDialog):
                 if field["type"] == "listview":
                     value_list = outputList[f]
                     for v, value in enumerate(value_list):
-                        value_list[v] = field["list"].index(value) 
+                        ls = [str(item) for item in field["list"]]
+                        value_list[v] = ls.index(value) 
+                        #value_list[v] = field["list"].index(value) 
                     field["value"] = value_list
         
                 elif field["type"] == "dropdownlist":
                     value = outputList[f]
-                    field["value"] = field["list"].index(value) 
+                    ls = [str(item) for item in field["list"]]
+                    field["value"] = ls.index(value)
+                    #field["value"] = field["list"].index(value) 
     
                 elif field["type"] == "string":
                     field["value"] = outputList[f]
@@ -477,19 +469,16 @@ class UserInput(QDialog):
         in the same as order as the widgets
         on the input dialog from top most (first item in the list) 
         to the bottom most (last item in the list)."""
-        try:
-            paramList = []
-            for item in self.listWidget:
-                if isinstance(item, QLineEdit):
-                    paramList.append(item.text())
-                elif isinstance(item, QComboBox):
-                    paramList.append(item.currentText())
-                elif isinstance(item, QListWidget):
-                    paramList.append([itemText.text() for itemText in item.selectedItems()])
-                else:
-                    paramList.append(item.value())
 
-            return self._processOutput(self.fields, paramList)
-        except Exception as e:
-            print('Error in class UserInput.returnListParameterValues: ' + str(e))
-            #logger.error('Error in class UserInput.returnListParameterValues: ' + str(e)) 
+        paramList = []
+        for item in self.listWidget:
+            if isinstance(item, QLineEdit):
+                paramList.append(item.text())
+            elif isinstance(item, QComboBox):
+                paramList.append(item.currentText())
+            elif isinstance(item, QListWidget):
+                paramList.append([itemText.text() for itemText in item.selectedItems()])
+            else:
+                paramList.append(item.value())
+
+        return self._processOutput(self.fields, paramList)

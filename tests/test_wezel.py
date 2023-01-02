@@ -61,7 +61,8 @@ def test_launch():
     #app.set_menu(wezel.menus.test)
     app.show()
 
-    #remove_tmp_database(tmp)
+    if tmp != tristan:
+        remove_tmp_database(tmp)
     
 
 def test_DICOMFolderTree(interactive = True):

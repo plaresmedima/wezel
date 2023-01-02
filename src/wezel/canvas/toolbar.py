@@ -52,7 +52,7 @@ class ToolBar(QWidget):
         self.actionFitItemAndZoom.setMenu(self.menuZoomToScale)
         self.actionZoomIn = QAction(QIcon(icons.magnifier_zoom_in), 'Zoom in..', self)
         self.actionZoomOut = QAction(QIcon(icons.magnifier_zoom_out), 'Zoom out..', self)
-        self.actionOpacity = ActionOpacity(self)
+        self.actionOpacity = ActionOpacity()
         self.actionSetDefaultColor = QAction(QIcon(icons.contrast_low), 'Greyscale', self)
         self.actionSetDefaultColor.setToolTip('Set to default greyscale')
         self.actionUndo = QAction(QIcon(icons.arrow_curve_180_left), 'Undo..', self)
@@ -60,6 +60,7 @@ class ToolBar(QWidget):
         self.actionRedo = QAction(QIcon(icons.arrow_curve), 'Redo..', self)
         self.actionRedo.setEnabled(False)
         self.actionErase = QAction(QIcon(icons.cross_script), 'Erase..', self)
+        self.actionErase.setEnabled(False)
         
         # Connect signals to slots
         self.window.valueChanged.connect(lambda v: self.canvas.setWindow(v[0], v[1]))
@@ -67,10 +68,15 @@ class ToolBar(QWidget):
         self.actionFitItemAndZoom.triggered.connect(lambda: self.canvas.fitItem())
         self.actionZoomIn.triggered.connect(lambda: self.canvas.scale(2.0, 2.0))
         self.actionZoomOut.triggered.connect(lambda: self.canvas.scale(0.5, 0.5))
+        self.actionOpacity.triggered.connect(self.toggleOpacity)
+        self.actionOpacity.menu().triggered.connect(lambda action: self.canvas.maskItem.setOpacity(action.opacity))
         self.actionSetDefaultColor.triggered.connect(self.setDefaultColor)
         self.actionUndo.triggered.connect(self.undo)
         self.actionRedo.triggered.connect(self.redo)
-        self.actionErase.triggered.connect(lambda: self.canvas.maskItem.erase())
+        self.actionErase.triggered.connect(self.erase)
+        self.filters[2].windowChanged.connect(
+            lambda array, center, width, set: self.window.setData(array, center, width, set=set)
+        )
 
         # Add filters to action group so only one can be selected
         self.group = QActionGroup(self)
@@ -89,7 +95,7 @@ class ToolBar(QWidget):
         if canvas == self.canvas:
             return
         self.setEnabled(True)
-        self.setRedoUndoEnabled(False)
+        self.setEditMaskEnabled(False)
         self.canvas = canvas
         self.canvas.toolBar = self
         self.canvas.setFilter(self.group.checkedAction().filter)
@@ -102,51 +108,69 @@ class ToolBar(QWidget):
                 color=canvas._model.color(), 
                 opacity=self.actionOpacity.opacity())
                 #opacity=self.opacity())
-        
 
+    def toggleOpacity(self):
+        if self.canvas.maskItem is None:
+            return
+        if self.canvas.maskItem.opacity() <= 0.25:
+            opacity = 0.75
+        else: 
+            opacity = 0.25
+        self.canvas.maskItem.setOpacity(opacity)
+        self.actionOpacity.setOpacity(opacity)
+        
     def maskChanged(self):
-        self.setRedoUndoEnabled()
+        self.setEditMaskEnabled()
     
     def newRegion(self):
-        self.setRedoUndoEnabled()
+        self.setEditMaskEnabled()
         self.regionList.setView()
 
-    def newImage(self, image):
-        self.setRedoUndoEnabled()
+    def setArray(self, array, center, width, colormap):
+        self.setEditMaskEnabled()
         if self.window.mode.isLocked:
             v = self.window.getValue()
             cmap = self.filters[2].getColorMap()
             self.canvas.setWindow(v[0], v[1])
             self.canvas.setColormap(cmap)
         else:
-            self.window.setData(
-                image.array(), 
-                self.canvas.center(), 
-                self.canvas.width())
-            self.filters[2].setChecked(self.canvas.colormap())
+            self.window.setData(array, center, width)
+            self.filters[2].setChecked(colormap)
 
-    def setRedoUndoEnabled(self, enable=None):
+    def setEditMaskEnabled(self, enable=None):
         if enable is None:
             item = self.canvas.maskItem
             undoEnable = item._current!=0 and item._current is not None
             redoEnable = item._current!=len(item._bin)-1 and item._current is not None
+            if item.bin() is None:
+                eraseEnable = False
+            else:
+                eraseEnable = item.bin().any()
         else:
             undoEnable = enable
             redoEnable = enable
+            eraseEnable = enable
         self.actionUndo.setEnabled(undoEnable)
         self.actionRedo.setEnabled(redoEnable)
+        self.actionErase.setEnabled(eraseEnable)
 
     def undo(self):
         item = self.canvas.maskItem
         item.undo()
         self.canvas.saveMask()
-        self.setRedoUndoEnabled()
+        self.setEditMaskEnabled()
 
     def redo(self):
         item = self.canvas.maskItem
         item.redo()
         self.canvas.saveMask()
-        self.setRedoUndoEnabled()
+        self.setEditMaskEnabled()
+
+    def erase(self):
+        item = self.canvas.maskItem
+        item.erase()
+        self.canvas.saveMask()
+        self.setEditMaskEnabled()
 
     def setDefaultColor(self):
         self.canvas.setWindow()
@@ -337,12 +361,12 @@ class ToolBarView():
 
 
 class ActionOpacity(QAction):
-    def __init__(self, toolBar):
+    def __init__(self):
         super().__init__()
-        self.toolBar = toolBar
+        #self.toolBar = toolBar
         menu = QMenu()
         menu.setIcon(QIcon(icons.layer_transparent))
-        menu.triggered.connect(lambda action: toolBar.canvas.maskItem.setOpacity(action.opacity))
+        # self.menu.triggered.connect(lambda action: toolBar.canvas.maskItem.setOpacity(action.opacity))
         actionGroup = QActionGroup(menu)
         settings = {
             '100%': 0.0,
@@ -364,17 +388,17 @@ class ActionOpacity(QAction):
         self.setText('Transparency')
         self.setIcon(icon)
         self.setMenu(menu)
-        self.triggered.connect(self.toggleOpacity)
+        #self.triggered.connect(self.toggleOpacity)
 
-    def toggleOpacity(self):
-        if self.toolBar.canvas.maskItem is None:
-            return
-        if self.toolBar.canvas.maskItem.opacity() <= 0.25:
-            opacity = 0.75
-        else: 
-            opacity = 0.25
-        self.toolBar.canvas.maskItem.setOpacity(opacity)
-        self.setOpacity(opacity)
+    # def toggleOpacity(self):
+    #     if self.toolBar.canvas.maskItem is None:
+    #         return
+    #     if self.toolBar.canvas.maskItem.opacity() <= 0.25:
+    #         opacity = 0.75
+    #     else: 
+    #         opacity = 0.25
+    #     self.toolBar.canvas.maskItem.setOpacity(opacity)
+    #     self.setOpacity(opacity)
 
     def opacity(self):
         menu = self.menu()
