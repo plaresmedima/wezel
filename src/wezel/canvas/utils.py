@@ -7,15 +7,19 @@ from skimage import feature
 import cv2 as cv2
 
 
-def region_grow_add(img, selected, to_select, min, max):
+def region_grow_add(img, selected, seed, min, max):
     width, height = img.shape
-    checked = np.copy(selected)
-    neighbours = [
-        [-1, -1], [0, -1], [1, -1], [1, 0], [1, 1], 
-        [0, 1], [-1, 1], [-1, 0]
+    checked = np.copy(selected) 
+    # neighbours = [ #should not include corners?
+    #     [-1, -1], [0, -1], [1, -1], [1, 0], [1, 1], 
+    #     [0, 1], [-1, 1], [-1, 0]
+    # ]
+    neighbours = [ 
+        [0, -1], [1, 0], 
+        [0, 1], [-1, 0],
     ]
-    while to_select != []:
-        p = to_select.pop()
+    while seed != []:
+        p = seed.pop()
         selected[p[0], p[1]] = True
         for next in neighbours:
             x = p[0] + next[0]
@@ -25,15 +29,19 @@ def region_grow_add(img, selected, to_select, min, max):
             if not checked[x,y]:
                 checked[x,y] = True
                 if min <= img[x,y] <= max:
-                    to_select.append([x,y])
+                    seed.append([x,y])
     return selected
 
 def region_grow_remove(img, selected, to_select, min, max):
     width, height = img.shape
     checked = np.copy(np.logical_not(selected))
-    neighbours = [
-        [-1, -1], [0, -1], [1, -1], [1, 0], [1, 1], 
-        [0, 1], [-1, 1], [-1, 0]
+    # neighbours = [
+    #     [-1, -1], [0, -1], [1, -1], [1, 0], [1, 1], 
+    #     [0, 1], [-1, 1], [-1, 0]
+    # ]
+    neighbours = [ 
+        [0, -1], [1, 0], 
+        [0, 1], [-1, 0],
     ]
     while to_select != []:
         p = to_select.pop()
@@ -87,25 +95,6 @@ def colormap_to_LUT(cmap):
         RGB = RGBA[:,:3]
     return RGB
 
-# HELPER FUNCTION ADAPTED FROM pyQtGraph
-
-# THIS HAS BECOME OBSOLETE
-# def makeQImage(imgData):
-
-#     # if not imgData.flags['C_CONTIGUOUS']:
-#     #     imgData = np.ascontiguousarray(imgData)
-#     # else:
-#     #     imgData = imgData.copy() 
-              
-#     try:
-#         img = QImage(imgData, imgData.shape[1], imgData.shape[0], QImage.Format_RGB32)
-#     #    img = QImage(imgData.ctypes.data, imgData.shape[1], imgData.shape[0], QImage.Format_RGB32)
-#     except:
-#         img = QImage(memoryview(imgData), imgData.shape[1], imgData.shape[0], QImage.Format_RGB32)
-                
-#     #img.data = imgData
-    
-#     return img 
 
 
 def kidneySegmentation(img_array,pixelY,pixelX,pixelSize,side=None):

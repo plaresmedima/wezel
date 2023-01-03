@@ -2,6 +2,7 @@ import math
 import numpy as np
 from matplotlib.path import Path as MplPath
 import cv2 as cv2
+import skimage
 
 from PyQt5.QtCore import Qt, QRectF, QPointF
 from PyQt5.QtWidgets import QAction, QMenu, QActionGroup
@@ -128,6 +129,8 @@ class MaskPenSet(canvas.FilterSet):
             MaskPenPolygon(mode=mode),
             MaskPenRectangle(mode=mode),
             MaskPenCircle(mode=mode),
+            MaskPenContour(mode=mode),
+            MaskPenAllContours(mode=mode),
         ]
         self.icon = self.filters[0].icon
         self.text = self.filters[0].text
@@ -176,14 +179,23 @@ class MaskPenFreehand(MaskPen):
         self.iconInSet = QIcon(icons.layer_shape_curve)
         self.textInSet = 'Freehand'
         self.path = None
+        # self.xc = None
+        # self.yc = None
 
-    def initialize(self):
-        # Called by the canvas after the filter is set to a scene
-        item = self.scene().parent().imageItem
-        nx, ny = item._array.shape[0], item._array.shape[1]
-        x, y = np.arange(0.5, 0.5+nx), np.arange(0.5, 0.5+ny)
-        self.xc, self.yc = np.meshgrid(x, y, indexing='ij')
-        self.locations = list(zip(self.xc.flatten(), self.yc.flatten()))
+    # def initialize(self):
+    #     # Called by the canvas after the filter is set to a scene
+    #     # And when a new image is set to the scene
+    #     item = self.scene().parent().imageItem
+    #     set_attributes = False
+    #     if self.xc is None:
+    #         set_attributes = True
+    #     elif self.xc.shape != item._array.shape:
+    #         set_attributes = True
+    #     if set_attributes:
+    #         nx, ny = item._array.shape[0], item._array.shape[1]
+    #         x, y = np.arange(0.5, 0.5+nx), np.arange(0.5, 0.5+ny)
+    #         self.xc, self.yc = np.meshgrid(x, y, indexing='ij')
+    #         self.locations = list(zip(self.xc.flatten(), self.yc.flatten()))
         
     def paint(self, painter, option, widget):
         if self.path is None: 
@@ -234,11 +246,9 @@ class MaskPenFreehand(MaskPen):
         if len(self.path) == 0: 
             return
         item = self.scene().parent().maskItem
-        nx, ny = item.bin().shape[0], item.bin().shape[1]
-        roiPath = MplPath(self.path, closed=True)
-        # This is the rate limiting step
-        # Try using QPpolygonF instead
-        bin = roiPath.contains_points(self.locations, radius=0.0).reshape((nx, ny))
+        bin = np.zeros(item.bin().shape, dtype=bool)
+        rr, cc = skimage.draw.polygon([p[0]-0.5 for p in self.path], [p[1]-0.5 for p in self.path], item.bin().shape)
+        bin[rr, cc] = True
         if self.mode == "draw":
             item.setBin(np.logical_or(item.bin(), bin))
         elif self.mode == "cut":
@@ -316,6 +326,22 @@ class MaskPenRectangle(MaskPenFreehand):
         self.textInSet = 'Rectangle'
         self.corner1 = None
         self.corner2 = None
+        self.xc = None
+        self.yc = None
+
+    def initialize(self):
+        # Called by the canvas after the filter is set to a scene
+        # And when a new image is set to the scene
+        item = self.scene().parent().imageItem
+        set_attributes = False
+        if self.xc is None:
+            set_attributes = True
+        elif self.xc.shape != item._array.shape:
+            set_attributes = True
+        if set_attributes:
+            nx, ny = item._array.shape[0], item._array.shape[1]
+            x, y = np.arange(0.5, 0.5+nx), np.arange(0.5, 0.5+ny)
+            self.xc, self.yc = np.meshgrid(x, y, indexing='ij')
 
     def paint(self, painter, option, widget):
         if self.corner2 is None: 
@@ -387,6 +413,22 @@ class MaskPenCircle(MaskPenFreehand):
         self.textInSet = 'Circle'
         self.center = None
         self.radius = None
+        self.xc = None
+        self.yc = None
+
+    def initialize(self):
+        # Called by the canvas after the filter is set to a scene
+        # And when a new image is set to the scene
+        item = self.scene().parent().imageItem
+        set_attributes = False
+        if self.xc is None:
+            set_attributes = True
+        elif self.xc.shape != item._array.shape:
+            set_attributes = True
+        if set_attributes:
+            nx, ny = item._array.shape[0], item._array.shape[1]
+            x, y = np.arange(0.5, 0.5+nx), np.arange(0.5, 0.5+ny)
+            self.xc, self.yc = np.meshgrid(x, y, indexing='ij')
 
     def paint(self, painter, option, widget):
         if self.center is None: 
@@ -437,6 +479,187 @@ class MaskPenCircle(MaskPenFreehand):
         elif self.mode == "catch":
             item.setBin(np.logical_and(item.bin(), d_sq <= self.radius**2))
         item.setDisplay()
+
+
+class MaskPenContour(MaskPenFreehand):
+    """Rectangle region drawing tool.
+    
+    Features
+    --------
+    >>> Left click and drag to draw, release to close
+    >>> Right click to change the pen properties
+    """
+
+    def __init__(self, mode="draw"):
+        super().__init__(mode=mode)
+        self.iconInSet = QIcon(icons.layer_shape_round)
+        self.textInSet = 'Contour'
+        self.contour = None
+
+    def paint(self, painter, option, widget):
+        if self.contour is None: 
+            return
+        pen = QPen()
+        pen.setColor(QColor(Qt.white))
+        pen.setWidth(0)
+        painter.setPen(pen)
+        position = self.contour[0,:]
+        p1 = QPointF(position[0]+0.5, position[1]+0.5)
+        n = self.contour.shape[0]
+        for i in range(n)[1:]:
+            position = self.contour[i,:]
+            p2 = QPointF(position[0]+0.5, position[1]+0.5)
+            painter.drawLine(p1, p2)
+            p1 = p2
+        position = self.contour[0,:]
+        p2 = QPointF(position[0]+0.5, position[1]+0.5)
+        painter.drawLine(p1, p2)
+
+    def mousePressEvent(self, event):
+        self.x = int(event.pos().x())
+        self.y = int(event.pos().y())
+        if event.button() == Qt.LeftButton:
+            self.contour = self.findContour()
+            item = self.scene().parent().maskItem
+            item.extend()
+            item.update()
+
+    def mouseMoveEvent(self, event):
+        self.x = int(event.pos().x())
+        self.y = int(event.pos().y())
+        buttons = event.buttons()
+        if buttons == Qt.LeftButton:
+            self.contour = self.findContour()
+            item = self.scene().parent().maskItem
+            item.update()
+
+    def mouseReleaseEvent(self, event):
+        self.x = int(event.pos().x())
+        self.y = int(event.pos().y())
+        button = event.button()
+        if button == Qt.LeftButton:
+            if self.contour is not None:
+                self.fillContour()
+                self.contour = None
+
+    def findContour(self):
+        array = self.scene().parent().imageItem._array
+        nx, ny = array.shape
+        if (self.x < 0) or (self.y < 0) or (self.x > nx-1) or (self.y > ny-1):
+            return
+        contours = skimage.measure.find_contours(array, level=array[self.x, self.y])
+        # Extract only the contour that goes through the current position
+        for contour in contours:
+            n = contour.shape[0]
+            for i in range(n):
+                p = contour[i,:]
+                if (p[0] == self.x) and (p[1] == self.y):
+                    return contour
+
+    def fillContour(self):
+        item = self.scene().parent().maskItem
+        bin = np.zeros(item.bin().shape, dtype=bool)
+        rr, cc = skimage.draw.polygon(self.contour[:, 0], self.contour[:, 1], item.bin().shape)
+        bin[rr, cc] = True
+        if self.mode == "draw":
+            item.setBin(np.logical_or(item.bin(), bin))
+        elif self.mode == "cut":
+            item.setBin(np.logical_and(item.bin(), np.logical_not(bin)))
+        elif self.mode == "catch":
+            item.setBin(np.logical_and(item.bin(), bin))
+        item.setDisplay()
+
+
+class MaskPenAllContours(MaskPenFreehand):
+    """Rectangle region drawing tool.
+    
+    Features
+    --------
+    >>> Left click and drag to draw, release to close
+    >>> Right click to change the pen properties
+    """
+
+    def __init__(self, mode="draw"):
+        super().__init__(mode=mode)
+        self.iconInSet = QIcon(icons.layer_shape_round)
+        self.textInSet = 'All contours'
+        self.contours = None
+
+    def paint(self, painter, option, widget):
+        if self.contours is None: 
+            return
+        pen = QPen()
+        pen.setColor(QColor(Qt.white))
+        pen.setWidth(0)
+        painter.setPen(pen)
+        for contour in self.contours:
+            position = contour[0,:]
+            p1 = QPointF(position[0]+0.5, position[1]+0.5)
+            n = contour.shape[0]
+            for i in range(n)[1:]:
+                position = contour[i,:]
+                p2 = QPointF(position[0]+0.5, position[1]+0.5)
+                painter.drawLine(p1, p2)
+                p1 = p2
+            position = contour[0,:]
+            p2 = QPointF(position[0]+0.5, position[1]+0.5)
+            painter.drawLine(p1, p2)
+
+    def mousePressEvent(self, event):
+        self.x = int(event.pos().x())
+        self.y = int(event.pos().y())
+        if event.button() == Qt.LeftButton:
+            self.contours = self.findContours()
+            item = self.scene().parent().maskItem
+            item.extend()
+            item.update()
+
+    def mouseMoveEvent(self, event):
+        self.x = int(event.pos().x())
+        self.y = int(event.pos().y())
+        buttons = event.buttons()
+        if buttons == Qt.LeftButton:
+            self.contours = self.findContours()
+            item = self.scene().parent().maskItem
+            item.update()
+
+    def mouseReleaseEvent(self, event):
+        self.x = int(event.pos().x())
+        self.y = int(event.pos().y())
+        button = event.button()
+        if button == Qt.LeftButton:
+            if self.contours is not None:
+                self.fillContours()
+                self.contours = None
+
+    def findContours(self):
+        array = self.scene().parent().imageItem._array
+        nx, ny = array.shape
+        if (self.x < 0) or (self.y < 0) or (self.x > nx-1) or (self.y > ny-1):
+            return
+        item = self.scene().parent().maskItem
+        if item.bin() is None:
+            return skimage.measure.find_contours(array, level=array[self.x, self.y])
+        elif item.bin().any():
+            return skimage.measure.find_contours(array, level=array[self.x, self.y], mask=item.bin())
+        else:
+            return skimage.measure.find_contours(array, level=array[self.x, self.y])
+
+    def fillContours(self):
+        item = self.scene().parent().maskItem
+        bin = np.zeros(item.bin().shape, dtype=bool)
+        for contour in self.contours:
+            rr, cc = skimage.draw.polygon(contour[:, 0], contour[:, 1], item.bin().shape)
+            bin[rr, cc] = True
+        if self.mode == "draw":
+            item.setBin(np.logical_or(item.bin(), bin))
+        elif self.mode == "cut":
+            item.setBin(np.logical_and(item.bin(), np.logical_not(bin)))
+        elif self.mode == "catch":
+            item.setBin(np.logical_and(item.bin(), bin))
+        item.setDisplay()
+
+
 
 
 class MaskThreshold(canvas.FilterItem):
@@ -507,7 +730,6 @@ class MaskThreshold(canvas.FilterItem):
         item.setDisplay()
 
 
-
 class MaskPaintByNumbers(MaskBrush):
 
     def setMode(self, mode):
@@ -524,21 +746,23 @@ class MaskPaintByNumbers(MaskBrush):
             self.text = 'Erase by numbers'
         self.icon = QIcon(pixMap)
 
-    def initialize(self):
-        #cnvs = self.scene().parent()
-        #self.array = cnvs.image.get_pixel_array()
-        item = self.scene().parent().imageItem
-        self.array = item._array
+    # def initialize(self):
+    #     #cnvs = self.scene().parent()
+    #     #self.array = cnvs.image.get_pixel_array()
+    #     item = self.scene().parent().imageItem
+    #     self.array = item._array
 
     def paintPixels(self):
         item = self.scene().parent().maskItem
+        array = self.scene().parent().imageItem._array
         min = max = None 
         w = int((self.brushSize - 1)/2)
         for x in range(self.x-w, self.x+w+1, 1):
             if 0 <= x < item.bin().shape[0]:
                 for y in range(self.y-w, self.y+w+1, 1):
                     if 0 <= y < item.bin().shape[1]:
-                        v = self.array[x,y]
+                        #v = self.array[x,y]
+                        v = array[x,y]
                         if min is None:
                             min = max = v
                         else:
@@ -549,15 +773,17 @@ class MaskPaintByNumbers(MaskBrush):
         if min is None or max is None:
             return
         if self.mode == 'paint':
-            inrange = np.logical_and(min <= self.array, self.array <= max)
+            #inrange = np.logical_and(min <= self.array, self.array <= max)
+            inrange = np.logical_and(min <= array, array <= max)
             item.setBin(np.logical_or(item.bin(), inrange))
         else:
-            inrange = np.logical_or(self.array < min, max < self.array)
+            #inrange = np.logical_or(self.array < min, max < self.array)
+            inrange = np.logical_or(array < min, max < array)
             item.setBin(np.logical_and(item.bin(), inrange))
         item.setDisplay()
 
 
-class MaskRegionGrowing(MaskPaintByNumbers):
+class MaskRegionGrowing(MaskBrush):
 
     def __init__(self, tolerance=5.0, mode='paint'):
         self.tolerance = tolerance
@@ -577,9 +803,18 @@ class MaskRegionGrowing(MaskPaintByNumbers):
             self.text = 'Erase by growing..'
         self.icon = QIcon(pixMap)
 
+    # def initialize(self):
+    #     #cnvs = self.scene().parent()
+    #     #self.array = cnvs.image.get_pixel_array()
+    #     item = self.scene().parent().imageItem
+    #     self.array = item._array
+
     def paintPixels(self):
         # Get range of values under brush
         item = self.scene().parent().maskItem
+        array = self.scene().parent().imageItem._array
+        # Build a seed list of all pixels under the brush
+        # and find minimum and maximum value over the seeds
         seed = []
         min = max = None 
         w = int((self.brushSize - 1)/2)
@@ -587,26 +822,29 @@ class MaskRegionGrowing(MaskPaintByNumbers):
             if 0 <= x < item.bin().shape[0]:
                 for y in range(self.y-w, self.y+w+1, 1):
                     if 0 <= y < item.bin().shape[1]:
-                        v = self.array[x,y]
+                        seed.append([x,y])
+                        #v = self.array[x,y]
+                        v = array[x,y]
                         if min is None:
                             min = max = v
                         else:
                             if v < min:
                                 min = v
-                            if v > max:
+                            elif v > max:
                                 max = v
-                        seed.append([x,y])
-
         if min is None or max is None:
             return
+        # Find the range of values with the given tolerance
         center = (max+min)/2
         width = self.tolerance*(max-min)/2
         max, min = center+width, center-width
-        # Grow to include all pixels in the same range
+        # Grow region to include all pixels in the same range
         if self.mode == 'paint':
-            canvas.utils.region_grow_add(self.array, item.bin(), seed, min, max)
+            #canvas.utils.region_grow_add(self.array, item.bin(), seed, min, max)
+            canvas.utils.region_grow_add(array, item.bin(), seed, min, max)
         else:
-            canvas.utils.region_grow_remove(self.array, item.bin(), seed, min, max)
+            #canvas.utils.region_grow_remove(self.array, item.bin(), seed, min, max)
+            canvas.utils.region_grow_remove(array, item.bin(), seed, min, max)
         item.setDisplay()
 
     def setOptions(self, option):
@@ -780,19 +1018,19 @@ class MaskKidneyEdgeDetection(canvas.FilterItem):
         self.text = 'Kidney picker'
         self.setActionPick()
 
-    def initialize(self):
-        item = self.scene().parent().imageItem
-        self.array = item._array
+    # def initialize(self):
+    #     item = self.scene().parent().imageItem
+    #     self.array = item._array
 
     def mousePressEvent(self, event):
         self.x = int(event.pos().x())
         self.y = int(event.pos().y())
-        cnvs = self.scene().parent()
-        item = cnvs.maskItem
         if event.button() == Qt.LeftButton:
-            p = [self.x, self.y]
-            pixelSize = cnvs.parent().sliders.image.PixelSpacing
-            pixels = canvas.utils.kidneySegmentation(self.array, p[1], p[0], pixelSize)
+            cnvs = self.scene().parent()
+            array = cnvs.imageItem._array
+            item = cnvs.maskItem
+            pixelSize = cnvs.parent().sliders.image.PixelSpacing # Hack!!! Some filters need access to geometry!
+            pixels = canvas.utils.kidneySegmentation(array, self.y, self.x, pixelSize)
             if pixels is not None:
                 item.extend()
                 item.setBin(np.logical_or(item.bin(), pixels.astype(np.bool8)))

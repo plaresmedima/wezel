@@ -68,6 +68,7 @@ class Canvas(QGraphicsView):
         if filter is not None:
             filter.prepareGeometryChange()
             filter.boundingRectangle = self.scene().sceneRect()
+            filter.initialize()
         self.setMask(None)
         return item
 

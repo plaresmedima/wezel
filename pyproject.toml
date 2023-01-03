@@ -17,7 +17,9 @@ dependencies = [
   "opencv-python<=4.5.3.56", # hack to fix a bug in building executable
   # Consider removing limit on open-cvversion number 
   # -> creates installation issues (wheel no longer up to date)
-  "scikit-image"
+  # Or consider removing opencv as dependency. Is scikit not enough?
+  "scikit-image",
+  "scipy",
 ]
 
 # optional information

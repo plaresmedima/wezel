@@ -31,6 +31,7 @@ __all__ = [
     'layer_shape_ellipse',
     'layer_shape_curve',
     'layer_shape_polygon',
+    'layer_shape_round',
     'layer_transparent', 
     'lifebuoy',
     'lock', 
@@ -114,6 +115,7 @@ layer_shape = str(f.joinpath('layer-shape.png'))
 layer_shape_ellipse = str(f.joinpath('layer-shape-ellipse.png'))
 layer_shape_curve = str(f.joinpath('layer-shape-curve.png'))
 layer_shape_polygon = str(f.joinpath('layer-shape-polygon.png'))
+layer_shape_round = str(f.joinpath('layer-shape-round.png'))
 layer_transparent = str(f.joinpath('layer-transparent.png'))
 lifebuoy = str(f.joinpath('lifebuoy.png'))
 lock = str(f.joinpath('lock.png'))
