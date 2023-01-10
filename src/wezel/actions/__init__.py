@@ -4,7 +4,10 @@ from . import (
     edit,
     folder,
     view,
-    test
+    test,
+    filter,
+    segment,
+    transform,
 )
 
 

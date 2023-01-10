@@ -68,27 +68,18 @@ def all(parent):
     
 
 class Test_FileWrite(wezel.Action):
-    def enable(self, app):
-        return True
-
     def run(self, app):
         window = wezel.widgets.LoggingWidget(test_file_write)
         app.addAsSubWindow(window, "Test File Write and Logging to GUI")
 
 
 class Test_LoggingToGUI(wezel.Action):
-    def enable(self, app):
-        return True
-
     def run(self, app):
         window = wezel.widgets.LoggingWidget(test_Function, start=1,end=10)
         app.addAsSubWindow(window, "Test Logging to GUI")
 
 
 class Test_UserInput(wezel.Action):
-    def enable(self, app):
-            return True
-
     def run(self, app): 
         filters = ["Gaussian", "Uniform", "Median", "Maximum", "Wiener"]
         flavours = ["Chocolate", "Vanilla", "Strawberry"]
@@ -113,10 +104,7 @@ class Test_UserInput(wezel.Action):
 
 
 class Test_Copy(wezel.Action):
-
     def enable(self, app):
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected(3) != 0
 
     def run(self, app):
@@ -125,10 +113,7 @@ class Test_Copy(wezel.Action):
         app.addAsSubWindow(window, "Test Logging to GUI while copying DICOM series")
        
 
-class Test_ArrayCopy(wezel.Action):
-    def enable(self, app):
-        return True
-       
+class Test_ArrayCopy(wezel.Action):  
     def run(self, app):
         window = wezel.widgets.LoggingWidget(test_array_copy, start=10,end=20)
         app.addAsSubWindow(window, "Test Logging to GUI while copying numpy arrays")
@@ -138,9 +123,6 @@ class Test_Export(wezel.Action):
     """Export selected series"""
 
     def enable(self, app):
-
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected(3) != 0
 
     def run(self, app):

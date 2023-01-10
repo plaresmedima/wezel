@@ -1,3 +1,4 @@
+import numpy as np
 import dbdicom as db
 import wezel
 
@@ -11,7 +12,8 @@ def all(parent):
     parent.action(MergeSeries, text='Series > Merge')
     parent.action(GroupSeries, text='Series > Group')
     parent.action(SeriesRename, text='Series > Rename')
-    parent.action(SeriesExtract, text='Series > Extract subseries')
+    parent.action(SeriesExtractByIndex, text='Series > Extract subseries (by index)')
+    parent.action(SeriesExtractByValue, text='Series > Extract subseries (by value)')
     parent.separator()
     parent.action(DeleteStudies, text='Studies > Delete')
     parent.action(Copy, text='Studies > Copy', generation=2)
@@ -34,17 +36,15 @@ def all(parent):
 class Copy(wezel.Action):
 
     def enable(self, app):
-
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected(self.generation) != 0
 
     def run(self, app):
 
         app.status.message("Copying..")
-        records = app.get_selected(self.generation)        
+        records = app.get_selected(self.generation)   
+        # This can be faster - copy all in one go     
         for j, record in enumerate(records):
-            app.status.progress(j, len(records), 'Copying..')
+            #app.status.progress(j, len(records), 'Copying..')
             record.copy()               
         app.refresh()
 
@@ -52,8 +52,6 @@ class Copy(wezel.Action):
 class Delete(wezel.Action):
 
     def enable(self, app):
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected(self.generation) != 0
 
     def run(self, app):
@@ -68,8 +66,6 @@ class Delete(wezel.Action):
 class DeleteSeries(wezel.Action):
 
     def enable(self, app):
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected('Series') != 0
 
     def run(self, app):
@@ -82,8 +78,6 @@ class DeleteSeries(wezel.Action):
 class DeleteStudies(wezel.Action):
 
     def enable(self, app):
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected('Studies') != 0
 
     def run(self, app):
@@ -96,8 +90,6 @@ class DeleteStudies(wezel.Action):
 class CopySeries(wezel.Action):
 
     def enable(self, app):
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected('Series') != 0
 
     def run(self, app):
@@ -119,8 +111,6 @@ class CopySeries(wezel.Action):
 class MoveSeries(wezel.Action):
 
     def enable(self, app):
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected('Series') != 0
 
     def run(self, app):
@@ -142,8 +132,6 @@ class MoveSeries(wezel.Action):
 class MoveStudies(wezel.Action):
 
     def enable(self, app):
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected('Studies') != 0
 
     def run(self, app):
@@ -165,8 +153,6 @@ class MoveStudies(wezel.Action):
 class CopyStudies(wezel.Action):
 
     def enable(self, app):
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected('Studies') != 0
 
     def run(self, app):
@@ -188,8 +174,6 @@ class CopyStudies(wezel.Action):
 class NewSeries(wezel.Action):
 
     def enable(self, app):
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected('Studies') != 0
 
     def run(self, app): 
@@ -203,8 +187,6 @@ class NewSeries(wezel.Action):
 class NewStudy(wezel.Action):
 
     def enable(self, app):
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected('Patients') != 0
 
     def run(self, app): 
@@ -218,8 +200,6 @@ class NewStudy(wezel.Action):
 class NewPatient(wezel.Action):
 
     def enable(self, app):
-        if not hasattr(app, 'folder'):
-            return False
         return True
 
     def run(self, app): 
@@ -231,16 +211,14 @@ class NewPatient(wezel.Action):
 class MergeSeries(wezel.Action):
 
     def enable(self, app):
-
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected('Series') != 0
 
     def run(self, app): 
 
         app.status.message('Merging..')
         records = app.selected('Series')
-        study = records[0].new_pibling(StudyDescription='Merger')
+        #study = records[0].new_pibling(StudyDescription='Merger')
+        study = records[0].parent()
         series = study.new_series(SeriesDescription='Merged series')
         db.merge(records, series)
         app.refresh()
@@ -249,8 +227,6 @@ class MergeSeries(wezel.Action):
 class MergeStudies(wezel.Action):
 
     def enable(self, app):
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected('Studies') != 0
 
     def run(self, app): 
@@ -263,8 +239,6 @@ class MergeStudies(wezel.Action):
 class MergePatients(wezel.Action):
 
     def enable(self, app):
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected('Patients') != 0
 
     def run(self, app): 
@@ -278,8 +252,6 @@ class MergePatients(wezel.Action):
 class GroupSeries(wezel.Action):
 
     def enable(self, app):
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected('Series') != 0
 
     def run(self, app): 
@@ -293,8 +265,6 @@ class GroupSeries(wezel.Action):
 class GroupStudies(wezel.Action):
 
     def enable(self, app):
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected('Studies') != 0
 
     def run(self, app): 
@@ -309,8 +279,6 @@ class GroupStudies(wezel.Action):
 class SeriesRename(wezel.Action):
 
     def enable(self, app):
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected('Series') != 0
 
     def run(self, app): 
@@ -328,8 +296,6 @@ class SeriesRename(wezel.Action):
 class StudiesRename(wezel.Action):
 
     def enable(self, app):
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected('Studies') != 0
 
     def run(self, app): 
@@ -346,8 +312,6 @@ class StudiesRename(wezel.Action):
 class PatientsRename(wezel.Action):
 
     def enable(self, app):
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected('Patients') != 0
 
     def run(self, app): 
@@ -361,12 +325,9 @@ class PatientsRename(wezel.Action):
         app.refresh()
 
 
-class SeriesExtract(wezel.Action):
+class SeriesExtractByIndex(wezel.Action):
 
     def enable(self, app):
-
-        if not hasattr(app, 'folder'):
-            return False
         return app.nr_selected(3) != 0
 
     def run(self, app):
@@ -374,6 +335,7 @@ class SeriesExtract(wezel.Action):
         # Get source data
         series = app.get_selected(3)[0]
         _, slices = series.get_pixel_array(['SliceLocation', 'AcquisitionTime'])
+        series.status.hide()
         nz, nt = slices.shape[0], slices.shape[1]
         x0, x1, t0, t1 = 0, nz, 0, nt
 
@@ -394,9 +356,61 @@ class SeriesExtract(wezel.Action):
                 app.dialog.information("Invalid selection - first index must be lower than second")
 
         # Extract series and save
-        study = series.parent().new_sibling(StudyDescription='Extracted Series')
+        #study = series.parent().new_sibling(StudyDescription='Extracted Series')
         indices = ' [' + str(x0) + ':' + str(x1) 
         indices += ', ' + str(t0) + ':' + str(t1) + ']'
-        new_series = study.new_child(SeriesDescription = series.SeriesDescription + indices)
-        db.copy_to(slices[x0:x1,t0:t1,:], new_series)
+        #new_series = study.new_child(SeriesDescription = series.SeriesDescription + indices)
+        new_series = series.new_sibling(SeriesDescription = slices[0,0,0].SeriesDescription + indices)
+        #db.copy_to(slices[x0:x1,t0:t1,:], new_series)
+        new_series.adopt(np.ravel(slices[x0:x1,t0:t1,:]).tolist())
+        app.refresh()
+
+
+class SeriesExtractByValue(wezel.Action):
+
+    def enable(self, app):
+        return app.nr_selected(3) != 0
+
+    def run(self, app):
+
+        # Get source data
+        series = app.get_selected(3)[0]
+        slice_locations = series.SliceLocation
+        if not isinstance(slice_locations, list):
+            slice_locations = [slice_locations]
+        acquisition_times = series.AcquisitionTime
+        if not isinstance(acquisition_times, list):
+            acquisition_times = [acquisition_times]
+        series.status.hide()
+
+        # Get user input
+        cancel, f = app.dialog.input(
+            {"type":"listview", "label":"Slice locations..", 'list': slice_locations},
+            {"type":"listview", "label":"Acquisition times..", 'list': acquisition_times},
+            title='Select parameter ranges')
+        if cancel: 
+            return
+        if f[0]['value'] != []:
+            slice_locations = [slice_locations[i] for i in f[0]['value']]
+        if f[1]['value'] != []:
+            acquisition_times = [acquisition_times[i] for i in f[1]['value']]
+
+        # Find matching instances
+        all = series.instances()
+        instances = []
+        for i, instance in enumerate(all):
+            series.status.progress(i, len(all), 'Finding instances..')
+            v = instance[['SliceLocation', 'AcquisitionTime']]
+            if (v[0] in slice_locations) and (v[1] in acquisition_times):
+                instances.append(instance)
+        series.status.hide()
+        if instances == []:
+            return
+
+        # Copy matching instances into new series
+        series.status.message('Çopying to series..')
+        desc = instances[0].SeriesDescription + ' [subseries]'
+        new_series = series.new_sibling(SeriesDescription = desc)
+        new_series.adopt(instances)
+        series.status.hide()
         app.refresh()

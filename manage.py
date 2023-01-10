@@ -2,6 +2,13 @@ import os
 import sys
 import venv
 
+# to build an executable of wezel, open the script exec.py and run it it check wezel opens fine
+# Then do:
+# pyinstaller --name wezel --clean --onefile --noconsole --additional-hooks-dir=. exec.py
+# or with splash screen
+# pyinstaller --name wezel --clean --onefile --noconsole --additional-hooks-dir=. --splash wezel.jpg exec.py
+# When this is done you will find the executable wezel.exe in the folder dist
+
 def distribute():
     """Upload new version on PyPI
     

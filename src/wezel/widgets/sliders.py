@@ -32,6 +32,17 @@ class IndexSlider(QSlider):
         self.setMaximum(maximum)
         self.setValue(minimum)
 
+    def move(self, direction='up'):
+        self.blockSignals(True)
+        index = self.value()
+        if direction == 'up':
+            if index < self.maximum():
+                self.setValue(index+1)
+        elif direction == 'down':
+            if index > self.minimum():
+                self.setValue(index-1)
+        self.blockSignals(False)
+
 
 class LabelSlider(QGroupBox):
     """A slider with a label to show the slider value.

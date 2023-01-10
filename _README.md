@@ -420,3 +420,7 @@ First applications in 4 multi-centre renal and liver projects
 are currently underway. Until these applications have 
 progressed to their first endpoints, wezel is considered an 
 early prototype still subject to substantial change in the code base and documenting material. 
+
+## Acknowledgement
+
+Ferret brain image from https://www.med.unc.edu/bric/camri/imaging-service/3d-t2w-mri-of-the-ferret-brain/

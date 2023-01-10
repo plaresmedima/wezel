@@ -113,7 +113,8 @@ class DICOMFolderTree(QTreeWidget):
 
 
     def get_selected(self, generation=1):
-
+        if generation == 4: 
+            return []
         try:
             root = self.invisibleRootItem()
         except RuntimeError:
@@ -129,6 +130,32 @@ class DICOMFolderTree(QTreeWidget):
             generation -= 1
         return [self.database.record(i.dict['level'], i.dict['uid']) for i in items if i.checkState(0)==Qt.Checked]
 
+    def selected(self, generation):
+        if isinstance(generation, str):
+            if generation == 'Patients':
+                generation=1
+            elif generation == 'Studies':
+                generation=2
+            elif generation == 'Series':
+                generation=3
+            elif generation == 'Instances':
+                generation=4
+        if generation == 4: 
+            return []  
+        return self.get_selected(generation) 
+
+    def nr_selected(self, generation):
+        if isinstance(generation, str):
+            if generation == 'Patients':
+                generation=1
+            elif generation == 'Studies':
+                generation=2
+            elif generation == 'Series':
+                generation=3
+            elif generation == 'Instances':
+                generation=4
+        selected = self.get_selected(generation)
+        return len(selected)            
 
 def was_toggled(item):
 

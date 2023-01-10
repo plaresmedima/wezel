@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "wezel"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
   "PyQt5<=5.13.1",  # found some resolution issues with later versions
   "dbdicom",
@@ -15,7 +15,11 @@ dependencies = [
   "pandas",
   "importlib-resources>=1.1.0",
   "opencv-python<=4.5.3.56", # hack to fix a bug in building executable
-  "scikit-image"
+  # Consider removing limit on open-cvversion number 
+  # -> creates installation issues (wheel no longer up to date)
+  # Or consider removing opencv as dependency. Is scikit not enough?
+  "scikit-image",
+  "scipy",
 ]
 
 # optional information
@@ -63,6 +67,19 @@ include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[project.optional-dependencies]
+# importlib-resources # removed - necessary? where?
+docs = [
+    "sphinx",
+    "sphinx_rtd_theme",
+    "myst-parser", 
+    "sphinx-copybutton",
+    "sphinx-remove-toctrees",
+]
+executable = [ 
+  'pyinstaller',
+]
 
 
 

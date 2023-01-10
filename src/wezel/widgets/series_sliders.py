@@ -1,5 +1,4 @@
 import pandas as pd
-import timeit
 
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import (
@@ -7,8 +6,7 @@ from PyQt5.QtWidgets import (
     )
 from PyQt5.QtGui import QIcon
 
-from .. import widgets as widgets
-import wezel.icons as icons
+from wezel import widgets, icons
 
 
 class SeriesSliders(QWidget):
@@ -178,6 +176,7 @@ class SeriesSliders(QWidget):
         key: arrow (left, right, up or down)
         """
         # Translate keyboard arrow hits to slider movement
+        self._blockSignals = True
         if key is not None:
             if key == 'left':
                 slider = 'first'
@@ -225,6 +224,7 @@ class SeriesSliders(QWidget):
                     index = sldr.index() + direction
                     if sldr.setIndex(index):
                         self._mainSliderValueChanged()
+        self._blockSignals = False
 
 
     def _setActiveSliderValues(self):
@@ -308,3 +308,5 @@ class SeriesSliders(QWidget):
             if slider.checkBox.isChecked():
                 activeSliders.append(slider)
         return activeSliders
+    
+
