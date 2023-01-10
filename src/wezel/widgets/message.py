@@ -1,4 +1,4 @@
-from ast import literal_eval
+#from ast import literal_eval
 
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
@@ -425,15 +425,17 @@ class UserInput(QDialog):
     #         return self.closeDialog
 
 
-    def _processOutput(self, fields, listParams):
-        outputList = []
-        # Sometimes the values parsed could be list or hexadecimals in strings
-        for param in listParams:
-            try:
-                outputList.append(literal_eval(param))
-            except:
-                outputList.append(param)
-    
+    # Sometimes the values parsed could be list or hexadecimals in strings
+    # Took this out - creates error if the intention is for these to be strings
+#    def _processOutput(self, fields, listParams):
+#        outputList = []
+        # for param in listParams:
+        #     try:
+        #         outputList.append(literal_eval(param))
+        #     except:
+        #         outputList.append(param)
+
+    def _processOutput(self, fields, outputList):
         if outputList is None: 
             return fields
         else:

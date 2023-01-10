@@ -44,6 +44,9 @@ class SeriesDisplay(MainWidget):
         self.canvas._model.saveRegions()
         
     def setSeries(self, series):
+        if series.instances() == []:
+            self.setError('Series ' + series.label() + ' is empty. \n\n Nothing to show here..')
+            return
         self.sliders.setData(series)
         self.canvas._model._series = series
         image = self.sliders.image
@@ -177,6 +180,9 @@ class SeriesDisplay4D(MainWidget):
         self.setPlot()
 
     def setSeries(self, series, sortby=['SliceLocation', 'AcquisitionTime']):
+        if series.instances() == []:
+            self.setError('Series ' + series.label() + ' is empty. \n\n Nothing to show here..')
+            return
         self.canvas._model._series = series
         array, header = series.array(sortby, pixels_first=True)
         series.status.hide()

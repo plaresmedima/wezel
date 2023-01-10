@@ -1,3 +1,4 @@
+import timeit
 import random
 import numpy as np
 from PyQt5.QtCore import pyqtSignal
@@ -250,7 +251,9 @@ class SeriesCanvasModel:
             random.randint(0,255), 
             random.randint(0,255)]
 
+
     def saveRegions(self):
+        #start = timeit.default_timer()
         series = self._series
         if not series.exists():
             return
@@ -268,33 +271,36 @@ class SeriesCanvasModel:
                         mask.WindowCenter = 0.5
                         mask.WindowWidth = 1.0
         series.status.hide()
+        #print(timeit.default_timer()-start)
+
 
     def loadRegion(self):
         # Build list of series for all series in the same study
         seriesList = self._series.parent().children()
-        seriesLabels = [series.SeriesDescription for series in seriesList]
+        seriesLabels = [series.instance().SeriesDescription for series in seriesList]
         # Ask the user to select series to import as regions
         input = widgets.UserInput(
             {"label":"Series:", "type":"listview", "list": seriesLabels}, 
             title = "Please select regions to load")
         if input.cancel:
             return
-        selectedSeries = [seriesList[i] for i in input.values[0]["value"]]
+        seriesList = [seriesList[i] for i in input.values[0]["value"]]
+        seriesLabels = [seriesLabels[i] for i in input.values[0]["value"]]
+        suffix = ' mapped to ' + self._series.instance().SeriesDescription
         # Overlay each of the selected series on the displayed series
-        for series in selectedSeries:
+        for s, series in enumerate(seriesList):
             # Create overlay
-            region = series.map_mask_to(self._series)
+            region, images = series.map_mask_to(self._series)
             # Add new region
-            newRegion = {'name': region.SeriesDescription, 'color': self.newColor()}
+            newRegion = {'name': seriesLabels[s] + suffix, 'color': self.newColor()}
+            if isinstance(region, list): # If self._series has multiple slice groups
+                for r, reg in enumerate(region):
+                    for i, image in np.ndenumerate(images[r]):
+                        if image is not None:
+                            newRegion[image.SOPInstanceUID] = reg[:,:,i[0]] != 0
+            else:
+                for i, image in np.ndenumerate(images):
+                    if image is not None:
+                        newRegion[image.SOPInstanceUID] = region[:,:,i[0]] != 0
             self._regions.append(newRegion)
             self._currentRegion = newRegion
-            # Find masks for each image
-            for image in self._series.instances():
-                maskList = region.instances(sort=False, SliceLocation=image.SliceLocation) 
-                if maskList != []:
-                    newRegion[image.SOPInstanceUID] = maskList[0].array() != 0
-
-            # Need a map_mask_to that returns the masks without creating
-            # a new series - avoids an unnecessary creation & deletion.
-            region.remove()
-        self._series.status.hide()

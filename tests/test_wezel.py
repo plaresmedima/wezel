@@ -40,6 +40,7 @@ def remove_tmp_database(tmp):
 ##
 
 
+
 def test_build():
     pass
     # To build an executable of the application

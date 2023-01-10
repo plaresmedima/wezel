@@ -5,7 +5,9 @@ def dicom(parent):
     wezel.actions.folder.all(parent.menu('File'))
     wezel.actions.edit.all(parent.menu('Edit'))
     wezel.actions.view.all(parent.menu('View'))
-    wezel.actions.image.all(parent.menu('Image'))
+    wezel.actions.filter.all(parent.menu('Filter'))
+    wezel.actions.segment.all(parent.menu('Segment'))
+    wezel.actions.transform.all(parent.menu('Transform'))
     wezel.actions.about.all(parent.menu('About'))
 
 def test(parent):

@@ -217,7 +217,8 @@ class MergeSeries(wezel.Action):
 
         app.status.message('Merging..')
         records = app.selected('Series')
-        study = records[0].new_pibling(StudyDescription='Merger')
+        #study = records[0].new_pibling(StudyDescription='Merger')
+        study = records[0].parent()
         series = study.new_series(SeriesDescription='Merged series')
         db.merge(records, series)
         app.refresh()
@@ -375,9 +376,11 @@ class SeriesExtractByValue(wezel.Action):
         # Get source data
         series = app.get_selected(3)[0]
         slice_locations = series.SliceLocation
-        slice_locations.sort() # should this be done by default?
+        if not isinstance(slice_locations, list):
+            slice_locations = [slice_locations]
         acquisition_times = series.AcquisitionTime
-        acquisition_times.sort()
+        if not isinstance(acquisition_times, list):
+            acquisition_times = [acquisition_times]
         series.status.hide()
 
         # Get user input

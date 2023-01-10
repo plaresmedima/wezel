@@ -96,7 +96,11 @@ class SeriesViewerMetaData(MainWidget):
         super().__init__()
         #Get the DICOM object for the first image in the series
         #The DICOM object for an image contains the metadata for the whole series
-        self._objectDICOM = series.children()[0].get_dataset()
+        instances = series.children()
+        if instances == []:
+            self.setError('Series ' + series.label() + ' is empty. \n\n Nothing to show here..')
+            return 
+        self._objectDICOM = instances[0].get_dataset()
         self.series = series
 
         layout = QVBoxLayout()

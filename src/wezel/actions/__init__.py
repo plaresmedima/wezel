@@ -5,7 +5,9 @@ from . import (
     folder,
     view,
     test,
-    image,
+    filter,
+    segment,
+    transform,
 )
 
 

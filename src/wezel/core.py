@@ -5,7 +5,15 @@ import logging
 
 #from PyQt5.QtCore import *
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QWidget, QApplication, QMainWindow, QAction, QMenu, QMenuBar, QDockWidget
+from PyQt5.QtWidgets import (
+    QWidget, 
+    QApplication, 
+    QMainWindow, 
+    QAction, 
+    QMenu, 
+    QMenuBar, 
+    QDockWidget, 
+    QMessageBox) 
 from PyQt5.QtGui import QIcon
 
 import dbdicom as db
@@ -169,6 +177,10 @@ class Main(QMainWindow):
             pass
 
     def addWidget(self, widget, title):
+        # rename to addMainWidget()
+        # widget needs to be subclassed from MainWidget
+        if widget.error:
+            return
         subWindow = self.central.addWidget(widget, title)
         subWindow.closed.connect(lambda: self.closeSubWindow(subWindow))
         self.central.tileSubWindows()
@@ -225,6 +237,11 @@ class MainWidget(QWidget):
         super().__init__()
         self.toolBarClass = None
         self.toolBar = None
+        self.error = False
+
+    def setError(self, message='Error displaying data!!'):
+        self.error = True
+        QMessageBox.information(self, 'Information', message)
 
     def setToolBar(self, toolBar):
         self.toolBar = toolBar
