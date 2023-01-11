@@ -85,7 +85,7 @@ class OverlayOn(wezel.Action):
 
     def run(self, app):
         for series in app.selected('Series'):
-            seriesList = series.parent().children()
+            seriesList = series.parent().parent().series()
             seriesLabels = [s.instance().SeriesDescription for s in seriesList]
             input = wezel.widgets.UserInput(
                 {"label":"Overlay on which series?", "type":"dropdownlist", "list": seriesLabels, 'value':0}, 
