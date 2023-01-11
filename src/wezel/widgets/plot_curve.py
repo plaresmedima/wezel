@@ -26,9 +26,15 @@ class PlotCurve(QWidget):
         self.setLayout(layout)
 
     def setXlim(self, xLim):
+        if self.xLim is not None:
+            if self.xLim[0] == self.xLim[1]:
+                self.xLim = [self.xLim[0]-1, self.xLim[0]+1]
         self.xLim = xLim
 
     def setYlim(self, yLim):
+        if self.yLim is not None:
+            if self.yLim[0] == self.yLim[1]:
+                self.yLim = [self.yLim[0]-1, self.yLim[0]+1]
         self.yLim = yLim
 
     def setXlabel(self, label):

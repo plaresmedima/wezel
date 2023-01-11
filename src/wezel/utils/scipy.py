@@ -474,7 +474,7 @@ def uniform_filter(input, size=3, **kwargs):
         image.set_array(array)
         image.clear()
     input.status.hide()
-    return 
+    return filtered
     
 
 # https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.gaussian_filter.html#scipy.ndimage.gaussian_filter
@@ -581,41 +581,77 @@ def resample(series, voxel_size=[1.0, 1.0, 1.0]):
     if isinstance(affine_source, list):
         mapped_series = []
         for affine_slice_group in affine_source:
-            v = dbdicom.utils.image.dismantle_affine_matrix(affine_slice_group)
-            slice_group = series.subseries(ImageOrientationPatient = v['ImageOrientationPatient'])
-            mapped = _resample_slice_group(slice_group, affine_slice_group, voxel_size=voxel_size)
+            #v = dbdicom.utils.image.dismantle_affine_matrix(affine_slice_group)
+            #slice_group = series.subseries(ImageOrientationPatient = v['ImageOrientationPatient'])
+            #mapped = _resample_slice_group(slice_group, affine_slice_group, voxel_size=voxel_size)
+            mapped = _resample_slice_group(series, affine_slice_group[0], affine_slice_group[0], voxel_size=voxel_size)
             mapped_series.append(mapped)
-            slice_group.remove()
+            #slice_group.remove()
         desc = series.instance().SeriesDescription + '[resampled]'
         mapped_series = dbdicom.merge(mapped_series, inplace=True)
         mapped_series.SeriesDescription = desc
     else:
-        mapped_series = _resample_slice_group(series, affine_source, voxel_size=voxel_size)
+        mapped_series = _resample_slice_group(series, affine_source[0], affine_source[1], voxel_size=voxel_size)
     return mapped_series
 
 
-def _resample_slice_group(series, affine_source, voxel_size=[1.0, 1.0, 1.0]):
+def reslice(series, orientation='axial'):
+
+    # Define geometry of axial series (isotropic)
+    series.status.message('Reading transformations..')
+    affine_source = series.affine_matrix()
+    if isinstance(affine_source, list):
+        mapped_series = []
+        for affine_slice_group in affine_source:
+            #v = dbdicom.utils.image.dismantle_affine_matrix(affine_slice_group)
+            #slice_group = series.subseries(ImageOrientationPatient = v['ImageOrientationPatient'])
+            #mapped = _reslice_slice_group(slice_group, affine_slice_group, orientation=orientation)
+            mapped = _reslice_slice_group(series, affine_slice_group[0], affine_slice_group[0], orientation=orientation)
+            mapped_series.append(mapped)
+            #slice_group.remove()
+        desc = series.instance().SeriesDescription + '['+orientation+']'
+        mapped_series = dbdicom.merge(mapped_series, inplace=True)
+        mapped_series.SeriesDescription = desc
+    else:
+        mapped_series = _reslice_slice_group(series, affine_source[0], affine_source[1], orientation=orientation)
+    return mapped_series
+
+
+def _resample_slice_group(series, affine_source, slice_group, voxel_size=[1.0, 1.0, 1.0]):
+
+    # Create new resliced series
+    desc = series.instance().SeriesDescription + '[resampled]'
+    resliced_series = series.new_sibling(SeriesDescription = desc)
+
+    # Work out the affine matrix of the new series
     p = dbdicom.utils.image.dismantle_affine_matrix(affine_source)
     affine_target = affine_source.copy()
     affine_target[:3, 0] = voxel_size[0] * np.array(p['ImageOrientationPatient'][:3])
     affine_target[:3, 1] = voxel_size[1] * np.array(p['ImageOrientationPatient'][3:]) 
     affine_target[:3, 2] = voxel_size[2] * np.array(p['slice_cosine'])
+
+    # If the series already is in the right orientation, return a copy
     if np.array_equal(affine_source, affine_target):
         series.status.message('Series is already in the right orientation..')
-        return series
+        resliced_series.adopt(slice_group)
+        return resliced_series
+
+    # Determine the transformation matrix and offset
     source_to_target = np.linalg.inv(affine_source).dot(affine_target)
     matrix, offset = nib.affines.to_matvec(source_to_target)
     
     # Get arrays
     array, headers = series.array(['SliceLocation','AcquisitionTime'], pixels_first=True)
 
-    #Perform transformation on the arrays
+    # Perform transformation on the arrays to determine the output shape
     dim = [
         array.shape[0] * p['PixelSpacing'][1],
         array.shape[1] * p['PixelSpacing'][0],
         array.shape[2] * p['SliceThickness']]
     output_shape = [1 + round(dim[i]/voxel_size[i]) for i in range(3)]
     resliced = np.empty(tuple(output_shape) + array.shape[-2:])
+
+    # Perform the affine transformation
     cnt=0
     nt, nk = array.shape[-2], array.shape[-1]
     for t in range(nt):
@@ -630,8 +666,6 @@ def _resample_slice_group(series, affine_source, voxel_size=[1.0, 1.0, 1.0]):
     
     # Save in database as new series
     series.status.message('Saving results..')
-    desc = series.instance().SeriesDescription + '[resampled]'
-    resliced_series = series.new_sibling(SeriesDescription = desc)
     ns, nt, nk = resliced.shape[2], resliced.shape[3], resliced.shape[4]
     slab = dbdicom.utils.image.dismantle_affine_matrix(affine_target)
     cnt=0
@@ -661,31 +695,15 @@ def _resample_slice_group(series, affine_source, voxel_size=[1.0, 1.0, 1.0]):
     return resliced_series
 
 
+def _reslice_slice_group(series, affine_source, slice_group, orientation='axial'):
 
-def reslice(series, orientation='axial'):
+    # Create new resliced series
+    desc = series.instance().SeriesDescription + '['+orientation+']'
+    resliced_series = series.new_sibling(SeriesDescription = desc)
 
-    # Define geometry of axial series (isotropic)
-    series.status.message('Reading transformations..')
-    affine_source = series.affine_matrix()
-    if isinstance(affine_source, list):
-        mapped_series = []
-        for affine_slice_group in affine_source:
-            v = dbdicom.utils.image.dismantle_affine_matrix(affine_slice_group)
-            slice_group = series.subseries(ImageOrientationPatient = v['ImageOrientationPatient'])
-            mapped = _reslice_slice_group(slice_group, affine_slice_group, orientation=orientation)
-            mapped_series.append(mapped)
-            slice_group.remove()
-        desc = series.instance().SeriesDescription + '['+orientation+']'
-        mapped_series = dbdicom.merge(mapped_series, inplace=True)
-        mapped_series.SeriesDescription = desc
-    else:
-        mapped_series = _reslice_slice_group(series, affine_source, orientation=orientation)
-    return mapped_series
-
-
-def _reslice_slice_group(series, affine_source, orientation='axial'):
+    # Work out the affine matrix of the new series
     p = dbdicom.utils.image.dismantle_affine_matrix(affine_source)
-    slice_group = series.instances(ImageOrientationPatient=p['ImageOrientationPatient'])
+    #slice_group = series.instances(ImageOrientationPatient=p['ImageOrientationPatient'])
     image_positions = [s.ImagePositionPatient for s in slice_group]
     rows = slice_group[0].Rows
     columns = slice_group[0].Columns
@@ -696,22 +714,26 @@ def _reslice_slice_group(series, affine_source, orientation='axial'):
         rows,
         columns)
     spacing = min([p['PixelSpacing'][0], p['PixelSpacing'][1], p['SliceThickness']])
-
     affine_target = dbdicom.utils.image.standard_affine_matrix(
         box, 
         [spacing, spacing],
         spacing,
         orientation=orientation)
+
+    # If the series already is in the right orientation, return a copy
     if np.array_equal(affine_source, affine_target):
         series.status.message('Series is already in the right orientation..')
-        return series
+        resliced_series.adopt(slice_group)
+        return resliced_series
+
+    # Determine the transformation matrix and offset
     source_to_target = np.linalg.inv(affine_source).dot(affine_target)
     matrix, offset = nib.affines.to_matvec(source_to_target)
     
     # Get arrays
     array, headers = series.array(['SliceLocation','AcquisitionTime'], pixels_first=True)
 
-    #Perform transformation on the arrays
+    #Perform transformation on the arrays to determine the output shape
     if orientation == 'axial':
         dim = [
             np.linalg.norm(np.array(box['RAF'])-np.array(box['LAF'])),
@@ -732,6 +754,8 @@ def _reslice_slice_group(series, affine_source, orientation='axial'):
         ]
     output_shape = [1 + round(d/spacing) for d in dim]
     resliced = np.empty(tuple(output_shape) + array.shape[-2:])
+
+    # Perform the affine transformation
     cnt=0
     nt, nk = array.shape[-2], array.shape[-1]
     for t in range(nt):
@@ -744,10 +768,8 @@ def _reslice_slice_group(series, affine_source, orientation='axial'):
                 offset = offset,
                 output_shape = output_shape)
     
-    # Save in database as new series
+    # Save results in the database
     series.status.message('Saving results..')
-    desc = series.instance().SeriesDescription + '['+orientation+']'
-    resliced_series = series.new_sibling(SeriesDescription = desc)
     ns, nt, nk = resliced.shape[2], resliced.shape[3], resliced.shape[4]
     slab = dbdicom.utils.image.dismantle_affine_matrix(affine_target)
     cnt=0
@@ -768,7 +790,7 @@ def _reslice_slice_group(series, affine_source, orientation='axial'):
                 image = headers[0,0,0].copy_to(resliced_series)
                 image.read()
                 image.AcquisitionTime = acq_time
-                image.affine_matrix = affine_target 
+                image.affine_matrix = affine_target
                 image.ImagePositionPatient = pos
                 image.SliceLocation = loc
                 image.set_pixel_array(resliced[:,:,s,t,k])

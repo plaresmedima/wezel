@@ -1,12 +1,9 @@
-import copy
 import numpy as np
 
-from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (
     QWidget, 
     QSplitter,
     QVBoxLayout,
-    QHBoxLayout, 
 )
 
 from wezel import widgets, canvas, MainWidget
@@ -32,16 +29,22 @@ class SeriesDisplay(MainWidget):
         # Display
         self._view = SeriesDisplayView(self)
 
+    def setToolBar(self, toolBar):
+        super().setToolBar(toolBar)
+        self.canvas.fitItem()
+
     def setToolBarState(self):
         self.toolBar.setWidget(self.canvas)
 
     def setActive(self, active):
-        super().setActive(active)
+        #super().setActive(active)
         if not active:
             self.canvas.saveMask()
 
     def closeEvent(self, event):
-        self.canvas._model.saveRegions()
+        newSeries = self.canvas._model.saveRegions()
+        if newSeries:
+            self.databaseUpdated.emit()
         
     def setSeries(self, series):
         if series.instances() == []:
@@ -135,13 +138,19 @@ class SeriesDisplay4D(MainWidget):
         # Display
         self._view = SeriesDisplay4DView(self)
 
+    def setToolBar(self, toolBar):
+        super().setToolBar(toolBar)
+        self.canvas.fitItem()
+
     def setActive(self, active):
-        super().setActive(active)
+        #super().setActive(active)
         if not active:
             self.canvas.saveMask()
 
     def closeEvent(self, event):
-        self.canvas._model.saveRegions()
+        newSeries = self.canvas._model.saveRegions()
+        if newSeries:
+            self.databaseUpdated.emit()
 
     def imageChanged(self):
         z = self.viewSlider.value()

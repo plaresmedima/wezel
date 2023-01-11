@@ -1,6 +1,3 @@
-from PyQt5.QtCore import Qt
-import numpy as np
-
 import wezel
 
 #Named constants
@@ -23,10 +20,21 @@ def all(parent):
 class ToolBar(wezel.Action):
 
     def enable(self, app):
-        return app.toolBarDockWidget.isHidden()
+        return True
+        # Closer sensitivity control requires enable to be called
+        # whenever the user closes the toolbar dockwidget
+        # if app.toolBarDockWidget.widget() is None:
+        #     return False
+        # return app.toolBarDockWidget.isHidden()
         
     def run(self, app):
+        if app.toolBarDockWidget.widget() is None:
+            msg = 'There are currently no toolbars available.'
+            msg += '\n Please open a display first.'
+            app.dialog.information(msg, title='No toolbars available')
+            return
         app.toolBarDockWidget.show()
+        #self.setEnabled(False)
 
 
 class DataBase(wezel.Action):

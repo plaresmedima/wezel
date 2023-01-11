@@ -4,7 +4,7 @@ import sys
 import logging
 
 #from PyQt5.QtCore import *
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import  pyqtSignal, Qt
 from PyQt5.QtWidgets import (
     QWidget, 
     QApplication, 
@@ -176,44 +176,6 @@ class Main(QMainWindow):
         elif object.type() == 'Instance':
             pass
 
-    def addWidget(self, widget, title):
-        # rename to addMainWidget()
-        # widget needs to be subclassed from MainWidget
-        if widget.error:
-            return
-        subWindow = self.central.addWidget(widget, title)
-        subWindow.closed.connect(lambda: self.closeSubWindow(subWindow))
-        self.central.tileSubWindows()
-        if widget.toolBarClass is not None:
-            toolBarName =  widget.toolBarClass.__name__
-            if toolBarName in self.toolBar:
-                toolBar = self.toolBar[toolBarName]
-                widget.setToolBar(toolBar)
-            else:
-                toolBar =  widget.toolBarClass()
-                self.toolBar[toolBarName] = toolBar
-                self.toolBarDockWidget.setWidget(toolBar)
-                widget.setToolBar(toolBar)
-                self.toolBarDockWidget.show()
-
-    def closeSubWindow(self, subWindow):
-        self.central.removeSubWindow(subWindow)
-        self.central.tileSubWindows()
-        widget = subWindow.widget().__class__.__name__
-        if 0 == self.central.countSubWindow(widget):
-            self.toolBarDockWidget.hide()
-        self.refresh()
-
-    def activateSubWindow(self, subWindow):
-        if self.central.activeWindow == subWindow:
-            return
-        activeWindow = self.central.activeWindow
-        if activeWindow is not None:
-            activeWindow.widget().setActive(False)
-        self.central.activeWindow = subWindow
-        if subWindow is not None:
-            subWindow.widget().setActive(True)
-
     def get_selected(self, generation):   
         if self.treeView is None: 
             return []
@@ -229,9 +191,63 @@ class Main(QMainWindow):
             return 0
         return self.treeView.nr_selected(generation)
 
+    def closeSubWindow(self, subWindow):
+        self.central.removeSubWindow(subWindow)
+        self.central.tileSubWindows()
+        # The widget continues to exist - memory issues?
+        # Delete widget when subwindow closes
+        widget = subWindow.widget().__class__.__name__
+        if 0 == self.central.countSubWindow(widget):
+            subWindow.widget().toolBar.setEnabled(False)
+            #self.toolBarDockWidget.hide()
+        #self.refresh()
+
+    def activateSubWindow(self, subWindow):
+        if self.central.activeWindow == subWindow:
+            return
+        activeWindow = self.central.activeWindow
+        if activeWindow is not None:
+            activeWindow.widget().setActive(False)
+        self.central.activeWindow = subWindow
+        if subWindow is not None:
+            subWindow.widget().setActive(True)
+            # If the main widget has a toolbar, set its state
+            # add it as a dockwidget.
+            toolBar = subWindow.widget().toolBar
+            if toolBar is not None:
+                subWindow.widget().setToolBarState()
+                self.toolBarDockWidget.setWidget(toolBar)
+
+    def addWidget(self, widget, title):
+        # rename to addSubWindow()
+        # widget needs to be subclassed from MainWidget
+        if widget.error:
+            return
+        subWindow = self.central.addWidget(widget, title)
+        subWindow.closed.connect(lambda: self.closeSubWindow(subWindow))
+        self.central.tileSubWindows()
+        widget.databaseUpdated.connect(self.refresh)
+        # If the right kind of toolbar does not exist yet, create it and show it
+        # If it does exist juts set it as current.
+        if widget.toolBarClass is not None:
+            toolBarName =  widget.toolBarClass.__name__
+            if toolBarName in self.toolBar:
+                toolBar = self.toolBar[toolBarName]
+                self.toolBarDockWidget.setWidget(toolBar)
+                widget.setToolBar(toolBar)
+            else:
+                toolBar =  widget.toolBarClass()
+                self.toolBar[toolBarName] = toolBar
+                self.toolBarDockWidget.setWidget(toolBar)
+                widget.setToolBar(toolBar)
+                self.toolBarDockWidget.show()
+        self.menuBar().enable() # added
+
 
 class MainWidget(QWidget):
     """Base class for widgets that are set as subWindow widgets"""
+
+    databaseUpdated = pyqtSignal() 
 
     def __init__(self):
         super().__init__()
@@ -249,15 +265,19 @@ class MainWidget(QWidget):
 
     def setToolBarState(self):
         self.toolBar.setWidget(self)
+        self.toolBar.setEnabled(True)
         
     def setActive(self, active):
-        if active:
-            if self.toolBar is not None:
-                self.setToolBarState()
-                subWindow = self.parentWidget()
-                mdiArea = subWindow.mdiArea()
-                mainWindow = mdiArea.parentWidget()
-                mainWindow.toolBarDockWidget.setWidget(self.toolBar)
+        pass
+        # If the window is activated, set its toolbar
+        # to the toolbar dockwidget
+        # if active:
+        #     if self.toolBar is not None:
+        #         self.setToolBarState()
+        #         subWindow = self.parentWidget()
+        #         mdiArea = subWindow.mdiArea()
+        #         mainWindow = mdiArea.parentWidget()
+        #         mainWindow.toolBarDockWidget.setWidget(self.toolBar)
                 
     def closeEvent(self, event):
         pass
