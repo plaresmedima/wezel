@@ -53,9 +53,6 @@ class Canvas(QGraphicsView):
     def filterItem(self):
         return self.item(2)
 
-    # def mask(self):
-    #     return self.maskItem.bin
-
     def setImage(self, array, center, width, cmap, lut=None):
         if lut is None:
             lut = colormap_to_LUT(cmap)
@@ -67,7 +64,8 @@ class Canvas(QGraphicsView):
         filter = self.filterItem
         if filter is not None:
             filter.prepareGeometryChange()
-            filter.boundingRectangle = self.scene().sceneRect()
+            #filter.boundingRectangle = self.scene().sceneRect()
+            filter.boundingRectangle = item.boundingRectangle
             filter.initialize()
         self.setMask(None)
         return item
@@ -96,7 +94,10 @@ class Canvas(QGraphicsView):
         self.scene().setFocusItem(filter)
         filter.setZValue(2)
         filter.prepareGeometryChange()
-        filter.boundingRectangle = self.scene().sceneRect()
+        if self.imageItem is None:
+            filter.boundingRectangle = self.scene().sceneRect()
+        else:
+            filter.boundingRectangle = self.imageItem.boundingRectangle
         filter.initialize()
 
     def fitItem(self):

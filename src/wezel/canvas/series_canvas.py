@@ -254,12 +254,14 @@ class SeriesCanvasModel:
 
     def saveRegions(self):
         #start = timeit.default_timer()
+        databaseUpdated = False
         series = self._series
         if not series.exists():
-            return
+            return databaseUpdated
         images = series.instances()
         for region in self._regions:
             if len(region.keys()) > 2:
+                databaseUpdated = True
                 roi_series = series.new_sibling(SeriesDescription=region['name'])
                 for cnt, image in enumerate(images):
                     series.status.progress(cnt+1, len(images), 'Saving region '+ region['name'])
@@ -272,6 +274,7 @@ class SeriesCanvasModel:
                         mask.WindowWidth = 1.0
         series.status.hide()
         #print(timeit.default_timer()-start)
+        return databaseUpdated
 
 
     def loadRegion(self):
