@@ -19,6 +19,8 @@ def watershed_3d(input, markers=250, mask=None, **kwargs):
     desc = input.instance().SeriesDescription + ' [watershed 3D]'
     filtered = input.copy(SeriesDescription = desc)
     array, headers = filtered.array('SliceLocation', pixels_first=True)
+    if array is None:
+        return filtered
     if mask is not None: 
         mask, _ = mask.array('SliceLocation', pixels_first=True) 
         if mask.shape != array.shape:
@@ -52,7 +54,8 @@ def watershed_2d(input, markers=5, **kwargs):
     """
     desc = input.instance().SeriesDescription + ' [watershed]'
     filtered = input.copy(SeriesDescription = desc)
-    images = filtered.instances() #sort=False should be faster - check
+    #images = filtered.instances() #sort=False should be faster - check
+    images = filtered.images()
     for i, image in enumerate(images):
         input.status.progress(i+1, len(images), 'Calculating ' + desc)
         image.read()
@@ -84,7 +87,8 @@ def watershed_2d_labels(input, markers=None, **kwargs):
     suffix = ' [watershed]'
     desc = input.instance().SeriesDescription
     filtered = input.copy(SeriesDescription = desc+suffix)
-    images = filtered.instances() #sort=False should be faster - check
+    #images = filtered.instances() #sort=False should be faster - check
+    images = filtered.images()
     for i, image in enumerate(images):
         input.status.progress(i+1, len(images), 'Calculating watershed for ' + desc)
         image.read()
@@ -130,7 +134,8 @@ def canny(input, sigma=1.0, **kwargs):
     suffix = ' [Canny filter x ' + str(sigma) + ' ]'
     desc = input.instance().SeriesDescription
     filtered = input.copy(SeriesDescription = desc+suffix)
-    images = filtered.instances()
+    #images = filtered.instances()
+    images = filtered.images()
     for i, image in enumerate(images):
         input.status.progress(i+1, len(images), 'Filtering ' + desc)
         image.read()
@@ -152,6 +157,8 @@ def coregister(moving, fixed, return_array=False, attachment=1):
     # Get arrays for fixed and moving series
     array_fixed, _ = fixed.array('SliceLocation', pixels_first=True)
     array_moving, headers_moving = moving.array('SliceLocation', pixels_first=True)
+    if array_fixed is None or array_moving is None:
+        return fixed
 
     # Coregister fixed and moving slice-by-slice
     row_coords, col_coords = np.meshgrid( 
@@ -186,7 +193,10 @@ def coregister_series(series, attachment=1):
 
     # Get arrays for fixed and moving series
     array, headers = series.array(['SliceLocation','AcquisitionTime'], pixels_first=True)
+    if array is None:
+        return
     array, headers = array[:,:,:,:,0], headers[:,:,0]
+
     
     # Coregister fixed and moving slice-by-slice
     row_coords, col_coords = np.meshgrid(
@@ -221,7 +231,10 @@ def mdreg_constant_2d(series, attachment=1, max_improvement=1, max_iter=5):
 
     # Get arrays for fixed and moving series
     array, headers = series.array(['SliceLocation','AcquisitionTime'], pixels_first=True)
+    if array is None:
+        return
     array, headers = array[:,:,:,:,0], headers[:,:,0]
+
     
     # Coregister fixed and moving slice-by-slice
     row_coords, col_coords = np.meshgrid(
@@ -267,6 +280,8 @@ def mdreg_constant_3d(series, attachment=1, max_improvement=1, max_iter=5):
 
     # Get arrays for fixed and moving series
     array, headers = series.array(['SliceLocation','AcquisitionTime'], pixels_first=True)
+    if array is None:
+        return
     array, headers = array[:,:,:,:,0], headers[:,:,0]
     
     # Coregister fixed and moving slice-by-slice

@@ -24,7 +24,8 @@ def label(input, **kwargs):
     suffix = ' [labels]'
     desc = input.instance().SeriesDescription
     filtered = input.copy(SeriesDescription = desc+suffix)
-    images = filtered.instances() # setting sort=False should be faster - TEST!!!!!!!
+    #images = filtered.instances() # setting sort=False should be faster - TEST!!!!!!!
+    images = filtered.images()
     for i, image in enumerate(images):
         input.status.progress(i+1, len(images), 'Labelling ' + desc)
         image.read()
@@ -54,7 +55,8 @@ def binary_fill_holes(input, **kwargs):
     suffix = ' [Fill holes]'
     desc = input.instance().SeriesDescription
     filtered = input.copy(SeriesDescription = desc+suffix)
-    images = filtered.instances()
+    #images = filtered.instances()
+    images = filtered.images()
     for i, image in enumerate(images):
         input.status.progress(i+1, len(images), 'Filling holes ' + desc)
         image.read()
@@ -90,7 +92,8 @@ def fourier_ellipsoid(input, size, **kwargs):
     suffix = ' [Fourier Ellipsoid x ' + str(size) + ' ]'
     desc = input.instance().SeriesDescription
     filtered = input.copy(SeriesDescription = desc + suffix)
-    images = filtered.instances()
+    #images = filtered.instances()
+    images = filtered.images()
     for i, image in enumerate(images):
         input.status.progress(i+1, len(images), 'Filtering ' + desc)
         image.read()
@@ -120,7 +123,8 @@ def fourier_uniform(input, size, **kwargs):
     suffix = ' [Fourier Uniform x ' + str(size) + ' ]'
     desc = input.instance().SeriesDescription
     filtered = input.copy(SeriesDescription = desc + suffix)
-    images = filtered.instances()
+    #images = filtered.instances()
+    images = filtered.images()
     for i, image in enumerate(images):
         input.status.progress(i+1, len(images), 'Filtering ' + desc)
         image.read()
@@ -150,7 +154,8 @@ def fourier_gaussian(input, sigma, **kwargs):
     suffix = ' [Fourier Gaussian x ' + str(sigma) + ' ]'
     desc = input.instance().SeriesDescription
     filtered = input.copy(SeriesDescription = desc + suffix)
-    images = filtered.instances()
+    #images = filtered.instances()
+    images = filtered.images()
     for i, image in enumerate(images):
         input.status.progress(i+1, len(images), 'Filtering ' + desc)
         image.read()
@@ -180,7 +185,8 @@ def gaussian_gradient_magnitude(input, sigma, **kwargs):
     suffix = ' [Gaussian Gradient Magnitude x ' + str(sigma) + ' ]'
     desc = input.instance().SeriesDescription
     filtered = input.copy(SeriesDescription = desc + suffix)
-    images = filtered.instances()
+    #images = filtered.instances()
+    images = filtered.images()
     for i, image in enumerate(images):
         input.status.progress(i+1, len(images), 'Filtering ' + desc)
         image.read()
@@ -209,7 +215,8 @@ def gaussian_laplace(input, sigma, **kwargs):
     suffix = ' [Gaussian Laplace x ' + str(sigma) + ' ]'
     desc = input.instance().SeriesDescription
     filtered = input.copy(SeriesDescription = desc + suffix)
-    images = filtered.instances()
+    #images = filtered.instances()
+    images = filtered.images()
     for i, image in enumerate(images):
         input.status.progress(i+1, len(images), 'Filtering ' + desc)
         image.read()
@@ -238,7 +245,8 @@ def laplace(input, **kwargs):
     suffix = ' [Laplace Filter]'
     desc = input.instance().SeriesDescription
     filtered = input.copy(SeriesDescription = desc + suffix)
-    images = filtered.instances()
+    #images = filtered.instances()
+    images = filtered.images()
     for i, image in enumerate(images):
         input.status.progress(i+1, len(images), 'Filtering ' + desc)
         image.read()
@@ -267,7 +275,8 @@ def sobel_filter(input, axis=-1, **kwargs):
     suffix = ' [Sobel Filter along axis ' + str(axis) + ' ]'
     desc = input.instance().SeriesDescription
     filtered = input.copy(SeriesDescription = desc + suffix)
-    images = filtered.instances()
+    #images = filtered.instances()
+    images = filtered.images()
     for i, image in enumerate(images):
         input.status.progress(i+1, len(images), 'Filtering ' + desc)
         image.read()
@@ -296,7 +305,8 @@ def prewitt_filter(input, axis=-1, **kwargs):
     suffix = ' [Prewitt Filter along axis ' + str(axis) + ' ]'
     desc = input.instance().SeriesDescription
     filtered = input.copy(SeriesDescription = desc + suffix)
-    images = filtered.instances()
+    #images = filtered.instances()
+    images = filtered.images()
     for i, image in enumerate(images):
         input.status.progress(i+1, len(images), 'Filtering ' + desc)
         image.read()
@@ -325,7 +335,8 @@ def median_filter(input, size=3, **kwargs):
     suffix = ' [Median Filter with size ' + str(size) + ' ]'
     desc = input.instance().SeriesDescription
     filtered = input.copy(SeriesDescription = desc + suffix)
-    images = filtered.instances()
+    #images = filtered.instances()
+    images = filtered.images()
     for i, image in enumerate(images):
         input.status.progress(i+1, len(images), 'Filtering ' + desc)
         image.read()
@@ -353,7 +364,8 @@ def percentile_filter(input, percentile, **kwargs):
     suffix = ' [Percentile Filter x ' + str(percentile) + ' ]'
     desc = input.instance().SeriesDescription
     filtered = input.copy(SeriesDescription = desc + suffix)
-    images = filtered.instances()
+    #images = filtered.instances()
+    images = filtered.images()
     for i, image in enumerate(images):
         input.status.progress(i+1, len(images), 'Filtering ' + desc)
         image.read()
@@ -381,7 +393,8 @@ def rank_filter(input, rank, **kwargs):
     suffix = ' [Rank Filter x ' + str(rank) + ' ]'
     desc = input.instance().SeriesDescription
     filtered = input.copy(SeriesDescription = desc + suffix)
-    images = filtered.instances()
+    #images = filtered.instances()
+    images = filtered.images()
     for i, image in enumerate(images):
         input.status.progress(i+1, len(images), 'Filtering ' + desc)
         image.read()
@@ -409,7 +422,8 @@ def maximum_filter(input, size=3, **kwargs):
     suffix = ' [Maximum Filter x ' + str(size) + ' ]'
     desc = input.instance().SeriesDescription
     filtered = input.copy(SeriesDescription = desc + suffix)
-    images = filtered.instances()
+    #images = filtered.instances()
+    images = filtered.images()
     for i, image in enumerate(images):
         input.status.progress(i+1, len(images), 'Filtering ' + desc)
         image.read()
@@ -437,7 +451,8 @@ def minimum_filter(input, size=3, **kwargs):
     suffix = ' [Minimum Filter x ' + str(size) + ' ]'
     desc = input.instance().SeriesDescription
     filtered = input.copy(SeriesDescription = desc + suffix)
-    images = filtered.instances()
+    #images = filtered.instances()
+    images = filtered.images()
     for i, image in enumerate(images):
         input.status.progress(i+1, len(images), 'Filtering ' + desc)
         image.read()
@@ -465,7 +480,8 @@ def uniform_filter(input, size=3, **kwargs):
     suffix = ' [Uniform Filter x ' + str(size) + ' ]'
     desc = input.instance().SeriesDescription
     filtered = input.copy(SeriesDescription = desc + suffix)
-    images = filtered.instances()
+    #images = filtered.instances()
+    images = filtered.images()
     for i, image in enumerate(images):
         input.status.progress(i+1, len(images), 'Filtering ' + desc)
         image.read()
@@ -493,7 +509,8 @@ def gaussian_filter(input, sigma, **kwargs):
     suffix = ' [Gaussian Filter x ' + str(sigma) + ' ]'
     desc = input.instance().SeriesDescription
     filtered = input.copy(SeriesDescription = desc + suffix)
-    images = filtered.instances()
+    #images = filtered.instances()
+    images = filtered.images()
     for i, image in enumerate(images):
         input.status.progress(i+1, len(images), 'Filtering ' + desc)
         image.read()
@@ -524,7 +541,8 @@ def fourier_shift(input, shift, **kwargs):
     suffix = ' [Fourier Shift]'
     desc = input.instance().SeriesDescription
     filtered = input.copy(SeriesDescription = desc + suffix)
-    images = filtered.instances()
+    #images = filtered.instances()
+    images = filtered.images()
     for i, image in enumerate(images):
         input.status.progress(i+1, len(images), 'Filtering ' + desc)
         image.read()
@@ -561,7 +579,8 @@ def zoom(input, zoom, **kwargs):
     suffix = ' [Resize x ' + str(zoom) + ' ]'
     desc = input.instance().SeriesDescription
     zoomed = input.copy(SeriesDescription = desc + suffix)
-    images = zoomed.instances()
+    #images = zoomed.instances()
+    images = zoomed.images()
     for i, image in enumerate(images):
         input.status.progress(i+1, len(images), 'Resizing ' + desc)
         image.read()
@@ -578,15 +597,13 @@ def zoom(input, zoom, **kwargs):
 def resample(series, voxel_size=[1.0, 1.0, 1.0]):
     series.status.message('Reading transformations..')
     affine_source = series.affine_matrix()
+    if affine_source is None:
+        return
     if isinstance(affine_source, list):
         mapped_series = []
         for affine_slice_group in affine_source:
-            #v = dbdicom.utils.image.dismantle_affine_matrix(affine_slice_group)
-            #slice_group = series.subseries(ImageOrientationPatient = v['ImageOrientationPatient'])
-            #mapped = _resample_slice_group(slice_group, affine_slice_group, voxel_size=voxel_size)
             mapped = _resample_slice_group(series, affine_slice_group[0], affine_slice_group[0], voxel_size=voxel_size)
             mapped_series.append(mapped)
-            #slice_group.remove()
         desc = series.instance().SeriesDescription + '[resampled]'
         mapped_series = dbdicom.merge(mapped_series, inplace=True)
         mapped_series.SeriesDescription = desc
@@ -603,9 +620,6 @@ def reslice(series, orientation='axial'):
     if isinstance(affine_source, list):
         mapped_series = []
         for affine_slice_group in affine_source:
-            #v = dbdicom.utils.image.dismantle_affine_matrix(affine_slice_group)
-            #slice_group = series.subseries(ImageOrientationPatient = v['ImageOrientationPatient'])
-            #mapped = _reslice_slice_group(slice_group, affine_slice_group, orientation=orientation)
             mapped = _reslice_slice_group(series, affine_slice_group[0], affine_slice_group[0], orientation=orientation)
             mapped_series.append(mapped)
             #slice_group.remove()
@@ -636,61 +650,44 @@ def _resample_slice_group(series, affine_source, slice_group, voxel_size=[1.0, 1
         resliced_series.adopt(slice_group)
         return resliced_series
 
+    # Perform transformation on the arrays to determine the output shape
+    dim = [
+        array.shape[0] * p['PixelSpacing'][1],
+        array.shape[1] * p['PixelSpacing'][0],
+        array.shape[2] * p['SliceThickness'],
+    ]
+    output_shape = [1 + round(dim[i]/voxel_size[i]) for i in range(3)]
+
     # Determine the transformation matrix and offset
     source_to_target = np.linalg.inv(affine_source).dot(affine_target)
     matrix, offset = nib.affines.to_matvec(source_to_target)
     
     # Get arrays
     array, headers = series.array(['SliceLocation','AcquisitionTime'], pixels_first=True)
-
-    # Perform transformation on the arrays to determine the output shape
-    dim = [
-        array.shape[0] * p['PixelSpacing'][1],
-        array.shape[1] * p['PixelSpacing'][0],
-        array.shape[2] * p['SliceThickness']]
-    output_shape = [1 + round(dim[i]/voxel_size[i]) for i in range(3)]
-    resliced = np.empty(tuple(output_shape) + array.shape[-2:])
+    if array is None:
+        return resliced_series
 
     # Perform the affine transformation
     cnt=0
-    nt, nk = array.shape[-2], array.shape[-1]
+    ns, nt, nk = output_shape[2], array.shape[-2], array.shape[-1]
+    pos, loc = dbdicom.utils.image.image_position_patient(affine_target, ns)
     for t in range(nt):
         for k in range(nk):
             cnt+=1
             series.status.progress(cnt, nt*nk, 'Performing transformation..')
-            resliced[:,:,:,t,k] = scipy.ndimage.affine_transform(
+            resliced = scipy.ndimage.affine_transform(
                 array[:,:,:,t,k],
                 matrix = matrix,
                 offset = offset,
-                output_shape = output_shape)
-    
-    # Save in database as new series
-    series.status.message('Saving results..')
-    ns, nt, nk = resliced.shape[2], resliced.shape[3], resliced.shape[4]
-    slab = dbdicom.utils.image.dismantle_affine_matrix(affine_target)
-    cnt=0
-    for t in range(nt):
-        # Retain source acquisition times
-        # Assign acquisition time of slice=0 to all slices
-        acq_time = headers[0,t,0].AcquisitionTime
-        for k in range(nk):
-            for s in range(ns):
-                cnt+=1
-                series.status.progress(cnt, ns*nt*nk, 'Saving results..')
-                pos = [
-                    slab['ImagePositionPatient'][i] 
-                    + s*slab['SliceThickness']*slab['slice_cosine'][i]
-                    for i in range(3)
-                ]
-                loc = np.dot(np.array(pos), np.array(slab['slice_cosine']))
-                image = headers[0,0,0].copy_to(resliced_series)
-                image.read()
-                image.AcquisitionTime = acq_time
-                image.affine_matrix = affine_target 
-                image.ImagePositionPatient = pos
-                image.SliceLocation = loc
-                image.set_pixel_array(resliced[:,:,s,t,k])
-                image.clear()
+                output_shape = output_shape,
+            )
+            resliced_series.set_array(resliced, 
+                source = headers[0,t,k],
+                pixels_first = True,
+                affine_matrix = affine_target,
+                ImagePositionPatient = pos,
+                SliceLocation = loc,
+            )
     series.status.message('Finished mapping..')
     return resliced_series
 
@@ -703,7 +700,6 @@ def _reslice_slice_group(series, affine_source, slice_group, orientation='axial'
 
     # Work out the affine matrix of the new series
     p = dbdicom.utils.image.dismantle_affine_matrix(affine_source)
-    #slice_group = series.instances(ImageOrientationPatient=p['ImageOrientationPatient'])
     image_positions = [s.ImagePositionPatient for s in slice_group]
     rows = slice_group[0].Rows
     columns = slice_group[0].Columns
@@ -713,7 +709,7 @@ def _reslice_slice_group(series, affine_source, slice_group, orientation='axial'
         p['PixelSpacing'], 
         rows,
         columns)
-    spacing = min([p['PixelSpacing'][0], p['PixelSpacing'][1], p['SliceThickness']])
+    spacing = np.mean([p['PixelSpacing'][0], p['PixelSpacing'][1], p['SliceThickness']])
     affine_target = dbdicom.utils.image.standard_affine_matrix(
         box, 
         [spacing, spacing],
@@ -725,13 +721,6 @@ def _reslice_slice_group(series, affine_source, slice_group, orientation='axial'
         series.status.message('Series is already in the right orientation..')
         resliced_series.adopt(slice_group)
         return resliced_series
-
-    # Determine the transformation matrix and offset
-    source_to_target = np.linalg.inv(affine_source).dot(affine_target)
-    matrix, offset = nib.affines.to_matvec(source_to_target)
-    
-    # Get arrays
-    array, headers = series.array(['SliceLocation','AcquisitionTime'], pixels_first=True)
 
     #Perform transformation on the arrays to determine the output shape
     if orientation == 'axial':
@@ -753,53 +742,39 @@ def _reslice_slice_group(series, affine_source, slice_group, orientation='axial'
             np.linalg.norm(np.array(box['LAH'])-np.array(box['RAH'])),
         ]
     output_shape = [1 + round(d/spacing) for d in dim]
-    resliced = np.empty(tuple(output_shape) + array.shape[-2:])
 
-    # Perform the affine transformation
+    # Determine the transformation matrix and offset
+    source_to_target = np.linalg.inv(affine_source).dot(affine_target)
+    matrix, offset = nib.affines.to_matvec(source_to_target)
+    
+    # Get arrays
+    array, headers = series.array(['SliceLocation','AcquisitionTime'], pixels_first=True)
+
+    # Perform the affine transformation and save results
     cnt=0
-    nt, nk = array.shape[-2], array.shape[-1]
+    ns, nt, nk = output_shape[2], array.shape[-2], array.shape[-1] 
+    pos, loc = dbdicom.utils.image.image_position_patient(affine_target, ns)
     for t in range(nt):
         for k in range(nk):
             cnt+=1
-            series.status.progress(cnt, nt*nk, 'Performing transformation..')
-            resliced[:,:,:,t,k] = scipy.ndimage.affine_transform(
+            series.status.progress(cnt, nt*nk, 'Calculating..')
+            resliced = scipy.ndimage.affine_transform(
                 array[:,:,:,t,k],
                 matrix = matrix,
                 offset = offset,
-                output_shape = output_shape)
-    
-    # Save results in the database
-    series.status.message('Saving results..')
-    ns, nt, nk = resliced.shape[2], resliced.shape[3], resliced.shape[4]
-    slab = dbdicom.utils.image.dismantle_affine_matrix(affine_target)
-    cnt=0
-    for t in range(nt):
-        # Retain source acquisition times
-        # Assign acquisition time of slice=0 to all slices
-        acq_time = headers[0,t,0].AcquisitionTime
-        for k in range(nk):
-            for s in range(ns):
-                cnt+=1
-                series.status.progress(cnt, ns*nt*nk, 'Saving results..')
-                pos = [
-                    slab['ImagePositionPatient'][i] 
-                    + s*slab['SliceThickness']*slab['slice_cosine'][i]
-                    for i in range(3)
-                ]
-                loc = np.dot(np.array(pos), np.array(slab['slice_cosine']))
-                image = headers[0,0,0].copy_to(resliced_series)
-                image.read()
-                image.AcquisitionTime = acq_time
-                image.affine_matrix = affine_target
-                image.ImagePositionPatient = pos
-                image.SliceLocation = loc
-                image.set_pixel_array(resliced[:,:,s,t,k])
-                image.clear()
+                output_shape = output_shape,
+            )
+            # Saving results at each time to avoid memory problems.
+            # Assign acquisition time of slice=0 to all slices
+            resliced_series.set_array(resliced, 
+                source = headers[0,t,k],
+                pixels_first = True,
+                affine_matrix = affine_target,
+                ImagePositionPatient = pos,
+                SliceLocation = loc,
+            )
     series.status.message('Finished mapping..')
     return resliced_series
-
-
-
 
 
 

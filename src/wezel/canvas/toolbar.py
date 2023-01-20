@@ -127,6 +127,9 @@ class ToolBar(QWidget):
         self.regionList.setView()
 
     def setArray(self, array, center, width, colormap):
+        self.setEnabled(array is not None)
+        if array is None:
+            return
         self.setEditMaskEnabled()
         if self.window.mode.isLocked:
             v = self.window.getValue()
@@ -142,10 +145,13 @@ class ToolBar(QWidget):
             item = self.canvas.maskItem
             undoEnable = item._current!=0 and item._current is not None
             redoEnable = item._current!=len(item._bin)-1 and item._current is not None
-            if item.bin() is None:
-                eraseEnable = False
-            else:
-                eraseEnable = item.bin().any()
+            # Small bug here - does not reset properly when slices
+            # are changed. Skipping for now..
+            # if item.bin() is None:
+            #     eraseEnable = False
+            # else:
+            #     eraseEnable = item.bin().any()
+            eraseEnable = True
         else:
             undoEnable = enable
             redoEnable = enable

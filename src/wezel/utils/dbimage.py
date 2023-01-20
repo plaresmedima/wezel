@@ -22,7 +22,8 @@ def threshold(input, low_threshold=0, high_threshold=1, method='absolute'):
     suffix = ' [Threshold segmentation]'
     desc = input.instance().SeriesDescription
     filtered = input.copy(SeriesDescription = desc+suffix)
-    images = filtered.instances()
+    #images = filtered.instances()
+    images = filtered.images()
     for i, image in enumerate(images):
         input.status.progress(i+1, len(images), 'Filtering ' + desc)
         image.read()

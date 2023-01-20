@@ -56,8 +56,13 @@ class SeriesDisplay(MainWidget):
         if image is None:
             return
         image.read()
+        array = image.array()
+        if array is None:
+            self.setError('Series ' + series.label() + ' does not contain images. \n\n Nothing to show here..')
+            image.clear()
+            return
         self.canvas.setArray(
-            image.array(),
+            array,
             image.SOPInstanceUID, 
             image.WindowCenter, 
             image.WindowWidth, 
@@ -194,6 +199,9 @@ class SeriesDisplay4D(MainWidget):
             return
         self.canvas._model._series = series
         array, header = series.array(sortby, pixels_first=True)
+        if array is None:
+            self.setError('Series ' + series.label() + ' does not have images. \n\n Nothing to show here..')
+            return
         series.status.hide()
         self.series = series
         self.array = array[...,0].reshape(array.shape[:4])

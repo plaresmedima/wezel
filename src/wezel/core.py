@@ -27,41 +27,115 @@ QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
 # https://doc.qt.io/qtforpython/overviews/stylesheet-examples.html
 # 
 
-STYLESHEET = """ 
-    QMdiArea {
-        background-color: rgb(32, 32, 32);
+
+
+STYLESHEET = """
+    QWidget {
+        background-color: #1E1E1E;
+        color: #DCDCDC;
     }
-    QDockWidget {
-        border: 0px;
-    }
-    QScrollBar:vertical {
-        border: 0px ;
-        background: black;
-        width: 10px;
-    }
-    QScrollBar::handle:vertical {
-        background: rgb(32, 32, 32);
-        min-height: 20px;
-    }
-    QMainWindow {
-        background: rgb(128, 128, 128);
-    }
-    QMainWindow::separator {
-        width: 2px; /* when vertical */
-        height: 2px; /* when horizontal */
-    }
+
     QMenuBar {
-        background-color: rgb(128, 128, 128); 
+        background-color: #2C2C2C;
+        color: #DCDCDC;
     }
-    QTreeView {
-        background: rgb(32, 32, 32);
+
+    QMenuBar::item {
+        background-color: #2C2C2C;
+        color: #DCDCDC;
     }
-    QTreeView::item { 
-        color: rgb(128, 128, 128);
+
+    QMenu {
+        background-color: #2C2C2C;
+        color: #DCDCDC;
     }
-    QTreeView::item:selected { 
-        background-color: rgb(32, 32, 64);
+
+    QMenu::item {
+        background-color: #2C2C2C;
+        color: #DCDCDC;
     }
+
+    QTabWidget {
+        background-color: #2C2C2C;
+        color: #DCDCDC;
+    }
+
+    QTabWidget::pane {
+        border: 1px solid #3F3F3F;
+        background-color: #2C2C2C;
+    }
+
+    QTabWidget::tab-bar {
+        left: 5px; /* move to the right by 5px */
+    }
+
+    QTabBar::tab {
+        background-color: #2C2C2C;
+        color: #DCDCDC;
+        padding: 5px;
+        border: 1px solid #3F3F3F;
+        border-bottom-color: #2C2C2C; /* same as pane color */
+        border-top-left-radius: 4px;
+        border-top-right-radius: 4px;
+    }
+
+    QTabBar::tab:selected {
+        background-color: #3F3F3F;
+    }
+
+    """
+
+
+SMALLSTYLESHEET = """
+
+    QMenuBar {
+        background-color: #2C2C2C;
+        color: #DCDCDC;
+    }
+
+    QMenuBar::item {
+        background-color: #2C2C2C;
+        color: #DCDCDC;
+    }
+
+    QMenu {
+        background-color: #2C2C2C;
+        color: #DCDCDC;
+    }
+
+    QMenu::item {
+        background-color: #2C2C2C;
+        color: #DCDCDC;
+    }
+
+    QTabWidget {
+        background-color: #2C2C2C;
+        color: #DCDCDC;
+    }
+
+    QTabWidget::pane {
+        border: 1px solid #3F3F3F;
+        background-color: #2C2C2C;
+    }
+
+    QTabWidget::tab-bar {
+        left: 5px; /* move to the right by 5px */
+    }
+
+    QTabBar::tab {
+        background-color: #2C2C2C;
+        color: #DCDCDC;
+        padding: 5px;
+        border: 1px solid #3F3F3F;
+        border-bottom-color: #2C2C2C; /* same as pane color */
+        border-top-left-radius: 4px;
+        border-top-right-radius: 4px;
+    }
+
+    QTabBar::tab:selected {
+        background-color: #3F3F3F;
+    }
+
     """
 
 
@@ -83,18 +157,40 @@ class Wezel:
             self.QApp.exec()
             #sys.exit(self.QApp.exec())
         except Exception as e:
-            print('Error: ' + str(e))
-            self.log.exception('Error: ' + str(e))
+            # Use QMessage
+            print('Wezel Error: ' + str(e))
+            self.log.exception('Wezel Error: ' + str(e))
 
 
 class Main(QMainWindow):
 
     def __init__(self, wzl): 
+        """
+        Initialize the Wezel class and its attributes.
+        
+        Parameters:
+            wzl (object): An instance of the wezel class.
+        
+        Attributes:
+            wezel (object): An instance of the wezel class, passed as an argument.
+            dialog (object): An instance of the Dialog class from the wezel.widgets module.
+            status (object): An instance of the StatusBar class from the wezel.widgets module.
+            toolBar (dict): A dictionary to store the toolbar widgets.
+            toolBarDockWidget (QDockWidget): A QDockWidget instance to hold the toolbar.
+            treeView (None): Placeholder for the treeview widget.
+            treeViewDockWidget (QDockWidget): A QDockWidget instance to hold the treeview.
+            folder (None): Placeholder for the folder widget.
+            central (object): An instance of the MainMultipleDocumentInterface class from the wezel.widgets module.
+        """
+
         super().__init__()
         self.wezel = wzl
-        #self.setStyleSheet(STYLESHEET)
+        #self.setStyleSheet(SMALLSTYLESHEET)
         self.setWindowTitle("Wezel")
-        #self.setWindowIcon(QIcon(wezel.icons.favicon))
+        
+        # self.offset = None
+        # self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowMinMaxButtonsHint)
+        # self.setMouseTracking(True)
 
         self.dialog = wezel.widgets.Dialog(self)
         self.status = wezel.widgets.StatusBar()
@@ -116,6 +212,25 @@ class Main(QMainWindow):
         self.setCentralWidget(self.central)
 
         self.set_menu(wezel.menus.dicom)
+
+    # def mousePressEvent(self, event):
+    #     self.offset = event.pos()
+
+    # def mouseMoveEvent(self, event):
+    #     if self.offset is not None:
+    #         x=event.globalX()
+    #         y=event.globalY()
+    #         x_w = self.offset.x()
+    #         y_w = self.offset.y()
+    #         self.move(x-x_w, y-y_w)
+
+    # def mouseReleaseEvent(self, event):
+    #     self.offset is None
+        
+    # def resizeEvent(self, event):
+    #     # add 8px padding on each side
+    #     self.setContentsMargins(8, 8, 8, 8)
+    #     super().resizeEvent(event)
 
     def closeEvent(self, event): #main
         accept = self.close()
@@ -159,6 +274,9 @@ class Main(QMainWindow):
         self.status.hide()
         
     def display(self, object):
+        if object is None:
+            self.dialog.information('There are no data to show here')
+            return
         if object.type() == 'Database':
             self.treeView = wezel.widgets.DICOMFolderTree(object)
             self.treeView.itemSelectionChanged.connect(self.menuBar().enable)
@@ -198,7 +316,9 @@ class Main(QMainWindow):
         # Delete widget when subwindow closes
         widget = subWindow.widget().__class__.__name__
         if 0 == self.central.countSubWindow(widget):
-            subWindow.widget().toolBar.setEnabled(False)
+            toolBar = subWindow.widget().toolBar
+            if toolBar is not None:
+                toolBar.setEnabled(False)
             #self.toolBarDockWidget.hide()
         #self.refresh()
 

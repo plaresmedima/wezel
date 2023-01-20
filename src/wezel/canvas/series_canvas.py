@@ -50,22 +50,16 @@ class SeriesCanvas(canvas.Canvas):
         self._model.setMask(bin)
 
         # update toolbar and display
-        self._model.setArray(
-            uid,
-            center,
-            width,
-            colormap)
-        if self.toolBar is not None:
-            self.toolBar.setArray(
-                array,
-                self._model.center(), 
-                self._model.width(), 
-                self._model.colormap())
-        super().setImage(
-            array, 
+        self._model.setArray(uid, center, width, colormap)
+        super().setImage(array, 
             self._model.center(), 
             self._model.width(), 
             self._model.colormap())
+        if self.toolBar is not None:
+            self.toolBar.setArray(array,
+                self._model.center(), 
+                self._model.width(), 
+                self._model.colormap())
 
         # get new mask
         mask = self._model.mask()
