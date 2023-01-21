@@ -105,10 +105,10 @@ class Test_UserInput(wezel.Action):
 
 class Test_Copy(wezel.Action):
     def enable(self, app):
-        return app.nr_selected(3) != 0
+        return app.nr_selected('Series') != 0
 
     def run(self, app):
-        series_list = app.get_selected(3)
+        series_list = app.selected('Series')
         window = wezel.widgets.LoggingWidget(test_Copy, series_list=series_list)
         app.addAsSubWindow(window, "Test Logging to GUI while copying DICOM series")
        
@@ -123,10 +123,10 @@ class Test_Export(wezel.Action):
     """Export selected series"""
 
     def enable(self, app):
-        return app.nr_selected(3) != 0
+        return app.nr_selected('Series') != 0
 
     def run(self, app):
-        series = app.get_selected(3)
+        series = app.selected('Series')
         path = app.dialog.directory("Where do you want to export the data?")
         window = wezel.widgets.LoggingWidget(test_export, series=series, path=path)
         app.addAsSubWindow(window, "Test Logging to GUI while copying numpy arrays")

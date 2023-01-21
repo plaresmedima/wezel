@@ -101,7 +101,7 @@ class SeriesViewerMetaData(MainWidget):
             self.setError('Series ' + series.label() + ' is empty. \n\n Nothing to show here..')
             return 
         self._objectDICOM = instances[0].get_dataset()
-        self.series = series
+        self._series = series
 
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -137,6 +137,9 @@ class SeriesViewerMetaData(MainWidget):
 
         self.layout().addLayout(self.horizontalBox)
         self.layout().addWidget(self.tableWidget) 
+
+    def series(self): # requried attribute
+        return self._series
         
     
     def resizeColumnsToContents(self):
@@ -288,7 +291,7 @@ class SeriesViewerMetaData(MainWidget):
                 else:
                     text = item.text()
                 df.at[row, columHeaders[col]] = text
-        filename, _ = QFileDialog.getSaveFileName(parent, 'Save CSV file as ...', self.series.label()+'.csv', "CSV files (*.csv)") 
+        filename, _ = QFileDialog.getSaveFileName(parent, 'Save CSV file as ...', self._series.label()+'.csv', "CSV files (*.csv)") 
         if filename != '':
             df.to_csv(filename, index=False)
 

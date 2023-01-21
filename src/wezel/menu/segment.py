@@ -1,6 +1,6 @@
 import numpy as np
 import wezel
-from wezel.utils import dbimage, skimage, scipy
+from dbdicom.wrappers import numpy, skimage, scipy
 
 
 def all(parent):   
@@ -35,7 +35,7 @@ class ThresholdAbsolute(wezel.Action):
         # Filter series
         series = app.selected('Series')
         for sery in series:
-            filtered = dbimage.threshold(
+            filtered = numpy.threshold(
                 sery, 
                 low_threshold = f[0]['value'],
                 high_threshold = f[1]['value'],
@@ -68,7 +68,7 @@ class ThresholdRelative(wezel.Action):
         # Filter series
         series = app.selected('Series')
         for sery in series:
-            filtered = dbimage.threshold(
+            filtered = numpy.threshold(
                 sery, 
                 low_threshold = f[0]['value']/100,
                 high_threshold = f[1]['value']/100,

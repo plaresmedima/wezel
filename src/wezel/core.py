@@ -147,9 +147,6 @@ class Wezel:
         self.QApp.setWindowIcon(QIcon(wezel.icons.favicon))
         self.main = Main(self)
 
-    def open(self, path):
-        self.main.open(path)
-
     def show(self):    
         self.log.info('Launching Wezel!')
         try:
@@ -160,6 +157,12 @@ class Wezel:
             # Use QMessage
             print('Wezel Error: ' + str(e))
             self.log.exception('Wezel Error: ' + str(e))
+
+    def open(self, path):
+        self.main.open(path)
+
+    def set_menu(self, menu):
+        self.main.set_menu(menu)
 
 
 class Main(QMainWindow):
@@ -206,7 +209,6 @@ class Main(QMainWindow):
         self.addDockWidget(Qt.LeftDockWidgetArea, self.treeViewDockWidget)
         self.treeViewDockWidget.hide()
 
-        self.folder = None # should be in TreeView
         self.central = wezel.widgets.MainMultipleDocumentInterface()
         self.central.subWindowActivated.connect(lambda subWindow: self.activateSubWindow(subWindow))
         self.setCentralWidget(self.central)
@@ -232,6 +234,8 @@ class Main(QMainWindow):
     #     self.setContentsMargins(8, 8, 8, 8)
     #     super().resizeEvent(event)
 
+
+
     def closeEvent(self, event): #main
         accept = self.close()
         if accept:
@@ -244,19 +248,18 @@ class Main(QMainWindow):
         self.setMenuBar(self.menubar)
 
     def open(self, path):
-        self.folder = db.database(path=path, 
+        folder = db.database(path=path, 
             status = self.status, 
             dialog = self.dialog)
-        self.display(self.folder)
+        self.display(folder)
         self.status.hide()
 
     def close(self):
         """Closes the application."""
-        if self.folder is None:
+        if self.database() is None:
             return True
-        accept = self.folder.close()
+        accept = self.database().close()
         if accept:
-            self.folder = None
             self.toolBarDockWidget.hide()
             self.treeViewDockWidget.hide()
             for subWindow in self.central.subWindowList():
@@ -269,7 +272,7 @@ class Main(QMainWindow):
         Refreshes the Wezel display.
         """
         self.status.message('Refreshing display..')
-        self.treeView.setFolder()
+        self.treeView.setDatabase()
         self.menuBar().enable()
         self.status.hide()
         
@@ -294,20 +297,91 @@ class Main(QMainWindow):
         elif object.type() == 'Instance':
             pass
 
-    def get_selected(self, generation):   
+    # THIS WILL BE DEPRECATED!! 
+    # Included for backwards compatibility only.
+    @property
+    def folder(self):
+        return self.database()
+
+    # THIS WILL BE DEPRECATED!!
+    # Use selected()
+    def get_selected(self, generation):  
         if self.treeView is None: 
             return []
         return self.treeView.get_selected(generation)
 
-    def selected(self, generation):
+    # Retrieve the selected database
+    def database(self):
+        databases = self.selected('Databases')
+        if databases == []:
+            return 
+        else:
+            return databases[0]        
+
+    def selected(self, generation='Series'):
+        """Returns a list of selected objects of the requested generation"""
+
+        # Check if any databases are open
         if self.treeView is None: 
             return []
-        return self.treeView.selected(generation)
+
+        # If an object is selected in the treeView, use that.
+        if generation == 'Databases':
+            return [self.treeView.database()]
+        sel = self.treeView.selected(generation)
+        if sel != []:
+            return sel
+
+        # If none are selected in the database, check the display.
+        activeWindow = self.central.activeWindow
+        if activeWindow is None:
+            return []
+        widget = activeWindow.widget()
+        if generation=='Instances':
+            if hasattr(widget, 'instance'):
+                return [widget.instance()]
+        elif generation=='Series':
+            if hasattr(widget, 'series'):
+                return [widget.series()]
+        elif generation=='Studies':
+            if hasattr(widget, 'study'):
+                return [widget.study()]
+        elif generation=='Patients':
+            if hasattr(widget, 'patient'):
+                return [widget.patient()]
+        elif generation=='Databases':
+            if hasattr(widget, 'database'):
+                return [widget.database()]
+        return []
+        
  
     def nr_selected(self, generation):
         if self.treeView is None: 
             return 0
-        return self.treeView.nr_selected(generation)
+        nr = self.treeView.nr_selected(generation)
+        if nr != 0:
+            return nr
+        activeWindow = self.central.activeWindow
+        if activeWindow is None:
+            return 0
+        widget = activeWindow.widget()
+        if generation=='Instances':
+            if hasattr(widget, 'instance'):
+                return 1
+        elif generation=='Series':
+            if hasattr(widget, 'series'):
+                return 1
+        elif generation=='Studies':
+            if hasattr(widget, 'study'):
+                return 1
+        elif generation=='Patients':
+            if hasattr(widget, 'patient'):
+                return 1
+        elif generation=='Databases':
+            if hasattr(widget, 'database'):
+                return 1
+        return 0
+        
 
     def closeSubWindow(self, subWindow):
         self.central.removeSubWindow(subWindow)
@@ -488,15 +562,6 @@ class Action(QAction):
         super().__init__()
 
         self.main = parent.main
-        # parent.addAction(self)
-        # parent._actions.append(self)
-
-        # if hasattr(parent, 'main'):
-        #     self.main = parent.main
-        #     parent.addAction(self)
-        #     parent._actions.append(self)
-        # else:
-        #     self.main = parent
         if text is None:
             text = self.__class__.__name__
         self.setText(text)

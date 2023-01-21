@@ -1,5 +1,5 @@
 import wezel
-from wezel.utils import skimage, scipy
+from dbdicom.wrappers import skimage, scipy
 
 
 def all(parent): 
@@ -93,7 +93,7 @@ class OverlayOn(wezel.Action):
             if input.cancel:
                 return
             underlay = seriesList[input.values[0]["value"]]
-            mapped = series.map_to(underlay)
+            mapped = scipy.map_to(series, underlay)
             app.display(mapped)
         app.refresh()
 

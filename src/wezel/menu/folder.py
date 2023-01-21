@@ -43,12 +43,12 @@ class Close(wezel.Action):
     Close wezel.
     """ 
     def enable(self, app): 
-        if app.folder is None:
+        if app.database() is None:
             return False
-        return app.folder.manager.is_open()
+        return app.database().manager.is_open()
 
     def run(self, app):
-        closed = app.folder.close()
+        closed = app.database().close()
         if closed: 
             app.close()
 
@@ -56,9 +56,9 @@ class Close(wezel.Action):
 class Read(wezel.Action):
 
     def enable(self, app): 
-        if app.folder is None:
+        if app.database() is None:
             return False  
-        return app.folder.manager.is_open()
+        return app.database().manager.is_open()
 
     def run(self, app):
         """
@@ -66,7 +66,7 @@ class Read(wezel.Action):
         """
         app.status.cursorToHourglass()
         app.central.closeAllSubWindows()
-        app.folder.scan()
+        app.database().scan()
         app.status.cursorToNormal() 
         app.refresh()
 
@@ -74,30 +74,30 @@ class Read(wezel.Action):
 class Restore(wezel.Action):
 
     def enable(self, app):
-        if app.folder is None:
+        if app.database() is None:
             return False
-        return app.folder.manager.is_open()
+        return app.database().manager.is_open()
 
     def run(self, app):
         """
         Restore the open DICOM folder.
         """
-        app.folder.restore()
+        app.database().restore()
         app.refresh()
 
 
 class Save(wezel.Action):
 
     def enable(self, app):
-        if app.folder is None:
+        if app.database() is None:
             return False  
-        return app.folder.manager.is_open()
+        return app.database().manager.is_open()
 
     def run(self, app):
         """
         Saves the open DICOM folder.
         """
-        app.folder.save()
+        app.database().save()
 
 
 class OpenSubFolders(wezel.Action):
@@ -125,19 +125,18 @@ class OpenSubFolders(wezel.Action):
             folder.save()
         app.status.cursorToNormal()
         app.status.hide()
-        app.folder = folder
-        app.display(app.folder)
+        app.display(folder)
 
 
 class ExportAsDicom(wezel.Action):
     """Export selected series"""
 
     def enable(self, app):
-        return app.nr_selected(3) != 0
+        return app.nr_selected('Series') != 0
 
     def run(self, app):
 
-        series = app.get_selected(3)
+        series = app.selected('Series')
         if series == []:
             app.dialog.information("Please select at least one series")
             return
@@ -151,10 +150,10 @@ class ExportAsCsv(wezel.Action):
     """Export selected series"""
 
     def enable(self, app):
-        return app.nr_selected(3) != 0
+        return app.nr_selected('Series') != 0
 
     def run(self, app):
-        series = app.get_selected(3)
+        series = app.selected('Series')
         if series == []:
             app.dialog.information("Please select at least one series")
             return
@@ -168,10 +167,10 @@ class ExportAsPng(wezel.Action):
     """Export selected series"""
 
     def enable(self, app):
-        return app.nr_selected(3) != 0
+        return app.nr_selected('Series') != 0
 
     def run(self, app):
-        series = app.get_selected(3)
+        series = app.selected('Series')
         if series == []:
             app.dialog.information("Please select at least one series")
             return
@@ -185,10 +184,10 @@ class ExportAsNifti(wezel.Action):
     """Export selected series"""
 
     def enable(self, app):
-        return app.nr_selected(3) != 0
+        return app.nr_selected('Series') != 0
 
     def run(self, app):
-        series = app.get_selected(3)
+        series = app.selected('Series')
         if series == []:
             app.dialog.information("Please select at least one series")
             return

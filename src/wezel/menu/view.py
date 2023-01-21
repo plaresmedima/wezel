@@ -1,9 +1,5 @@
 import wezel
 
-#Named constants
-SERIES_VIEWER = 3
-IMAGE_VIEWER = 4
-
 def all(parent):
    
     parent.action(DataBase, text = 'Database')
@@ -53,10 +49,10 @@ class DataBase(wezel.Action):
 class Series(wezel.Action):
 
     def enable(self, app):
-        return app.nr_selected(SERIES_VIEWER) != 0
+        return app.nr_selected('Series') != 0
 
     def run(self, app):
-        for series in app.get_selected(SERIES_VIEWER):
+        for series in app.selected('Series'):
             app.display(series)      
         #app.central.tileSubWindows()      
 
@@ -64,10 +60,10 @@ class Series(wezel.Action):
 class Array4D(wezel.Action):
 
     def enable(self, app):
-        return app.nr_selected(3) != 0
+        return app.nr_selected('Series') != 0
 
     def run(self, app):
-        for series in app.get_selected(SERIES_VIEWER):
+        for series in app.selected('Series'):
             viewer = wezel.widgets.SeriesDisplay4D()
             viewer.setSeries(series)
             app.addWidget(viewer, series.label())
@@ -76,10 +72,10 @@ class Array4D(wezel.Action):
 class HeaderDICOM(wezel.Action):
 
     def enable(self, app):
-        return app.nr_selected(SERIES_VIEWER) != 0
+        return app.nr_selected('Series') != 0
 
     def run(self, app):
-       for series in app.get_selected(SERIES_VIEWER):
+       for series in app.selected('Series'):
             viewer = wezel.widgets.SeriesViewerMetaData(series)
             app.addWidget(viewer, series.label())
 

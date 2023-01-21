@@ -1,5 +1,5 @@
 import wezel
-from wezel.utils import scipy
+from dbdicom.wrappers import scipy
 
 
 def all(parent): 
@@ -428,8 +428,8 @@ class RankFilter(wezel.Action):
 
         # Default settings
         modes = ['reflect', 'constant', 'nearest', 'mirror', 'wrap']
-        rank = 10
-        size = 3
+        rank = 3
+        size = 6
         mode = 1
         cval = 0.0
         hshift = 0
@@ -465,14 +465,19 @@ class RankFilter(wezel.Action):
         # Filter series
         series = app.selected('Series')
         for sery in series:
-            resized = scipy.rank_filter(
-                sery, rank,
-                size = size,
-                mode = modes[mode],
-                cval = cval,
-                origin = [hshift, vshift],
-            )
-            app.display(resized)
+            try:
+                resized = scipy.rank_filter(
+                    sery, rank,
+                    size = size,
+                    mode = modes[mode],
+                    cval = cval,
+                    origin = [hshift, vshift],
+                )
+            except Exception as e:
+                msg = str(e) + '\n Please try again with different parameters'
+                app.dialog.error(msg)
+            else:
+                app.display(resized)
         app.refresh()
 
 
