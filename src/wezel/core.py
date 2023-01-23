@@ -213,7 +213,7 @@ class Main(QMainWindow):
         self.central.subWindowActivated.connect(lambda subWindow: self.activateSubWindow(subWindow))
         self.setCentralWidget(self.central)
 
-        self.set_menu(wezel.menus.dicom)
+        self.set_menu(wezel.menu.menubar.default)
 
     # def mousePressEvent(self, event):
     #     self.offset = event.pos()

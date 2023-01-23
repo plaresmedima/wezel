@@ -31,6 +31,16 @@ from wezel.core import Wezel
 
 def app():
 
+    # Otional
+    # This closes the splash screen
+    # pyi_splash is part of pyinstaller
+    try:
+        import pyi_splash
+        pyi_splash.update_text('Loaded wezel..')
+        pyi_splash.close()
+    except:
+        pass
+
     return Wezel()
 
 

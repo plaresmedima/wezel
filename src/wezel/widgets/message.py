@@ -225,7 +225,9 @@ class UserInput(QDialog):
         for key in paramDict:
             paramType, value1, value2, value3 = self._getParamData(paramDict[key])
             if paramType.lower() not in ("integer", "float", "string", "dropdownlist", "listview"):
-                raise TypeError
+                msg = paramType.lower() + ' is not a valid type \n'
+                msg += 'Must be either integer, float, string, dropdownlist or listview'
+                raise TypeError(msg)
             if paramType == "integer":
                 self.input = QSpinBox()
                 if value2:

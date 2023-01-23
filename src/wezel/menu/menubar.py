@@ -1,6 +1,6 @@
 import wezel
 
-def dicom(parent): 
+def default(parent): 
 
     wezel.menu.folder.all(parent.menu('File'))
     wezel.menu.edit.all(parent.menu('Edit'))
