@@ -95,7 +95,7 @@ class SeriesSliders(QWidget):
         # If all required tags are in the register,
         # then just extract the register for the series;
         # else read the data from disk.
-        columns = list(self.series.manager.columns)
+        columns = list(self.series.manager.columns) # Do we need all of these?
         tags = list(set(tags + columns))
         # if set(tags) == set(columns): # integrated in dbdicom read_dataframe
         #     self.dataFrame = self.series.register()

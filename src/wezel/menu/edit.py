@@ -6,7 +6,7 @@ import wezel
 def all(parent):
 
     parent.action(DeleteSeries, text='Series > Delete')
-    parent.action(Copy, text='Series > Copy', generation=3)
+    parent.action(Copy, text='Series > Copy', generation='Series')
     parent.action(CopySeries, text='Series > Copy to..')
     parent.action(MoveSeries, text='Series > Move to..')
     parent.action(MergeSeries, text='Series > Merge')
@@ -16,7 +16,7 @@ def all(parent):
     parent.action(SeriesExtractByValue, text='Series > Extract subseries (by value)')
     parent.separator()
     parent.action(DeleteStudies, text='Studies > Delete')
-    parent.action(Copy, text='Studies > Copy', generation=2)
+    parent.action(Copy, text='Studies > Copy', generation='Studies')
     parent.action(CopyStudies, text='Studies > Copy to..')
     parent.action(MoveStudies, text='Studies > Move to..')
     parent.action(MergeStudies, text='Studies > Merge')
@@ -24,8 +24,8 @@ def all(parent):
     parent.action(StudiesRename, text='Studies > Rename')
     parent.action(NewSeries, text='Studies > New series')
     parent.separator()
-    parent.action(Delete, text='Patients > Delete', generation=1)
-    parent.action(Copy, text='Patients > Copy', generation=1)
+    parent.action(Delete, text='Patients > Delete', generation='Patients')
+    parent.action(Copy, text='Patients > Copy', generation='Patients')
     parent.action(MergePatients, text='Patients > Merge')
     parent.action(PatientsRename, text='Patients > Rename')
     parent.action(NewStudy, text='Patients > New study')
@@ -41,7 +41,7 @@ class Copy(wezel.Action):
     def run(self, app):
 
         app.status.message("Copying..")
-        records = app.get_selected(self.generation)   
+        records = app.selected(self.generation)   
         # This can be faster - copy all in one go     
         for j, record in enumerate(records):
             #app.status.progress(j, len(records), 'Copying..')
@@ -56,7 +56,7 @@ class Delete(wezel.Action):
 
     def run(self, app):
         app.status.message("Deleting..")
-        records = app.get_selected(self.generation)        
+        records = app.selected(self.generation)        
         for j, record in enumerate(records):
             app.status.progress(j, len(records), 'Deleting..')
             record.remove()
@@ -93,7 +93,7 @@ class CopySeries(wezel.Action):
         return app.nr_selected('Series') != 0
 
     def run(self, app):
-        studies = app.folder.studies()
+        studies = app.database().studies()
         labels = [s.label() for s in studies]
         cancel, f = app.dialog.input(
             {'type':'dropdownlist', 'label':'Copy to study: ', 'list': labels, 'value': 0},
@@ -114,7 +114,7 @@ class MoveSeries(wezel.Action):
         return app.nr_selected('Series') != 0
 
     def run(self, app):
-        studies = app.folder.studies()
+        studies = app.database().studies()
         labels = [s.label() for s in studies]
         cancel, f = app.dialog.input(
             {'type':'dropdownlist', 'label':'Move to study: ', 'list': labels, 'value': 0},
@@ -135,7 +135,7 @@ class MoveStudies(wezel.Action):
         return app.nr_selected('Studies') != 0
 
     def run(self, app):
-        patients = app.folder.patients()
+        patients = app.database().patients()
         labels = [p.label() for p in patients]
         cancel, f = app.dialog.input(
             {'type':'dropdownlist', 'label':'Move to patient: ', 'list': labels, 'value': 0},
@@ -156,7 +156,7 @@ class CopyStudies(wezel.Action):
         return app.nr_selected('Studies') != 0
 
     def run(self, app):
-        patients = app.folder.patients()
+        patients = app.database().patients()
         labels = [p.label() for p in patients]
         cancel, f = app.dialog.input(
             {'type':'dropdownlist', 'label':'Copy to patient: ', 'list': labels, 'value': 0},
@@ -204,7 +204,7 @@ class NewPatient(wezel.Action):
 
     def run(self, app): 
         app.status.message('Creating new patient..')
-        app.folder.new_patient(PatientName='New patient')
+        app.database().new_patient(PatientName='New patient')
         app.refresh()
 
 
@@ -282,7 +282,7 @@ class SeriesRename(wezel.Action):
         return app.nr_selected('Series') != 0
 
     def run(self, app): 
-        series_list = app.get_selected(3)
+        series_list = app.selected('Series')
         for s in series_list:
             cancel, f = app.dialog.input(
                 {"type":"string", "label":"New series name:", "value": s.SeriesDescription},
@@ -328,12 +328,12 @@ class PatientsRename(wezel.Action):
 class SeriesExtractByIndex(wezel.Action):
 
     def enable(self, app):
-        return app.nr_selected(3) != 0
+        return app.nr_selected('Series') != 0
 
     def run(self, app):
 
         # Get source data
-        series = app.get_selected(3)[0]
+        series = app.selected('Series')[0]
         _, slices = series.get_pixel_array(['SliceLocation', 'AcquisitionTime'])
         series.status.hide()
         nz, nt = slices.shape[0], slices.shape[1]
@@ -369,12 +369,12 @@ class SeriesExtractByIndex(wezel.Action):
 class SeriesExtractByValue(wezel.Action):
 
     def enable(self, app):
-        return app.nr_selected(3) != 0
+        return app.nr_selected('Series') != 0
 
     def run(self, app):
 
         # Get source data
-        series = app.get_selected(3)[0]
+        series = app.selected('Series')[0]
         slice_locations = series.SliceLocation
         if not isinstance(slice_locations, list):
             slice_locations = [slice_locations]

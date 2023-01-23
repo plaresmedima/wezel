@@ -1,7 +1,8 @@
 import timeit
 import random
 import numpy as np
-from PyQt5.QtCore import pyqtSignal
+
+from dbdicom.wrappers import scipy
 
 from wezel import widgets, canvas
 from wezel.canvas.utils import colormap_to_LUT
@@ -50,22 +51,16 @@ class SeriesCanvas(canvas.Canvas):
         self._model.setMask(bin)
 
         # update toolbar and display
-        self._model.setArray(
-            uid,
-            center,
-            width,
-            colormap)
-        if self.toolBar is not None:
-            self.toolBar.setArray(
-                array,
-                self._model.center(), 
-                self._model.width(), 
-                self._model.colormap())
-        super().setImage(
-            array, 
+        self._model.setArray(uid, center, width, colormap)
+        super().setImage(array, 
             self._model.center(), 
             self._model.width(), 
             self._model.colormap())
+        if self.toolBar is not None:
+            self.toolBar.setArray(array,
+                self._model.center(), 
+                self._model.width(), 
+                self._model.colormap())
 
         # get new mask
         mask = self._model.mask()
@@ -293,7 +288,8 @@ class SeriesCanvasModel:
         # Overlay each of the selected series on the displayed series
         for s, series in enumerate(seriesList):
             # Create overlay
-            region, images = series.map_mask_to(self._series)
+            #region, images = series.map_mask_to(self._series)
+            region, images = scipy.map_mask_to(series, self._series)
             # Add new region
             newRegion = {'name': seriesLabels[s] + suffix, 'color': self.newColor()}
             if isinstance(region, list): # If self._series has multiple slice groups

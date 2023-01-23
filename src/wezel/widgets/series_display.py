@@ -23,7 +23,7 @@ class SeriesDisplay(MainWidget):
         self.sliders.valueChanged.connect(self.slidersChanged)
         self.canvas.arrowKeyPress.connect(lambda arrow: self.arrowKeyPress(arrow))
         self.canvas.mousePositionMoved.connect(
-            lambda x, y: self.sliders.series.status.pixelValue(x,y,self.canvas.array())
+            lambda x, y: self.series().status.pixelValue(x,y,self.canvas.array())
         )
 
         # Display
@@ -45,6 +45,9 @@ class SeriesDisplay(MainWidget):
         newSeries = self.canvas._model.saveRegions()
         if newSeries:
             self.databaseUpdated.emit()
+
+    def series(self):
+        return self.canvas._model._series
         
     def setSeries(self, series):
         if series.instances() == []:
@@ -56,8 +59,13 @@ class SeriesDisplay(MainWidget):
         if image is None:
             return
         image.read()
+        array = image.array()
+        if array is None:
+            self.setError('Series ' + series.label() + ' does not contain images. \n\n Nothing to show here..')
+            image.clear()
+            return
         self.canvas.setArray(
-            image.array(),
+            array,
             image.SOPInstanceUID, 
             image.WindowCenter, 
             image.WindowWidth, 
@@ -166,7 +174,6 @@ class SeriesDisplay4D(MainWidget):
         self.setStatus()
         self.setPlot() 
 
-
     def plotChanged(self):
         self.setStatus()
         self.setPlot()        
@@ -188,14 +195,20 @@ class SeriesDisplay4D(MainWidget):
         self.setStatus()
         self.setPlot()
 
+    def series(self):
+        return self.canvas._model._series
+
     def setSeries(self, series, sortby=['SliceLocation', 'AcquisitionTime']):
         if series.instances() == []:
             self.setError('Series ' + series.label() + ' is empty. \n\n Nothing to show here..')
             return
         self.canvas._model._series = series
         array, header = series.array(sortby, pixels_first=True)
+        if array is None:
+            self.setError('Series ' + series.label() + ' does not have images. \n\n Nothing to show here..')
+            return
         series.status.hide()
-        self.series = series
+        #self.series = series
         self.array = array[...,0].reshape(array.shape[:4])
         self.zlabel = sortby[0]
         self.tlabel = sortby[1]
@@ -258,7 +271,7 @@ class SeriesDisplay4D(MainWidget):
             msg += ', ' + self.zlabel + ' = ' + str(self.zcoords[z,t])
             msg += ', ' + self.tlabel + ' = ' + str(self.tcoords[z,t])
             msg += ', signal = ' + str(v)
-        self.series.status.message(msg)
+        self.series().status.message(msg)
 
     def setCanvas(self):
         z = self.viewSlider.value()

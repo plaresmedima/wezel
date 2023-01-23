@@ -30,19 +30,19 @@ class Dialog():
 
         self.parent = parent
 
-    def information(self, message="Message in the box", title="Window Title"):
+    def information(self, message="Message in the box", title="Information"):
         """
         Information message. Press 'OK' to continue.
         """
         QMessageBox.information(self.parent, title, message)
 
-    def warning(self, message="Message in the box", title="Window Title"):
+    def warning(self, message="Message in the box", title="Warning"):
         """
         Warning message. Press 'OK' to continue.
         """
         QMessageBox.warning(self.parent, title, message)
 
-    def error(self, message="Message in the box", title="Window Title"):
+    def error(self, message="Message in the box", title="Error"):
         """
         Error message. Press 'OK' to continue.
         """
@@ -166,15 +166,6 @@ class StatusBar(QStatusBar):
         self.message(text)
 
 
-# User-defined exceptions
-class Error(Exception):
-   """Base class for other exceptions"""
-   pass
-
-class IncorrectParameterTypeError(Error):
-   """Raised when a parameter type is not 'integer', 'float' or 'string'.
-   A unit test for developers to avoid typos."""
-   pass
 
 class UserInput(QDialog):
     """
@@ -234,7 +225,7 @@ class UserInput(QDialog):
         for key in paramDict:
             paramType, value1, value2, value3 = self._getParamData(paramDict[key])
             if paramType.lower() not in ("integer", "float", "string", "dropdownlist", "listview"):
-                raise IncorrectParameterTypeError
+                raise TypeError
             if paramType == "integer":
                 self.input = QSpinBox()
                 if value2:

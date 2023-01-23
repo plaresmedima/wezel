@@ -1,12 +1,15 @@
 # This is the code run to create an executable
 
 # to build an executable:
-# pyinstaller --name wezel --clean --onefile --noconsole --additional-hooks-dir=. exec.py
-# with splash screen
+# -----------------------
+# distribution mode: splash screen, single file and no console
 # pyinstaller --name wezel --clean --onefile --noconsole --additional-hooks-dir=. --splash wezel.jpg exec.py
+# debugging mode: not single file & no splash & console included
+# pyinstaller --name wezel --clean --additional-hooks-dir=. exec.py
 
 
 import wezel
+import numpy as np
 
 
 if __name__ == "__main__":

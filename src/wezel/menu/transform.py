@@ -1,5 +1,5 @@
 import wezel
-from wezel.utils import skimage, scipy
+from dbdicom.wrappers import skimage, scipy, elastix, dipy
 
 
 def all(parent): 
@@ -14,11 +14,15 @@ def all(parent):
     parent.action(ResliceSagittal, text='Reslice (sagittal)')
     parent.separator()
     parent.action(OverlayOn, text='Overlay on..')
-    parent.action(CoregisterTo, text='Coregister to..')
+    parent.separator()
+    parent.action(CoregisterToSkImage, text='Coregister to (skimage)')
+    parent.action(CoregisterToElastix, text='Coregister to (elastix)')
+    parent.action(CoregisterToDiPy, text='Coregister to (dipy)')
     parent.separator()
     parent.action(CoregisterSeries, text='Align time series')
     parent.action(MDRegConstant2D, text='Align time series (mdreg 2D - constant)')
     parent.action(MDRegConstant3D, text='Align time series (mdreg 3D - constant)')
+    
 
 
 
@@ -93,7 +97,7 @@ class OverlayOn(wezel.Action):
             if input.cancel:
                 return
             underlay = seriesList[input.values[0]["value"]]
-            mapped = series.map_to(underlay)
+            mapped = scipy.map_to(series, underlay)
             app.display(mapped)
         app.refresh()
 
@@ -178,7 +182,7 @@ class ResliceSagittal(wezel.Action):
         app.refresh()
 
 
-class CoregisterTo(wezel.Action): 
+class CoregisterToSkImage(wezel.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -197,6 +201,65 @@ class CoregisterTo(wezel.Action):
             coregistered = skimage.coregister(series, fixed, attachment=input.values[1]["value"])
             app.display(coregistered)
         app.refresh()
+
+
+
+class CoregisterToElastix(wezel.Action): 
+
+    def enable(self, app):
+        return app.nr_selected('Series') != 0
+
+    def run(self, app):
+        for series in app.selected('Series'):
+            seriesList = series.parent().children()
+            seriesLabels = [s.instance().SeriesDescription for s in seriesList]
+            transform = ['Rigid', 'Affine', 'Freeform']
+            metric = ["AdvancedMeanSquares", "NormalizedMutualInformation", "AdvancedMattesMutualInformation"]
+            input = wezel.widgets.UserInput(
+                {"label":"Coregister to which fixed series?", "type":"dropdownlist", "list": seriesLabels, 'value':0},
+                {"label":"Transformation: ", "type":"dropdownlist", "list": transform, 'value':1},
+                {"label":"Metric: ", "type":"dropdownlist", "list": metric, 'value':1},
+                {"label":"Final grid spacing (mm)", "type":"float", 'value':25.0, 'minimum':1.0},
+                title = "Please select coregistration settings")
+            if input.cancel:
+                return
+            fixed = seriesList[input.values[0]["value"]]
+            coregistered = elastix.coregister(series, fixed,
+                transformation = transform[input.values[1]["value"]],
+                metric = metric[input.values[2]["value"]],
+                final_grid_spacing = input.values[3]["value"],
+            )
+            app.display(coregistered)
+        app.refresh()
+
+
+class CoregisterToDiPy(wezel.Action): 
+
+    def enable(self, app):
+        return app.nr_selected('Series') != 0
+
+    def run(self, app):
+        for series in app.selected('Series'):
+            seriesList = series.parent().children()
+            seriesLabels = [s.instance().SeriesDescription for s in seriesList]
+            transform = ['Symmetric Diffeomorphic']
+            metric = ["Cross-Correlation", 'Expectation-Maximization', 'Sum of Squared Differences']
+            input = wezel.widgets.UserInput(
+                {"label":"Coregister to which fixed series?", "type":"dropdownlist", "list": seriesLabels, 'value':0},
+                {"label":"Transformation: ", "type":"dropdownlist", "list": transform, 'value':0},
+                {"label":"Metric: ", "type":"dropdownlist", "list": metric, 'value':0},
+                title = "Please select coregistration settings")
+            if input.cancel:
+                return
+            fixed = seriesList[input.values[0]["value"]]
+            coregistered = dipy.coregister(series, fixed,
+                transformation = transform[input.values[1]["value"]],
+                metric = metric[input.values[2]["value"]],
+            )
+            app.display(coregistered)
+        app.refresh()
+
+
 
 
 class CoregisterSeries(wezel.Action): 

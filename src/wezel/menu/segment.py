@@ -1,11 +1,13 @@
 import numpy as np
 import wezel
-from wezel.utils import dbimage, skimage, scipy
+from dbdicom.wrappers import numpy, skimage, scipy, dipy
 
 
 def all(parent):   
     parent.action(ThresholdAbsolute, text="Threshold (absolute values)")
     parent.action(ThresholdRelative, text="Threshold (relative values)")
+    parent.action(MedianOtsu, text="Median Otsu segmentation")
+    parent.separator()
     parent.action(CannyFilter, text="Canny Edge Detection")
     parent.separator()
     parent.action(BinaryFillHoles, text="Fill holes")
@@ -35,7 +37,7 @@ class ThresholdAbsolute(wezel.Action):
         # Filter series
         series = app.selected('Series')
         for sery in series:
-            filtered = dbimage.threshold(
+            filtered = numpy.threshold(
                 sery, 
                 low_threshold = f[0]['value'],
                 high_threshold = f[1]['value'],
@@ -68,7 +70,7 @@ class ThresholdRelative(wezel.Action):
         # Filter series
         series = app.selected('Series')
         for sery in series:
-            filtered = dbimage.threshold(
+            filtered = numpy.threshold(
                 sery, 
                 low_threshold = f[0]['value']/100,
                 high_threshold = f[1]['value']/100,
@@ -76,6 +78,34 @@ class ThresholdRelative(wezel.Action):
             )
             app.display(filtered)
         app.refresh()
+
+
+class MedianOtsu(wezel.Action): 
+
+    def enable(self, app):
+        return app.nr_selected('Series') != 0
+
+    def run(self, app):
+
+        # Get user input
+        cancel, f = app.dialog.input(
+            {"label":"Median Radius", "type":"int", "value": 2, 'minimum':1},
+            {"label":"Numpass", "type":"int", "value": 1, 'minimum':1},
+            title = 'Select Thresholding settings')
+        if cancel: 
+            return
+
+        # Filter series
+        series = app.selected('Series')
+        for sery in series:
+            filtered = dipy.median_otsu(
+                sery, 
+                median_radius=f[0]['value'], 
+                numpass=f[1]['value'],
+            )
+            app.display(filtered)
+        app.refresh()
+
 
 
 class Watershed3D(wezel.Action): 

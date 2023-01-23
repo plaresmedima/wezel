@@ -27,41 +27,115 @@ QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
 # https://doc.qt.io/qtforpython/overviews/stylesheet-examples.html
 # 
 
-STYLESHEET = """ 
-    QMdiArea {
-        background-color: rgb(32, 32, 32);
+
+
+STYLESHEET = """
+    QWidget {
+        background-color: #1E1E1E;
+        color: #DCDCDC;
     }
-    QDockWidget {
-        border: 0px;
-    }
-    QScrollBar:vertical {
-        border: 0px ;
-        background: black;
-        width: 10px;
-    }
-    QScrollBar::handle:vertical {
-        background: rgb(32, 32, 32);
-        min-height: 20px;
-    }
-    QMainWindow {
-        background: rgb(128, 128, 128);
-    }
-    QMainWindow::separator {
-        width: 2px; /* when vertical */
-        height: 2px; /* when horizontal */
-    }
+
     QMenuBar {
-        background-color: rgb(128, 128, 128); 
+        background-color: #2C2C2C;
+        color: #DCDCDC;
     }
-    QTreeView {
-        background: rgb(32, 32, 32);
+
+    QMenuBar::item {
+        background-color: #2C2C2C;
+        color: #DCDCDC;
     }
-    QTreeView::item { 
-        color: rgb(128, 128, 128);
+
+    QMenu {
+        background-color: #2C2C2C;
+        color: #DCDCDC;
     }
-    QTreeView::item:selected { 
-        background-color: rgb(32, 32, 64);
+
+    QMenu::item {
+        background-color: #2C2C2C;
+        color: #DCDCDC;
     }
+
+    QTabWidget {
+        background-color: #2C2C2C;
+        color: #DCDCDC;
+    }
+
+    QTabWidget::pane {
+        border: 1px solid #3F3F3F;
+        background-color: #2C2C2C;
+    }
+
+    QTabWidget::tab-bar {
+        left: 5px; /* move to the right by 5px */
+    }
+
+    QTabBar::tab {
+        background-color: #2C2C2C;
+        color: #DCDCDC;
+        padding: 5px;
+        border: 1px solid #3F3F3F;
+        border-bottom-color: #2C2C2C; /* same as pane color */
+        border-top-left-radius: 4px;
+        border-top-right-radius: 4px;
+    }
+
+    QTabBar::tab:selected {
+        background-color: #3F3F3F;
+    }
+
+    """
+
+
+SMALLSTYLESHEET = """
+
+    QMenuBar {
+        background-color: #2C2C2C;
+        color: #DCDCDC;
+    }
+
+    QMenuBar::item {
+        background-color: #2C2C2C;
+        color: #DCDCDC;
+    }
+
+    QMenu {
+        background-color: #2C2C2C;
+        color: #DCDCDC;
+    }
+
+    QMenu::item {
+        background-color: #2C2C2C;
+        color: #DCDCDC;
+    }
+
+    QTabWidget {
+        background-color: #2C2C2C;
+        color: #DCDCDC;
+    }
+
+    QTabWidget::pane {
+        border: 1px solid #3F3F3F;
+        background-color: #2C2C2C;
+    }
+
+    QTabWidget::tab-bar {
+        left: 5px; /* move to the right by 5px */
+    }
+
+    QTabBar::tab {
+        background-color: #2C2C2C;
+        color: #DCDCDC;
+        padding: 5px;
+        border: 1px solid #3F3F3F;
+        border-bottom-color: #2C2C2C; /* same as pane color */
+        border-top-left-radius: 4px;
+        border-top-right-radius: 4px;
+    }
+
+    QTabBar::tab:selected {
+        background-color: #3F3F3F;
+    }
+
     """
 
 
@@ -73,9 +147,6 @@ class Wezel:
         self.QApp.setWindowIcon(QIcon(wezel.icons.favicon))
         self.main = Main(self)
 
-    def open(self, path):
-        self.main.open(path)
-
     def show(self):    
         self.log.info('Launching Wezel!')
         try:
@@ -83,18 +154,46 @@ class Wezel:
             self.QApp.exec()
             #sys.exit(self.QApp.exec())
         except Exception as e:
-            print('Error: ' + str(e))
-            self.log.exception('Error: ' + str(e))
+            # Use QMessage
+            print('Wezel Error: ' + str(e))
+            self.log.exception('Wezel Error: ' + str(e))
+
+    def open(self, path):
+        self.main.open(path)
+
+    def set_menu(self, menu):
+        self.main.set_menu(menu)
 
 
 class Main(QMainWindow):
 
     def __init__(self, wzl): 
+        """
+        Initialize the Wezel class and its attributes.
+        
+        Parameters:
+            wzl (object): An instance of the wezel class.
+        
+        Attributes:
+            wezel (object): An instance of the wezel class, passed as an argument.
+            dialog (object): An instance of the Dialog class from the wezel.widgets module.
+            status (object): An instance of the StatusBar class from the wezel.widgets module.
+            toolBar (dict): A dictionary to store the toolbar widgets.
+            toolBarDockWidget (QDockWidget): A QDockWidget instance to hold the toolbar.
+            treeView (None): Placeholder for the treeview widget.
+            treeViewDockWidget (QDockWidget): A QDockWidget instance to hold the treeview.
+            folder (None): Placeholder for the folder widget.
+            central (object): An instance of the MainMultipleDocumentInterface class from the wezel.widgets module.
+        """
+
         super().__init__()
         self.wezel = wzl
-        #self.setStyleSheet(STYLESHEET)
+        #self.setStyleSheet(SMALLSTYLESHEET)
         self.setWindowTitle("Wezel")
-        #self.setWindowIcon(QIcon(wezel.icons.favicon))
+        
+        # self.offset = None
+        # self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowMinMaxButtonsHint)
+        # self.setMouseTracking(True)
 
         self.dialog = wezel.widgets.Dialog(self)
         self.status = wezel.widgets.StatusBar()
@@ -110,12 +209,32 @@ class Main(QMainWindow):
         self.addDockWidget(Qt.LeftDockWidgetArea, self.treeViewDockWidget)
         self.treeViewDockWidget.hide()
 
-        self.folder = None # should be in TreeView
         self.central = wezel.widgets.MainMultipleDocumentInterface()
         self.central.subWindowActivated.connect(lambda subWindow: self.activateSubWindow(subWindow))
         self.setCentralWidget(self.central)
 
         self.set_menu(wezel.menus.dicom)
+
+    # def mousePressEvent(self, event):
+    #     self.offset = event.pos()
+
+    # def mouseMoveEvent(self, event):
+    #     if self.offset is not None:
+    #         x=event.globalX()
+    #         y=event.globalY()
+    #         x_w = self.offset.x()
+    #         y_w = self.offset.y()
+    #         self.move(x-x_w, y-y_w)
+
+    # def mouseReleaseEvent(self, event):
+    #     self.offset is None
+        
+    # def resizeEvent(self, event):
+    #     # add 8px padding on each side
+    #     self.setContentsMargins(8, 8, 8, 8)
+    #     super().resizeEvent(event)
+
+
 
     def closeEvent(self, event): #main
         accept = self.close()
@@ -129,19 +248,18 @@ class Main(QMainWindow):
         self.setMenuBar(self.menubar)
 
     def open(self, path):
-        self.folder = db.database(path=path, 
+        folder = db.database(path=path, 
             status = self.status, 
             dialog = self.dialog)
-        self.display(self.folder)
+        self.display(folder)
         self.status.hide()
 
     def close(self):
         """Closes the application."""
-        if self.folder is None:
+        if self.database() is None:
             return True
-        accept = self.folder.close()
+        accept = self.database().close()
         if accept:
-            self.folder = None
             self.toolBarDockWidget.hide()
             self.treeViewDockWidget.hide()
             for subWindow in self.central.subWindowList():
@@ -154,11 +272,14 @@ class Main(QMainWindow):
         Refreshes the Wezel display.
         """
         self.status.message('Refreshing display..')
-        self.treeView.setFolder()
+        self.treeView.setDatabase()
         self.menuBar().enable()
         self.status.hide()
         
     def display(self, object):
+        if object is None:
+            self.dialog.information('There are no data to show here')
+            return
         if object.type() == 'Database':
             self.treeView = wezel.widgets.DICOMFolderTree(object)
             self.treeView.itemSelectionChanged.connect(self.menuBar().enable)
@@ -176,20 +297,91 @@ class Main(QMainWindow):
         elif object.type() == 'Instance':
             pass
 
-    def get_selected(self, generation):   
+    # THIS WILL BE DEPRECATED!! 
+    # Included for backwards compatibility only.
+    @property
+    def folder(self):
+        return self.database()
+
+    # THIS WILL BE DEPRECATED!!
+    # Use selected()
+    def get_selected(self, generation):  
         if self.treeView is None: 
             return []
         return self.treeView.get_selected(generation)
 
-    def selected(self, generation):
+    # Retrieve the selected database
+    def database(self):
+        databases = self.selected('Databases')
+        if databases == []:
+            return 
+        else:
+            return databases[0]        
+
+    def selected(self, generation='Series'):
+        """Returns a list of selected objects of the requested generation"""
+
+        # Check if any databases are open
         if self.treeView is None: 
             return []
-        return self.treeView.selected(generation)
+
+        # If an object is selected in the treeView, use that.
+        if generation == 'Databases':
+            return [self.treeView.database()]
+        sel = self.treeView.selected(generation)
+        if sel != []:
+            return sel
+
+        # If none are selected in the database, check the display.
+        activeWindow = self.central.activeWindow
+        if activeWindow is None:
+            return []
+        widget = activeWindow.widget()
+        if generation=='Instances':
+            if hasattr(widget, 'instance'):
+                return [widget.instance()]
+        elif generation=='Series':
+            if hasattr(widget, 'series'):
+                return [widget.series()]
+        elif generation=='Studies':
+            if hasattr(widget, 'study'):
+                return [widget.study()]
+        elif generation=='Patients':
+            if hasattr(widget, 'patient'):
+                return [widget.patient()]
+        elif generation=='Databases':
+            if hasattr(widget, 'database'):
+                return [widget.database()]
+        return []
+        
  
     def nr_selected(self, generation):
         if self.treeView is None: 
             return 0
-        return self.treeView.nr_selected(generation)
+        nr = self.treeView.nr_selected(generation)
+        if nr != 0:
+            return nr
+        activeWindow = self.central.activeWindow
+        if activeWindow is None:
+            return 0
+        widget = activeWindow.widget()
+        if generation=='Instances':
+            if hasattr(widget, 'instance'):
+                return 1
+        elif generation=='Series':
+            if hasattr(widget, 'series'):
+                return 1
+        elif generation=='Studies':
+            if hasattr(widget, 'study'):
+                return 1
+        elif generation=='Patients':
+            if hasattr(widget, 'patient'):
+                return 1
+        elif generation=='Databases':
+            if hasattr(widget, 'database'):
+                return 1
+        return 0
+        
 
     def closeSubWindow(self, subWindow):
         self.central.removeSubWindow(subWindow)
@@ -198,7 +390,9 @@ class Main(QMainWindow):
         # Delete widget when subwindow closes
         widget = subWindow.widget().__class__.__name__
         if 0 == self.central.countSubWindow(widget):
-            subWindow.widget().toolBar.setEnabled(False)
+            toolBar = subWindow.widget().toolBar
+            if toolBar is not None:
+                toolBar.setEnabled(False)
             #self.toolBarDockWidget.hide()
         #self.refresh()
 
@@ -368,15 +562,6 @@ class Action(QAction):
         super().__init__()
 
         self.main = parent.main
-        # parent.addAction(self)
-        # parent._actions.append(self)
-
-        # if hasattr(parent, 'main'):
-        #     self.main = parent.main
-        #     parent.addAction(self)
-        #     parent._actions.append(self)
-        # else:
-        #     self.main = parent
         if text is None:
             text = self.__class__.__name__
         self.setText(text)

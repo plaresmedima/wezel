@@ -101,7 +101,7 @@ class SeriesViewerMetaData(MainWidget):
             self.setError('Series ' + series.label() + ' is empty. \n\n Nothing to show here..')
             return 
         self._objectDICOM = instances[0].get_dataset()
-        self.series = series
+        self._series = series
 
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -137,6 +137,9 @@ class SeriesViewerMetaData(MainWidget):
 
         self.layout().addLayout(self.horizontalBox)
         self.layout().addWidget(self.tableWidget) 
+
+    def series(self): # requried attribute
+        return self._series
         
     
     def resizeColumnsToContents(self):
@@ -147,11 +150,12 @@ class SeriesViewerMetaData(MainWidget):
         header.setSectionResizeMode(3, QHeaderView.ResizeMode(QHeaderView.AdjustToContentsOnFirstShow))
 
 
-    def createScrollableLabel(self, rowPosition, valueMetadata):
-        scrollableLabel = ScrollLabel()
-        scrollableLabel.setText(valueMetadata)
-        self.tableWidget.setCellWidget(rowPosition, 3, scrollableLabel)
-        self.tableWidget.resizeRowToContents(rowPosition)
+    # Too slow
+    # def createScrollableLabel(self, rowPosition, valueMetadata):
+    #     scrollableLabel = ScrollLabel()
+    #     scrollableLabel.setText(valueMetadata)
+    #     self.tableWidget.setCellWidget(rowPosition, 3, scrollableLabel)
+    #     self.tableWidget.resizeRowToContents(rowPosition)
 
 
     def populateTable(self):
@@ -182,9 +186,9 @@ class SeriesViewerMetaData(MainWidget):
                 else:
                     valueMetadata = str(meta_element.value)
 
-                if meta_element.VR == "OB" or meta_element.VR == "OW":
-                    self.createScrollableLabel(rowPosition, valueMetadata)
-                elif meta_element.VR == "SQ":
+                # if meta_element.VR == "OB" or meta_element.VR == "OW":
+                #     self.createScrollableLabel(rowPosition, valueMetadata)
+                if meta_element.VR == "SQ":
                     self.iterateSequenceTag(self.tableWidget, meta_element)
                 else:
                     self.tableWidget.setItem(rowPosition , 3, QTableWidgetItem(valueMetadata))
@@ -214,9 +218,9 @@ class SeriesViewerMetaData(MainWidget):
                 else:
                     valueMetadata = str(data_element.value)
 
-                if data_element.VR == "OB" or data_element.VR == "OW":
-                    self.createScrollableLabel(rowPosition, valueMetadata)
-                elif data_element.VR == "SQ":
+                # if data_element.VR == "OB" or data_element.VR == "OW":
+                #     self.createScrollableLabel(rowPosition, valueMetadata)
+                if data_element.VR == "SQ":
                     self.iterateSequenceTag(self.tableWidget, data_element)
                 else:
                     self.tableWidget.setItem(rowPosition , 3, QTableWidgetItem(valueMetadata))
@@ -251,6 +255,7 @@ class SeriesViewerMetaData(MainWidget):
                 table.setItem(rowPosition , 0, QTableWidgetItem(level + ' ' + str(data_element.tag)))
                 table.setItem(rowPosition , 1, QTableWidgetItem(data_element.name))
                 table.setItem(rowPosition , 2, QTableWidgetItem(data_element.VR))
+
                 if data_element.VR == "OW" or data_element.VR == "OB":
                     try:
                         valueMetadata = str(data_element.value.decode('utf-8'))
@@ -259,7 +264,7 @@ class SeriesViewerMetaData(MainWidget):
                             valueMetadata = str(list(data_element))
                         except:
                             valueMetadata = str(data_element.value)
-                    self.createScrollableLabel(rowPosition, valueMetadata)
+                    #self.createScrollableLabel(rowPosition, valueMetadata)
                 else:
                     valueMetadata =  str(data_element.value)
                 
@@ -286,7 +291,7 @@ class SeriesViewerMetaData(MainWidget):
                 else:
                     text = item.text()
                 df.at[row, columHeaders[col]] = text
-        filename, _ = QFileDialog.getSaveFileName(parent, 'Save CSV file as ...', self.series.label()+'.csv', "CSV files (*.csv)") 
+        filename, _ = QFileDialog.getSaveFileName(parent, 'Save CSV file as ...', self._series.label()+'.csv', "CSV files (*.csv)") 
         if filename != '':
             df.to_csv(filename, index=False)
 

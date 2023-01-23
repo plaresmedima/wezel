@@ -18,22 +18,26 @@ class DICOMFolderTree(QTreeWidget):
         self.itemDoubleClicked.connect(lambda item, col: self._itemDoubleClickedEvent(item, col))
         self.itemClicked.connect(lambda item, col: self._itemClickedEvent(item, col))
         # self.setModel(QFileSystemModel()) #This only works for QTreeView
-        self.setFolder(folder)
+        self._database = None
+        self.setDatabase(folder)
 
-    def setFolder(self, folder=None):
+    def database(self):
+        return self._database
+
+    def setDatabase(self, folder=None):
         if folder is not None: 
-            self.database=folder
+            self._database=folder
         self.dict = {
-            'label': self.database.manager.path,
+            'label': self._database.manager.path,
             'level': 'Database',
             'uid': 'Database',
             'key': None,
         }
         self.setUpdatesEnabled(False)
         self.clear()
-        self.setHeaderLabels([self.database.manager.path])
+        self.setHeaderLabels([self._database.manager.path])
         # This does not show empty patients or studies
-        database = self.database.manager.tree()
+        database = self._database.manager.tree()
         for patient in database['patients']:
             patientWidget = self._treeWidgetItem('Patient', patient, self)
             for study in patient['studies']:
@@ -51,7 +55,7 @@ class DICOMFolderTree(QTreeWidget):
         # Custom attributes
         item.checked = False
         item.dict = {
-            'label': self.database.manager.label(key=record['key'], type=level),
+            'label': self._database.manager.label(key=record['key'], type=level),
             'level': level,
             'uid': record['uid'],
             'key': record['key'],
@@ -128,7 +132,10 @@ class DICOMFolderTree(QTreeWidget):
         while generation > 1:
             items = _children(items)
             generation -= 1
-        return [self.database.record(i.dict['level'], i.dict['uid']) for i in items if i.checkState(0)==Qt.Checked]
+        return [
+            self._database.record(i.dict['level'], i.dict['uid']) 
+            for i in items if i.checkState(0) == Qt.Checked
+        ]
 
     def selected(self, generation):
         if isinstance(generation, str):
