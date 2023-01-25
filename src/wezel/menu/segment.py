@@ -1,16 +1,24 @@
+"""
+A collection of methods for image segmentation.
 
-from wezel.menu.package_numpy import (
+Requirements:
+
+dipy
+"""
+
+
+from wezel.menu.numpy import (
     ThresholdAbsolute,
     ThresholdRelative,
 )
-from wezel.menu.package_scipy import (
+from wezel.menu.scipy import (
     BinaryFillHoles, 
     Label,
 )
-from wezel.menu.package_dipy import (
+from wezel.menu.dipy import (
     MedianOtsu,
 )
-from wezel.menu.package_skimage import (
+from wezel.menu.skimage import (
     CannyFilter, 
     Watershed2DLabels, 
     Watershed2D, 
