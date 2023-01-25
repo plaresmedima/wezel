@@ -1,3 +1,11 @@
+"""
+A collection of wezel menu buttons with wrappers for elastix coregistration functions.
+
+Requires optional dependencies:
+
+dipy
+"""
+
 import wezel
 from dbdicom.wrappers import dipy
 
@@ -33,6 +41,7 @@ class CoregisterToDiPy(wezel.Action):
             )
             app.display(coregistered)
         app.refresh()
+
 
 
 class MedianOtsu(wezel.Action): 

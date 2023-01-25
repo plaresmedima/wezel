@@ -1,5 +1,5 @@
 
-from wezel.menu.package_scipy import (
+from wezel.menu.scipy import (
     FourierShift,
     GaussianFilter,
     UniformFilter,

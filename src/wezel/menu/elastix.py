@@ -1,3 +1,12 @@
+"""
+A collection of wezel menu buttons with wrappers for elastix coregistration functions.
+
+Requires optional dependencies:
+
+SimpleITK
+itk-elastix
+"""
+
 import wezel
 from dbdicom.wrappers import elastix
 

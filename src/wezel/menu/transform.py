@@ -1,16 +1,28 @@
-from wezel.menu.package_dipy import (
+"""
+A collection of methods for transforming image geometry, 
+including resampling, reslicing, coregistration.
+
+Requires optional dependencies:
+
+dipy
+SimpleITK
+itk-elastix
+"""
+
+
+from wezel.menu.dipy import (
     CoregisterToDiPy,
 )
-from wezel.menu.package_elastix import (
+from wezel.menu.elastix import (
     CoregisterToElastix,
 )
-from wezel.menu.package_skimage import (
+from wezel.menu.skimage import (
     CoregisterToSkImage, 
     CoregisterSeries, 
     MDRegConstant2D, 
     MDRegConstant3D,
 )
-from wezel.menu.package_scipy import (
+from wezel.menu.scipy import (
     Zoom,
     Resample3Disotropic,
     Resample3D,

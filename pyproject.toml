@@ -20,9 +20,6 @@ dependencies = [
   # Or consider removing opencv as dependency. Is scikit not enough?
   "scikit-image",
   "scipy",
-  "SimpleITK",
-  "itk-elastix",
-  "dipy",
 ]
 
 # optional information
@@ -80,8 +77,13 @@ docs = [
     "sphinx-copybutton",
     "sphinx-remove-toctrees",
 ]
-executable = [ 
+management = [ 
   'pyinstaller',
+]
+plugins = [
+  "dipy",
+  "SimpleITK",
+  "itk-elastix",
 ]
 
 

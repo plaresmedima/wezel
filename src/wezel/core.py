@@ -164,6 +164,9 @@ class Wezel:
     def set_menu(self, menu):
         self.main.set_menu(menu)
 
+    def add_menu(self, menu):
+        self.main.addMenu(menu)
+
 
 class Main(QMainWindow):
 
@@ -213,7 +216,7 @@ class Main(QMainWindow):
         self.central.subWindowActivated.connect(lambda subWindow: self.activateSubWindow(subWindow))
         self.setCentralWidget(self.central)
 
-        self.set_menu(wezel.menu.menubar.default)
+        self.set_menu(wezel.menu.menubar.minimal)
 
     # def mousePressEvent(self, event):
     #     self.offset = event.pos()
@@ -243,9 +246,14 @@ class Main(QMainWindow):
         else:
             event.ignore()
 
-    def set_menu(self, menu):
-        self.menubar = MenuBar(self, menu)
+    def set_menu(self, menu_func): # -> setMenu()
+        self.menubar = MenuBar(self, menu_func)
         self.setMenuBar(self.menubar)
+
+    def addMenu(self, menu_func):
+        menuBar = self.menuBar() 
+        menu_func(menuBar)
+        #menuBar.addMenu(menu)
 
     def open(self, path):
         folder = db.database(path=path, 
@@ -524,6 +532,7 @@ class Menu(QMenu):
     def addMenu(self, menu):
         super().addMenu(menu)
         self._menus.append(menu)
+        self.enable()
 
     def menu(self, title='Submenu'):
         return Menu(self, title)
@@ -562,6 +571,7 @@ class Action(QAction):
         super().__init__()
 
         self.main = parent.main
+
         if text is None:
             text = self.__class__.__name__
         self.setText(text)
