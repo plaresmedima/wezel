@@ -2,7 +2,7 @@ import wezel
 from dbdicom.wrappers import skimage
 
 
-class CannyFilter(wezel.Action): 
+class CannyFilter(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -51,7 +51,7 @@ class CannyFilter(wezel.Action):
 
 
 
-class CoregisterToSkImage(wezel.Action): 
+class CoregisterToSkImage(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -72,7 +72,7 @@ class CoregisterToSkImage(wezel.Action):
         app.refresh()
 
 
-class Watershed2D(wezel.Action): 
+class Watershed2D(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -113,7 +113,7 @@ class Watershed2D(wezel.Action):
         app.refresh()
 
 
-class Watershed2DLabels(wezel.Action): 
+class Watershed2DLabels(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -164,7 +164,7 @@ class Watershed2DLabels(wezel.Action):
 
 
 
-class Watershed3D(wezel.Action): 
+class Watershed3D(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -220,7 +220,7 @@ class Watershed3D(wezel.Action):
         app.refresh()
 
 
-class CoregisterSeries(wezel.Action): 
+class CoregisterSeries(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -237,7 +237,7 @@ class CoregisterSeries(wezel.Action):
         app.refresh()
 
 
-class MDRegConstant2D(wezel.Action): 
+class MDRegConstant2D(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -259,7 +259,7 @@ class MDRegConstant2D(wezel.Action):
         app.refresh()
 
 
-class MDRegConstant3D(wezel.Action): 
+class MDRegConstant3D(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0

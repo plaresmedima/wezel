@@ -20,6 +20,7 @@ dependencies = [
   # Or consider removing opencv as dependency. Is scikit not enough?
   "scikit-image",
   "scipy",
+  'pyinstaller', # This has become part of wezel - package icnludes api's to create executables
 ]
 
 # optional information
@@ -76,9 +77,6 @@ docs = [
     "myst-parser", 
     "sphinx-copybutton",
     "sphinx-remove-toctrees",
-]
-management = [ 
-  'pyinstaller',
 ]
 plugins = [
   "dipy",

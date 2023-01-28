@@ -33,7 +33,7 @@ def all(parent):
     parent.action(NewPatient, text='Database > New patient')
     
 
-class Copy(wezel.Action):
+class Copy(wezel.gui.Action):
 
     def enable(self, app):
         return app.nr_selected(self.generation) != 0
@@ -49,7 +49,7 @@ class Copy(wezel.Action):
         app.refresh()
 
 
-class Delete(wezel.Action):
+class Delete(wezel.gui.Action):
 
     def enable(self, app):
         return app.nr_selected(self.generation) != 0
@@ -63,7 +63,7 @@ class Delete(wezel.Action):
         app.refresh()
 
 
-class DeleteSeries(wezel.Action):
+class DeleteSeries(wezel.gui.Action):
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -75,7 +75,7 @@ class DeleteSeries(wezel.Action):
             sery.remove()
         app.refresh()
 
-class DeleteStudies(wezel.Action):
+class DeleteStudies(wezel.gui.Action):
 
     def enable(self, app):
         return app.nr_selected('Studies') != 0
@@ -87,7 +87,7 @@ class DeleteStudies(wezel.Action):
             study.remove()
         app.refresh()
 
-class CopySeries(wezel.Action):
+class CopySeries(wezel.gui.Action):
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -108,7 +108,7 @@ class CopySeries(wezel.Action):
         app.refresh()
 
 
-class MoveSeries(wezel.Action):
+class MoveSeries(wezel.gui.Action):
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -129,7 +129,7 @@ class MoveSeries(wezel.Action):
         app.refresh()
 
 
-class MoveStudies(wezel.Action):
+class MoveStudies(wezel.gui.Action):
 
     def enable(self, app):
         return app.nr_selected('Studies') != 0
@@ -150,7 +150,7 @@ class MoveStudies(wezel.Action):
         app.refresh()
 
 
-class CopyStudies(wezel.Action):
+class CopyStudies(wezel.gui.Action):
 
     def enable(self, app):
         return app.nr_selected('Studies') != 0
@@ -171,7 +171,7 @@ class CopyStudies(wezel.Action):
         app.refresh()
 
 
-class NewSeries(wezel.Action):
+class NewSeries(wezel.gui.Action):
 
     def enable(self, app):
         return app.nr_selected('Studies') != 0
@@ -184,7 +184,7 @@ class NewSeries(wezel.Action):
         app.refresh()
 
 
-class NewStudy(wezel.Action):
+class NewStudy(wezel.gui.Action):
 
     def enable(self, app):
         return app.nr_selected('Patients') != 0
@@ -197,7 +197,7 @@ class NewStudy(wezel.Action):
         app.refresh()
 
 
-class NewPatient(wezel.Action):
+class NewPatient(wezel.gui.Action):
 
     def enable(self, app):
         return True
@@ -208,7 +208,7 @@ class NewPatient(wezel.Action):
         app.refresh()
 
 
-class MergeSeries(wezel.Action):
+class MergeSeries(wezel.gui.Action):
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -224,7 +224,7 @@ class MergeSeries(wezel.Action):
         app.refresh()
 
 
-class MergeStudies(wezel.Action):
+class MergeStudies(wezel.gui.Action):
 
     def enable(self, app):
         return app.nr_selected('Studies') != 0
@@ -236,7 +236,7 @@ class MergeStudies(wezel.Action):
         db.merge(studies, patient.new_study(StudyDescription='Merged studies'))
         app.refresh()
 
-class MergePatients(wezel.Action):
+class MergePatients(wezel.gui.Action):
 
     def enable(self, app):
         return app.nr_selected('Patients') != 0
@@ -249,7 +249,7 @@ class MergePatients(wezel.Action):
         app.refresh()
 
 
-class GroupSeries(wezel.Action):
+class GroupSeries(wezel.gui.Action):
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -262,7 +262,7 @@ class GroupSeries(wezel.Action):
         app.status.hide()
         app.refresh()
 
-class GroupStudies(wezel.Action):
+class GroupStudies(wezel.gui.Action):
 
     def enable(self, app):
         return app.nr_selected('Studies') != 0
@@ -276,7 +276,7 @@ class GroupStudies(wezel.Action):
         app.refresh()
 
 
-class SeriesRename(wezel.Action):
+class SeriesRename(wezel.gui.Action):
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -293,7 +293,7 @@ class SeriesRename(wezel.Action):
         app.refresh()
 
 
-class StudiesRename(wezel.Action):
+class StudiesRename(wezel.gui.Action):
 
     def enable(self, app):
         return app.nr_selected('Studies') != 0
@@ -309,7 +309,7 @@ class StudiesRename(wezel.Action):
         app.refresh()
 
 
-class PatientsRename(wezel.Action):
+class PatientsRename(wezel.gui.Action):
 
     def enable(self, app):
         return app.nr_selected('Patients') != 0
@@ -325,7 +325,7 @@ class PatientsRename(wezel.Action):
         app.refresh()
 
 
-class SeriesExtractByIndex(wezel.Action):
+class SeriesExtractByIndex(wezel.gui.Action):
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -366,7 +366,7 @@ class SeriesExtractByIndex(wezel.Action):
         app.refresh()
 
 
-class SeriesExtractByValue(wezel.Action):
+class SeriesExtractByValue(wezel.gui.Action):
 
     def enable(self, app):
         return app.nr_selected('Series') != 0

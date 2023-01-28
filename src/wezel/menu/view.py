@@ -13,7 +13,7 @@ def all(parent):
     parent.action(TileWindows, text='Tile windows')
 
 
-class ToolBar(wezel.Action):
+class ToolBar(wezel.gui.Action):
 
     def enable(self, app):
         return True
@@ -33,7 +33,7 @@ class ToolBar(wezel.Action):
         #self.setEnabled(False)
 
 
-class DataBase(wezel.Action):
+class DataBase(wezel.gui.Action):
 
     def enable(self, app):
         if app.treeViewDockWidget is None:
@@ -46,7 +46,7 @@ class DataBase(wezel.Action):
         app.menubar.enable()
 
         
-class Series(wezel.Action):
+class Series(wezel.gui.Action):
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -57,7 +57,7 @@ class Series(wezel.Action):
         #app.central.tileSubWindows()      
 
 
-class Array4D(wezel.Action):
+class Array4D(wezel.gui.Action):
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -69,7 +69,7 @@ class Array4D(wezel.Action):
             app.addWidget(viewer, series.label())
 
             
-class HeaderDICOM(wezel.Action):
+class HeaderDICOM(wezel.gui.Action):
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -80,11 +80,11 @@ class HeaderDICOM(wezel.Action):
             app.addWidget(viewer, series.label())
 
 
-class CloseWindows(wezel.Action):
+class CloseWindows(wezel.gui.Action):
     def run(self, app):
         app.central.closeAllSubWindows()
 
 
-class TileWindows(wezel.Action):
+class TileWindows(wezel.gui.Action):
     def run(self, app):
         app.central.tileSubWindows()
