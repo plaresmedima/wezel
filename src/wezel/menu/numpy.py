@@ -8,7 +8,7 @@ def all(parent):
 
 
 
-class ThresholdAbsolute(wezel.Action): 
+class ThresholdAbsolute(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -36,7 +36,7 @@ class ThresholdAbsolute(wezel.Action):
         app.refresh()
 
 
-class ThresholdRelative(wezel.Action): 
+class ThresholdRelative(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0

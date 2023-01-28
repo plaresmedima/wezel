@@ -6,10 +6,11 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
 )
 
-from wezel import widgets, canvas, MainWidget
+import wezel
+from wezel import widgets, canvas
 
 
-class SeriesDisplay(MainWidget):
+class SeriesDisplay(wezel.gui.MainWidget):
 
     def __init__(self):
         super().__init__()
@@ -116,7 +117,7 @@ class SeriesDisplayView():
 
 
 
-class SeriesDisplay4D(MainWidget):
+class SeriesDisplay4D(wezel.gui.MainWidget):
     """
     GUI for displaying a 4D numpy array
     """

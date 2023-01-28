@@ -7,7 +7,7 @@ def all(parent):
     parent.action(About, text='Wezel', icon=wezel.icons.question_mark) 
 
 
-class About(wezel.Action):
+class About(wezel.gui.Action):
 
     def run(self, app):
         webbrowser.open("weasel.pro")

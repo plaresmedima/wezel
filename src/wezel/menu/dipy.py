@@ -16,7 +16,7 @@ def all(parent):
     parent.action(MedianOtsu, text="Median Otsu segmentation")
 
 
-class CoregisterToDiPy(wezel.Action): 
+class CoregisterToDiPy(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -44,7 +44,7 @@ class CoregisterToDiPy(wezel.Action):
 
 
 
-class MedianOtsu(wezel.Action): 
+class MedianOtsu(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0

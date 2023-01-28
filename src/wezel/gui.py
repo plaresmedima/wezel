@@ -1,13 +1,9 @@
 
 
-import sys
-import logging
-
-#from PyQt5.QtCore import *
 from PyQt5.QtCore import  pyqtSignal, Qt
 from PyQt5.QtWidgets import (
     QWidget, 
-    QApplication, 
+    #QApplication, 
     QMainWindow, 
     QAction, 
     QMenu, 
@@ -19,8 +15,8 @@ from PyQt5.QtGui import QIcon
 import dbdicom as db
 import wezel
 
-QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
-QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+#QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+#QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
 
 
 # Examples of style sheets
@@ -139,35 +135,6 @@ SMALLSTYLESHEET = """
     """
 
 
-class Wezel:
-
-    def __init__(self):
-        self.log = logger()
-        self.QApp = QApplication(sys.argv)
-        self.QApp.setWindowIcon(QIcon(wezel.icons.favicon))
-        self.main = Main(self)
-
-    def show(self):    
-        self.log.info('Launching Wezel!')
-        try:
-            self.main.show()
-            self.QApp.exec()
-            #sys.exit(self.QApp.exec())
-        except Exception as e:
-            # Use QMessage
-            print('Wezel Error: ' + str(e))
-            self.log.exception('Wezel Error: ' + str(e))
-
-    def open(self, path):
-        self.main.open(path)
-
-    def set_menu(self, menu):
-        self.main.set_menu(menu)
-
-    def add_menu(self, menu):
-        self.main.addMenu(menu)
-
-
 class Main(QMainWindow):
 
     def __init__(self, wzl): 
@@ -250,10 +217,16 @@ class Main(QMainWindow):
         self.menubar = MenuBar(self, menu_func)
         self.setMenuBar(self.menubar)
 
-    def addMenu(self, menu_func):
-        menuBar = self.menuBar() 
-        menu_func(menuBar)
-        #menuBar.addMenu(menu)
+    # def addMenu(self, menu_func):
+    #     menuBar = self.menuBar() 
+    #     menu_func(menuBar)
+    #     menuBar.enable()
+
+    # When menus become objects instead of functions
+    # Needs a menu class that can be built before launching QApp
+    # def _addMenu(self, menu): 
+    #     menuBar = self.menuBar()
+    #     menuBar.addMenu(menu)
 
     def open(self, path):
         folder = db.database(path=path, 
@@ -491,13 +464,14 @@ class MenuBar(QMenuBar):
     Programming interfaces for the Wezel menus. 
     """
 
-    def __init__(self, main, menu):
+    def __init__(self, main, menu=None):
         super().__init__()
 
         self._menus = []
         self.main = main
-        menu(self)
-        self.enable()
+        if menu is not None:
+            menu(self)
+            self.enable()
 
     def addMenu(self, menu):
         super().addMenu(menu)
@@ -516,17 +490,23 @@ class MenuBar(QMenuBar):
         for menu in self._menus:
             menu.enable()
 
+    def add(self, menu):
+        menu._QMenu(self)
+        #self.addMenu(menu)
+
+
 
 class Menu(QMenu):
 
-    def __init__(self, parent, title='Menu'):
+    def __init__(self, parent=None, title='Menu'):
         super().__init__()
 
+        self._parent = parent
         self._actions = []
         self._menus = []
         self.setTitle(title)
-        self.main = parent.main
         if parent is not None:
+            self.main = parent.main
             parent.addMenu(self)
 
     def addMenu(self, menu):
@@ -538,11 +518,31 @@ class Menu(QMenu):
         return Menu(self, title)
 
     def action(self, action, **kwargs):
-        #return action(self, **kwargs)
-        action = action(self, **kwargs)
-        self.addAction(action)
+        act = action(self, **kwargs)
+        super().addAction(act)
+        self._actions.append(act)
+        
+    def addAction(self, 
+        text = 'Action',
+        shortcut = None,
+        tooltip = None, 
+        icon = None, 
+        on_clicked = None,
+        is_clickable = None):
+
+        action = Action(self, 
+            text = text,
+            shortcut = shortcut,
+            tooltip = tooltip,
+            icon = icon,
+            on_clicked = on_clicked,
+            is_clickable = is_clickable)
+        super().addAction(action)
         self._actions.append(action)
-        return action
+
+    def add(self, action):
+        super().addAction(action)
+        self._actions.append(action)
         
     def separator(self):
         self.addSeparator() 
@@ -566,11 +566,15 @@ class Action(QAction):
         shortcut = None,
         tooltip = None, 
         icon = None,  
+        on_clicked = None,
+        is_clickable = None,
         **kwargs):
-        """parent: App, Menu or MenuBar"""
+        
         super().__init__()
 
         self.main = parent.main
+        self._on_clicked = on_clicked
+        self._is_clickable = is_clickable
 
         if text is None:
             text = self.__class__.__name__
@@ -589,27 +593,13 @@ class Action(QAction):
             self.__dict__[option] = kwargs[option]
 
     def enable(self, app):
-        return True
+        if self._is_clickable is not None:
+            return self._is_clickable(app)
+        else:
+            return True
 
     def run(self, app):
-        pass
-
-
-
-
-
-
-def logger():
-    
-    LOG_FILE_NAME = "wezel_log.log"
-    # creates some sort of conflict with mdreg - commenting out for now
-#    if os.path.exists(LOG_FILE_NAME):
-#        os.remove(LOG_FILE_NAME)
-    LOG_FORMAT = "%(levelname)s %(asctime)s - %(message)s"
-    logging.basicConfig(
-        filename = LOG_FILE_NAME, 
-        level = logging.INFO, 
-        format = LOG_FORMAT)
-    return logging.getLogger(__name__)
-
-
+        if self._on_clicked is not None:
+            self._on_clicked(app)
+        else:
+            pass

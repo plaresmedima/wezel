@@ -40,7 +40,7 @@ def all(parent):
     parent.action(FourierEllipsoidFilter, text="Fourier Ellipsoid Filter")
 
 
-class FunctionOfTwoSeries(wezel.Action): 
+class FunctionOfTwoSeries(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -74,7 +74,7 @@ class FunctionOfTwoSeries(wezel.Action):
         
 
 
-class OverlayOn(wezel.Action): 
+class OverlayOn(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -94,7 +94,7 @@ class OverlayOn(wezel.Action):
         app.refresh()
 
 
-class Resample3D(wezel.Action): 
+class Resample3D(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -117,7 +117,7 @@ class Resample3D(wezel.Action):
         app.refresh()
 
 
-class Resample3Disotropic(wezel.Action): 
+class Resample3Disotropic(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -138,7 +138,7 @@ class Resample3Disotropic(wezel.Action):
         app.refresh()
 
 
-class ResliceAxial(wezel.Action): 
+class ResliceAxial(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -150,7 +150,7 @@ class ResliceAxial(wezel.Action):
         app.refresh()
 
 
-class ResliceCoronal(wezel.Action): 
+class ResliceCoronal(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -162,7 +162,7 @@ class ResliceCoronal(wezel.Action):
         app.refresh()
 
 
-class ResliceSagittal(wezel.Action): 
+class ResliceSagittal(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -174,7 +174,7 @@ class ResliceSagittal(wezel.Action):
         app.refresh()
 
 
-class Zoom(wezel.Action): 
+class Zoom(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -197,7 +197,7 @@ class Zoom(wezel.Action):
         app.refresh()
 
 
-class FourierShift(wezel.Action): 
+class FourierShift(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -230,7 +230,7 @@ class FourierShift(wezel.Action):
         app.refresh()
 
 
-class BinaryFillHoles(wezel.Action): 
+class BinaryFillHoles(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -275,7 +275,7 @@ class BinaryFillHoles(wezel.Action):
         app.refresh()
 
 
-class Label(wezel.Action): 
+class Label(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -343,7 +343,7 @@ class Label(wezel.Action):
         app.refresh()
 
 
-class FourierEllipsoidFilter(wezel.Action): 
+class FourierEllipsoidFilter(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -373,7 +373,7 @@ class FourierEllipsoidFilter(wezel.Action):
         app.refresh()
 
 
-class FourierUniformFilter(wezel.Action): 
+class FourierUniformFilter(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -403,7 +403,7 @@ class FourierUniformFilter(wezel.Action):
         app.refresh()
 
 
-class FourierGaussianFilter(wezel.Action): 
+class FourierGaussianFilter(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -433,7 +433,7 @@ class FourierGaussianFilter(wezel.Action):
         app.refresh()
 
 
-class GaussianGradientMagnitudeFilter(wezel.Action): 
+class GaussianGradientMagnitudeFilter(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -472,7 +472,7 @@ class GaussianGradientMagnitudeFilter(wezel.Action):
         app.refresh()
 
 
-class GaussianLaplaceFilter(wezel.Action): 
+class GaussianLaplaceFilter(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -511,7 +511,7 @@ class GaussianLaplaceFilter(wezel.Action):
         app.refresh()
 
 
-class LaplaceFilter(wezel.Action): 
+class LaplaceFilter(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -547,7 +547,7 @@ class LaplaceFilter(wezel.Action):
         app.refresh()
 
 
-class SobelFilter(wezel.Action): 
+class SobelFilter(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -587,7 +587,7 @@ class SobelFilter(wezel.Action):
         app.refresh()
 
 
-class PrewittFilter(wezel.Action): 
+class PrewittFilter(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -627,7 +627,7 @@ class PrewittFilter(wezel.Action):
         app.refresh()
 
 
-class MedianFilter(wezel.Action): 
+class MedianFilter(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -681,7 +681,7 @@ class MedianFilter(wezel.Action):
         app.refresh()
 
 
-class PercentileFilter(wezel.Action): 
+class PercentileFilter(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -738,7 +738,7 @@ class PercentileFilter(wezel.Action):
         app.refresh()
 
 
-class RankFilter(wezel.Action): 
+class RankFilter(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -800,7 +800,7 @@ class RankFilter(wezel.Action):
         app.refresh()
 
 
-class MaximumFilter(wezel.Action): 
+class MaximumFilter(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -854,7 +854,7 @@ class MaximumFilter(wezel.Action):
         app.refresh()
 
 
-class MinimumFilter(wezel.Action): 
+class MinimumFilter(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -908,7 +908,7 @@ class MinimumFilter(wezel.Action):
         app.refresh()
 
 
-class UniformFilter(wezel.Action): 
+class UniformFilter(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -962,7 +962,7 @@ class UniformFilter(wezel.Action):
         app.refresh()
 
 
-class GaussianFilter(wezel.Action): 
+class GaussianFilter(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
