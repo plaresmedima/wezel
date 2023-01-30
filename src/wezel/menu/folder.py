@@ -102,49 +102,61 @@ def open_subfolders(app):
 
 
 def export_as_dicom(app):
-    series = app.selected('Series')
-    if series == []:
+    path = app.dialog.directory("Where do you want to export the data?")
+    patients, studies, series = app.top_level_selected()
+    selected = patients + studies + series
+    if selected == []:
         app.dialog.information("Please select at least one series")
         return
-    path = app.dialog.directory("Where do you want to export the data?")
-    for i, s in enumerate(series):
-        app.status.progress(i, len(series), 'Exporting data..')
-        s.export_as_dicom(path)
+    app.status.message('Exporting to ' + path)
+    for i, record in enumerate(selected):
+        app.status.progress(i, len(selected), 'Exporting to ' + path)
+        record.export_as_dicom(path)
     app.status.hide()
-
-
-def export_as_csv(app):
-    series = app.selected('Series')
-    if series == []:
-        app.dialog.information("Please select at least one series")
-        return
-    path = app.dialog.directory("Where do you want to export the data?")
-    for i, s in enumerate(series):
-        app.status.message('Exporting series ' + str(i))
-        s.export_as_csv(path)
-    app.status.hide()
+    app.status.message('Finished exporting..')
 
 
 def export_as_png(app):
-    series = app.selected('Series')
-    if series == []:
+    path = app.dialog.directory("Where do you want to export the data?")
+    patients, studies, series = app.top_level_selected()
+    selected = patients + studies + series
+    if selected == []:
         app.dialog.information("Please select at least one series")
         return
-    path = app.dialog.directory("Where do you want to export the data?")
-    for i, s in enumerate(series):
-        app.status.message('Exporting series ' + str(i))
-        s.export_as_png(path)
+    app.status.message('Exporting to ' + path)
+    for i, record in enumerate(selected):
+        app.status.progress(i, len(selected), 'Exporting to ' + path)
+        record.export_as_png(path)
     app.status.hide()
+    app.status.message('Finished exporting..')
+
+
+def export_as_csv(app):
+    path = app.dialog.directory("Where do you want to export the data?")
+    patients, studies, series = app.top_level_selected()
+    selected = patients + studies + series
+    if selected == []:
+        app.dialog.information("Please select at least one series")
+        return
+    app.status.message('Exporting to ' + path)
+    for i, record in enumerate(selected):
+        app.status.progress(i, len(selected), 'Exporting to ' + path)
+        record.export_as_csv(path)
+    app.status.hide()
+    app.status.message('Finished exporting..')
 
 
 def export_as_nifti(app):
-    series = app.selected('Series')
-    if series == []:
+    path = app.dialog.directory("Where do you want to export the data?")
+    patients, studies, series = app.top_level_selected()
+    selected = patients + studies + series
+    if selected == []:
         app.dialog.information("Please select at least one series")
         return
-    path = app.dialog.directory("Where do you want to export the data?")
-    for i, s in enumerate(series):
-        app.status.message('Exporting series ' + str(i))
-        s.export_as_nifti(path)
+    app.status.message('Exporting to ' + path)
+    for i, record in enumerate(selected):
+        app.status.progress(i, len(selected), 'Exporting to ' + path)
+        record.export_as_nifti(path)
     app.status.hide()
+    app.status.message('Finished exporting..')
 

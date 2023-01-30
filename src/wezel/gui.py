@@ -297,7 +297,31 @@ class Main(QMainWindow):
         if databases == []:
             return 
         else:
-            return databases[0]        
+            return databases[0]   
+
+    def top_level_selected(self):
+        patients = self.selected('Patients')
+        studies = self.selected('Studies')
+        series = self.selected('Series')
+        sel = patients + studies + series
+        if sel == []:     
+            return
+        tl_patients = []
+        tl_studies = []
+        tl_series = []
+        for patient in self.database().patients():
+            if patient in patients:
+                tl_patients.append(patient)
+            else:
+                for study in patient.studies():
+                    if study in studies:
+                        tl_studies.append(study)
+                    else:
+                        for sery in study.series():
+                            if sery in series:
+                                tl_series.append(sery)
+        return tl_patients, tl_studies, tl_series
+             
 
     def selected(self, generation='Series'):
         """Returns a list of selected objects of the requested generation"""
