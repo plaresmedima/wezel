@@ -58,6 +58,24 @@ class Dialog():
             directory = datafolder, 
             options = QFileDialog.ShowDirsOnly)
 
+    def files(self, 
+        title = 'Select files..', 
+        initial_folder = None, 
+        extension = "All files (*.*)"):
+        """
+        Select a file to read.
+        """
+        # dialog = QFileDialog()
+        # dialog.setFileMode(QFileDialog.ExistingFiles)
+        # #dialog.setNameFilter("Images (*.png *.xpm *.jpg)")
+        # dialog.exec_()
+        # return dialog.selectedFiles()
+        # This selects files only - ideally want to select files and directories
+        # This may be a solution 
+        # https://stackoverflow.com/questions/6484793/multiple-files-and-folder-selection-in-a-qfiledialog
+        names, _ = QFileDialog.getOpenFileNames(None, title, initial_folder, extension)
+        return names
+
     def question(self, message="Do you wish to proceed?", title="Question for the user", cancel=False):
         """
         Displays a question window in the User Interface.
@@ -90,7 +108,8 @@ class Dialog():
         if initial_folder is None:
             initial_folder = datafolder
         filename, _ = QFileDialog.getOpenFileName(title, initial_folder, extension)
-        if filename == '': return None
+        if filename == '': 
+            return None
         return filename
 
     def file_to_save(self, title='Save as ...', directory=None, filter="All files (*.*)", datafolder=None):

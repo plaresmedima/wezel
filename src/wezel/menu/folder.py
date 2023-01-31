@@ -12,10 +12,13 @@ def all(parent):
     parent.separator()
     parent.addAction('Open subfolders', on_clicked=open_subfolders)
     parent.separator()
-    parent.addAction('Export as .dcm', on_clicked=export_as_dicom, is_clickable=is_series_selected)
-    parent.addAction('Export as .csv', on_clicked=export_as_csv, is_clickable=is_series_selected)
-    parent.addAction('Export as .png', on_clicked=export_as_png, is_clickable=is_series_selected)
-    parent.addAction('Export as .nii', on_clicked=export_as_nifti, is_clickable=is_series_selected)
+    parent.addAction('Export as DICOM', on_clicked=export_as_dicom, is_clickable=is_series_selected)
+    parent.addAction('Export as CSV', on_clicked=export_as_csv, is_clickable=is_series_selected)
+    parent.addAction('Export as PNG', on_clicked=export_as_png, is_clickable=is_series_selected)
+    parent.addAction('Export as NIfTI', on_clicked=export_as_nifti, is_clickable=is_series_selected)
+    parent.separator()
+    parent.addAction('Import DICOM', on_clicked=import_dicom, is_clickable=is_database_open)
+    parent.addAction('Import NIfTI', on_clicked=import_nifti, is_clickable=is_database_open)
 
 
 def is_database_open(app): 
@@ -116,6 +119,13 @@ def export_as_dicom(app):
     app.status.message('Finished exporting..')
 
 
+def import_dicom(app):
+    files = app.dialog.files("Select DICOM files to import")
+    app.database().import_dicom(files)
+    app.status.hide()
+    app.refresh()
+
+
 def export_as_png(app):
     path = app.dialog.directory("Where do you want to export the data?")
     patients, studies, series = app.top_level_selected()
@@ -159,4 +169,11 @@ def export_as_nifti(app):
         record.export_as_nifti(path)
     app.status.hide()
     app.status.message('Finished exporting..')
+
+
+def import_nifti(app):
+    files = app.dialog.files("Select NIfTI files to import")
+    app.database().import_nifti(files)
+    app.status.hide()
+    app.refresh()
 
