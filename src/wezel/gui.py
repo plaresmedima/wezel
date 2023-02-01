@@ -258,6 +258,10 @@ class Main(QMainWindow):
         self.status.hide()
         
     def display(self, object):
+        if isinstance(object, list):
+            for o in object:
+                self.display(o)
+            return
         if object is None:
             self.dialog.information('There are no data to show here')
             return
