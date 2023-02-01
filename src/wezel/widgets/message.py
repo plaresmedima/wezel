@@ -239,49 +239,37 @@ class UserInput(QDialog):
             self.helpTextLbl.setWordWrap(True)
             self.layout.addRow(self.helpTextLbl)
         self.listWidget = []
-        listCounter = 0
-        paramDict, lists = self._processInput(*fields)
-        for key in paramDict:
-            paramType, value1, value2, value3 = self._getParamData(paramDict[key])
-            if paramType.lower() not in ("integer", "float", "string", "dropdownlist", "listview"):
-                msg = paramType.lower() + ' is not a valid type \n'
-                msg += 'Must be either integer, float, string, dropdownlist or listview'
-                raise TypeError(msg)
-            if paramType == "integer":
+        #listCounter = 0
+        #paramDict, lists = self._processInput(*fields)
+        #for key in paramDict:
+            #paramType, value1, value2, value3 = self._getParamData(paramDict[key])
+        for field in self._processInput(*fields):
+
+            if field['type'] == "integer":
                 self.input = QSpinBox()
-                if value2:
-                    self.input.setMinimum(int(value2))
-                if value3:
-                    self.input.setMaximum(int(value3))
-                if value1:
-                    self.input.setValue(int(value1))
-            elif paramType == "float":
+                self.input.setMinimum(int(field['minimum']))
+                self.input.setMaximum(int(field['maximum']))
+                self.input.setValue(int(field['value']))
+
+            elif field['type'] == "float":
                 self.input = QDoubleSpinBox()
-                if value2:
-                    self.input.setMinimum(float(value2))
-                if value3:
-                    self.input.setMaximum(float(value3))
-                if value1:
-                    self.input.setValue(float(value1))
-            elif paramType == "string":
+                self.input.setMinimum(float(field['minimum']))
+                self.input.setMaximum(float(field['maximum']))
+                self.input.setValue(float(field['value']))
+
+            elif field['type'] == "string":
                 self.input = QLineEdit()
-                if key=="Password": self.input.setEchoMode(QLineEdit.Password)
-                if value1:
-                    self.input.setText(value1)
-                else:
-                    self.input.setPlaceholderText("Enter your text")
-                #uncomment to set an input mask
-                #self.input.setInputMask('000.000.000.000;_')
-            elif paramType == "dropdownlist":
+                self.input.setText(str(field['value']))
+                
+            elif field['type'] == "dropdownlist":
                 self.input = QComboBox()
-                self.input.addItems(lists[listCounter])
-                listCounter += 1
-                if value1:
-                    self.input.setCurrentIndex(int(value1))   
-            elif paramType == "listview":
+                self.input.addItems([str(v) for v in field["list"]])
+                self.input.setCurrentIndex(int(field['value'])) 
+
+            elif field['type'] == "listview":
                 self.input = QListWidget()
                 self.input.setSelectionMode(QAbstractItemView.ExtendedSelection)
-                self.input.addItems(lists[listCounter])
+                self.input.addItems([str(v) for v in field["list"]])
                 #self.input.setFlags(item.flags() | Qt.ItemIsUserCheckable)
                 #self.input.setCheckState(Qt.Unchecked)
                 # scroll bar 
@@ -290,10 +278,14 @@ class UserInput(QDialog):
                 self.input.setVerticalScrollBar(scrollBar)
                 self.input.setMinimumHeight(self.input.sizeHintForColumn(0))
                 self.input.setMinimumWidth(self.input.sizeHintForColumn(0))
-                listCounter += 1
-                
-            self.layout.addRow(key, self.input)
+                #Initialise selections
+                for i in field['value']:
+                    item = self.input.item(i)
+                    item.setSelected(True)
+
+            self.layout.addRow(field['label'], self.input)
             self.listWidget.append(self.input)
+
         self.layout.addRow("", self.buttonBox)
         self.setLayout(self.layout)
         self.exec_()  #display input dialog
@@ -326,8 +318,15 @@ class UserInput(QDialog):
     
         # set default values for items that are not provided by the user
         for field in fields:
-            if field['type'] == "listview": 
-                field['value'] = [0]
+
+            if field['type'] not in ("integer", "float", "string", "dropdownlist", "listview"):
+                msg = field['label'] + ' is not a valid type \n'
+                msg += 'Must be either integer, float, string, dropdownlist or listview'
+                raise TypeError(msg)
+
+            if field['type'] == "listview":
+                if "value" not in field: 
+                    field['value'] = []
 
             elif field["type"] == "dropdownlist":
                 if "value" not in field: 
@@ -338,91 +337,31 @@ class UserInput(QDialog):
                     field["value"] = "Hello"
 
             elif field["type"] == "integer":
+                if "value" not in field: 
+                    field["value"] = 0 
                 if "minimum" not in field: 
                     field["minimum"] = -2147483648
                 if "maximum" not in field: 
                     field["maximum"] = +2147483647
-                if "value" not in field: 
-                    field["value"] = field["minimum"] 
-                    field["value"] += 0.5*(field["maximum"]-field["minimum"])
-                    field["value"] = int(field["value"])
                 if field["value"] < field["minimum"]: 
                     field["value"] = field["minimum"]
                 if field["value"] > field["maximum"]: 
                     field["value"] = field["maximum"]
 
             elif field["type"] == "float":
+                if "value" not in field: 
+                    field["value"] = 0.0  
                 if "minimum" not in field: 
                     field["minimum"] = -1.0e+18
                 if "maximum" not in field: 
-                    field["maximum"] = +1.0e+18
-                if "value" not in field: 
-                    field["value"] = field["minimum"] 
-                    field["value"] += 0.5*(field["maximum"]-field["minimum"])              
+                    field["maximum"] = +1.0e+18          
                 if field["value"] < field["minimum"]: 
                     field["value"] = field["minimum"]
                 if field["value"] > field["maximum"]: 
                     field["value"] = field["maximum"]
 
-        # first ensure each label is unique 
-        for f, field in enumerate(fields):
-            for field_next in fields[f+1:]:
-                if field_next["label"] == field["label"]:
-                    field_next["label"] += '_'
+        return fields
 
-        # next build a single dictionary
-        dict = {}
-        for field in fields:
-            dict[field["label"]] = field["type"]
-
-            if field["type"] == "dropdownlist":
-                dict[field["label"]] += ", " + str(field["value"])
-
-            elif field["type"] == "string":
-                dict[field["label"]] += ", " + str(field["value"])
-
-            elif field["type"] == "integer":
-                dict[field["label"]] += ", " + str(field["value"])
-                dict[field["label"]] += ", " + str(field["minimum"])
-                dict[field["label"]] += ", " + str(field["maximum"])
-
-            elif field["type"] == "float":
-                dict[field["label"]] += ", " + str(field["value"])
-                dict[field["label"]] += ", " + str(field["minimum"])
-                dict[field["label"]] += ", " + str(field["maximum"])
-
-        # then build a single list of lists         
-        lists = []
-        for field in fields:
-            if field["type"] == "listview":
-                lists.append([str(v) for v in field["list"]])
-                #lists.append(field["list"])
-            elif field["type"] == "dropdownlist":
-                lists.append([str(v) for v in field["list"]])
-                #lists.append(field["list"])
-        return dict, lists
-
-
-    def _getParamData(self, paramDescription):
-        commaCount = paramDescription.count(',')
-        if commaCount == 0:
-            return paramDescription, None, None, None
-        elif commaCount == 1:
-            paramList = paramDescription.split(",")
-            return paramList[0], paramList[1], None, None
-        elif commaCount == 2:
-            paramList = paramDescription.split(",")
-            return paramList[0], paramList[1], paramList[2], None
-        elif commaCount == 3:
-            paramList = paramDescription.split(",")
-            return paramList[0], paramList[1], paramList[2], paramList[3]
-
-
-    # def close(self): # OK button clicked
-    #     self.button = 'OK'
-    #     #self.closeDialog =True
-    #     #Now programmatically click OK to close the dialog
-    #     self.accept()
 
     def clickedOK(self): # OK button clicked
         self.button = 'OK'
@@ -433,20 +372,6 @@ class UserInput(QDialog):
         self.accept()
 
 
-    # def _closeInputDialog(self):
-    #         return self.closeDialog
-
-
-    # Sometimes the values parsed could be list or hexadecimals in strings
-    # Took this out - creates error if the intention is for these to be strings
-#    def _processOutput(self, fields, listParams):
-#        outputList = []
-        # for param in listParams:
-        #     try:
-        #         outputList.append(literal_eval(param))
-        #     except:
-        #         outputList.append(param)
-
     def _processOutput(self, fields, outputList):
         if outputList is None: 
             return fields
@@ -454,18 +379,14 @@ class UserInput(QDialog):
             # Overwrite the value key with the returned parameter
             for f, field in enumerate(fields):
                 if field["type"] == "listview":
-                    value_list = outputList[f]
-                    for v, value in enumerate(value_list):
-                        ls = [str(item) for item in field["list"]]
-                        value_list[v] = ls.index(value) 
-                        #value_list[v] = field["list"].index(value) 
-                    field["value"] = value_list
+                    value = outputList[f]
+                    ls = [str(item) for item in field["list"]]
+                    field["value"] = [ls.index(v) for v in value]
         
                 elif field["type"] == "dropdownlist":
                     value = outputList[f]
                     ls = [str(item) for item in field["list"]]
-                    field["value"] = ls.index(value)
-                    #field["value"] = field["list"].index(value) 
+                    field["value"] = ls.index(value) 
     
                 elif field["type"] == "string":
                     field["value"] = outputList[f]
