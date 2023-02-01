@@ -17,8 +17,9 @@ def all(parent):
     parent.addAction('Export as PNG', on_clicked=export_as_png, is_clickable=is_series_selected)
     parent.addAction('Export as NIfTI', on_clicked=export_as_nifti, is_clickable=is_series_selected)
     parent.separator()
-    parent.addAction('Import DICOM', on_clicked=import_dicom, is_clickable=is_database_open)
-    parent.addAction('Import NIfTI', on_clicked=import_nifti, is_clickable=is_database_open)
+    parent.addAction('Import DICOM files', on_clicked=import_dicom_files, is_clickable=is_database_open)
+    parent.addAction('Import DICOM folder', on_clicked=import_dicom_folder, is_clickable=is_database_open)
+    parent.addAction('Import NIfTI files', on_clicked=import_nifti, is_clickable=is_database_open)
 
 
 def is_database_open(app): 
@@ -62,6 +63,7 @@ def save_database(app):
     Saves the open DICOM folder.
     """
     app.database().save()
+    app.status.message('Finished saving..')
 
 
 def restore_database(app):
@@ -106,6 +108,8 @@ def open_subfolders(app):
 
 def export_as_dicom(app):
     path = app.dialog.directory("Where do you want to export the data?")
+    if path == '':
+        return
     patients, studies, series = app.top_level_selected()
     selected = patients + studies + series
     if selected == []:
@@ -119,15 +123,37 @@ def export_as_dicom(app):
     app.status.message('Finished exporting..')
 
 
-def import_dicom(app):
-    files = app.dialog.files("Select DICOM files to import")
-    app.database().import_dicom(files)
+def import_dicom_files(app):
+    files = app.dialog.files("Please select DICOM files to import")
+    if files == []:
+        return
+    dicom_found = app.database().import_dicom(files)
+    if not dicom_found:
+        msg = 'No DICOM data were detected. \n'
+        msg += 'Nothing has been imported.'
+        app.dialog.information(msg)
+    app.status.hide()
+    app.refresh()
+
+
+def import_dicom_folder(app):
+    path = app.dialog.directory("Please select DICOM folder to import.")
+    if path == '':
+        return
+    files = db.utils.files.all_files(path)
+    dicom_found = app.database().import_dicom(files)
+    if not dicom_found:
+        msg = 'No DICOM data were detected. \n'
+        msg += 'Nothing has been imported.'
+        app.dialog.information(msg)
     app.status.hide()
     app.refresh()
 
 
 def export_as_png(app):
     path = app.dialog.directory("Where do you want to export the data?")
+    if path == '':
+        return
     patients, studies, series = app.top_level_selected()
     selected = patients + studies + series
     if selected == []:
@@ -143,6 +169,8 @@ def export_as_png(app):
 
 def export_as_csv(app):
     path = app.dialog.directory("Where do you want to export the data?")
+    if path == '':
+        return
     patients, studies, series = app.top_level_selected()
     selected = patients + studies + series
     if selected == []:
@@ -158,6 +186,8 @@ def export_as_csv(app):
 
 def export_as_nifti(app):
     path = app.dialog.directory("Where do you want to export the data?")
+    if path == '':
+        return
     patients, studies, series = app.top_level_selected()
     selected = patients + studies + series
     if selected == []:
@@ -173,7 +203,14 @@ def export_as_nifti(app):
 
 def import_nifti(app):
     files = app.dialog.files("Select NIfTI files to import")
-    app.database().import_nifti(files)
+    if files == []:
+        return
+    try:
+        app.database().import_nifti(files)
+    except:
+        msg = 'NIfTI import is work in progress and failed in this case. \n'
+        msg += 'Please contact the developer and send a sample of your data if you can..'
+        app.dialog.information(msg)
     app.status.hide()
     app.refresh()
 

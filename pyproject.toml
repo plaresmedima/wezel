@@ -82,6 +82,7 @@ plugins = [
   "dipy",
   "SimpleITK",
   "itk-elastix",
+  "scikit-learn",
 ]
 
 

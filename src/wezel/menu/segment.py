@@ -24,12 +24,16 @@ from wezel.menu.skimage import (
     Watershed2D, 
     Watershed3D,
 )
+from wezel.menu.sklearn import (
+    KMeans,
+)
 
 
 def all(parent):   
     parent.action(ThresholdAbsolute, text="Threshold (absolute values)")
     parent.action(ThresholdRelative, text="Threshold (relative values)")
     parent.action(MedianOtsu, text="Median Otsu segmentation")
+    parent.action(KMeans, text='K-Means clustering')
     parent.separator()
     parent.action(CannyFilter, text="Canny Edge Detection")
     parent.separator()
@@ -38,7 +42,7 @@ def all(parent):
     parent.separator()
     parent.action(Watershed2DLabels, text="Watershed 2D (from labels)")
     # Check on github - accidentally deleted?
-    #parent.action(Watershed3DLabels, text="Watershed 2D (from labels)")
+    #parent.action(Watershed3DLabels, text="Watershed 3D (from labels)")
     parent.action(Watershed2D, text="Watershed 2D (no labels)")
     parent.action(Watershed3D, text="Watershed 3D (no labels)")
 
