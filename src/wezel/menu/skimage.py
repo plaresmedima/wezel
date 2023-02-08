@@ -2,6 +2,47 @@ import wezel
 from dbdicom.wrappers import skimage
 
 
+
+class Skeletonize_3D(wezel.gui.Action): 
+
+    def enable(self, app):
+        return app.nr_selected('Series') != 0
+
+    def run(self, app):
+
+        for sery in app.selected('Series'):
+            result = skimage.skeletonize_3d(sery)
+            app.display(result)
+        app.refresh()
+
+
+
+class Skeletonize(wezel.gui.Action): 
+
+    def enable(self, app):
+        return app.nr_selected('Series') != 0
+
+    def run(self, app):
+
+        for sery in app.selected('Series'):
+            result = skimage.skeletonize(sery)
+            app.display(result)
+        app.refresh()
+
+
+class ConvexHullImage(wezel.gui.Action): 
+
+    def enable(self, app):
+        return app.nr_selected('Series') != 0
+
+    def run(self, app):
+
+        for sery in app.selected('Series'):
+            result = skimage.convex_hull_image(sery)
+            app.display(result)
+        app.refresh()
+
+
 class CannyFilter(wezel.gui.Action): 
 
     def enable(self, app):
