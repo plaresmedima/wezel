@@ -23,6 +23,9 @@ from wezel.menu.skimage import (
     Watershed2DLabels, 
     Watershed2D, 
     Watershed3D,
+    ConvexHullImage,
+    Skeletonize,
+    Skeletonize_3D,
 )
 from wezel.menu.sklearn import (
     KMeans,
@@ -39,6 +42,9 @@ def all(parent):
     parent.separator()
     parent.action(BinaryFillHoles, text="Fill holes")
     parent.action(Label, text="Label structures")
+    parent.action(ConvexHullImage, text="Determine convex Hull")
+    parent.action(Skeletonize, text="Skeletonize (2D)")
+    parent.action(Skeletonize_3D, text="Skeletonize (3D)")
     parent.separator()
     parent.action(Watershed2DLabels, text="Watershed 2D (from labels)")
     # Check on github - accidentally deleted?
