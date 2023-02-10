@@ -4,7 +4,8 @@ from dbdicom.wrappers import scipy
 
 
 def all(parent): 
-    parent.action(FunctionOfTwoSeries, text='new series = f(series 1, series 2)')
+    parent.action(FunctionOfOneSeries, text='series => new series')
+    parent.action(FunctionOfTwoSeries, text='(series 1, series 2) => new series')
     parent.separator()
     parent.action(Zoom, text="Resample images")
     parent.action(Resample3Disotropic, text="Resample 3D volume (isotropic)")
@@ -16,8 +17,10 @@ def all(parent):
     parent.separator()
     parent.action(OverlayOn, text='Overlay on..')
     parent.separator()
+    parent.action(DistanceTransformEdt, text="Euclidian distance transform")
     parent.action(BinaryFillHoles, text="Fill holes")
-    parent.action(Label, text="Label structures")
+    parent.action(Label2D, text="Label structures (2D)")
+    parent.action(Label3D, text="Label structures (3D)")
     parent.separator()
     parent.action(GaussianFilter, text="Gaussian Filter")
     parent.separator()
@@ -38,6 +41,37 @@ def all(parent):
     parent.action(FourierGaussianFilter, text="Fourier Gaussian Filter")
     parent.action(FourierUniformFilter, text="Fourier Uniform Filter")
     parent.action(FourierEllipsoidFilter, text="Fourier Ellipsoid Filter")
+    
+
+
+class FunctionOfOneSeries(wezel.gui.Action): 
+
+    def enable(self, app):
+        return app.nr_selected('Series') != 0
+
+    def run(self, app):
+        for series in app.selected('Series'):
+            seriesList = series.parent().children()
+            seriesLabels = [s.label() for s in seriesList]
+            value = seriesList.index(series)
+            operation = [
+                '1 - series', 
+                '- series',
+                '1 / series',
+                'exp(- series)',
+                'exp(+ series)',
+                ]
+            input = wezel.widgets.UserInput(
+                {"label":"series", "type":"dropdownlist", "list": seriesLabels, 'value':value},
+                {"label":"Operation: ", "type":"dropdownlist", "list": operation, 'value':0},
+                title = "Please select series and operation")
+            if input.cancel:
+                return
+            series = seriesList[input.values[0]["value"]]
+            operation = operation[input.values[1]["value"]]
+            result = scipy.series_calculator(series, operation)
+            app.display(result)
+        app.refresh()
 
 
 class FunctionOfTwoSeries(wezel.gui.Action): 
@@ -46,30 +80,36 @@ class FunctionOfTwoSeries(wezel.gui.Action):
         return app.nr_selected('Series') != 0
 
     def run(self, app):
-        for series in app.selected('Series'):
-            seriesList = series.parent().children()
-            seriesLabels = [s.instance().SeriesDescription for s in seriesList]
-            value = seriesList.index(series)
-            operation = [
-                'series 1 + series 2', 
-                'series 1 - series 2',
-                'series 1 / series 2',
-                'series 1 * series 2',
-                '(series 1 - series 2)/series 2',
-                'average(series 1, series 2)',
-                ]
-            input = wezel.widgets.UserInput(
-                {"label":"series 1", "type":"dropdownlist", "list": seriesLabels, 'value':value},
-                {"label":"series 2", "type":"dropdownlist", "list": seriesLabels, 'value':value},
-                {"label":"Operation: ", "type":"dropdownlist", "list": operation, 'value':1},
-                title = "Please select factors and operation")
-            if input.cancel:
-                return
-            series1 = seriesList[input.values[0]["value"]]
-            series2 = seriesList[input.values[1]["value"]]
-            operation = operation[input.values[2]["value"]]
-            result = scipy.image_calculator(series1, series2, operation)
-            app.display(result)
+        selected = app.selected('Series')
+        if selected == []:
+            return
+        seriesList = selected[0].parent().children()
+        value1 = seriesList.index(selected[0])
+        try:
+            value2 = seriesList.index(selected[1])
+        except:
+            value2 = value1
+        seriesLabels = [s.label() for s in seriesList]
+        operation = [
+            'series 1 + series 2', 
+            'series 1 - series 2',
+            'series 1 / series 2',
+            'series 1 * series 2',
+            '(series 1 - series 2)/series 2',
+            'average(series 1, series 2)',
+            ]
+        input = wezel.widgets.UserInput(
+            {"label":"series 1", "type":"dropdownlist", "list": seriesLabels, 'value':value1},
+            {"label":"series 2", "type":"dropdownlist", "list": seriesLabels, 'value':value2},
+            {"label":"Operation: ", "type":"dropdownlist", "list": operation, 'value':1},
+            title = "Please select factors and operation")
+        if input.cancel:
+            return
+        series1 = seriesList[input.values[0]["value"]]
+        series2 = seriesList[input.values[1]["value"]]
+        operation = operation[input.values[2]["value"]]
+        result = scipy.image_calculator(series1, series2, operation)
+        app.display(result)
         app.refresh()
         
 
@@ -230,6 +270,19 @@ class FourierShift(wezel.gui.Action):
         app.refresh()
 
 
+class DistanceTransformEdt(wezel.gui.Action):
+
+    def enable(self, app):
+        return app.nr_selected('Series') != 0
+
+    def run(self, app):
+        series = app.selected('Series')
+        for sery in series:
+            transformed = scipy.distance_transform_edt_3d(sery)
+            app.display(transformed)
+        app.refresh()
+
+
 class BinaryFillHoles(wezel.gui.Action): 
 
     def enable(self, app):
@@ -275,7 +328,7 @@ class BinaryFillHoles(wezel.gui.Action):
         app.refresh()
 
 
-class Label(wezel.gui.Action): 
+class Label2D(wezel.gui.Action): 
 
     def enable(self, app):
         return app.nr_selected('Series') != 0
@@ -335,11 +388,24 @@ class Label(wezel.gui.Action):
         # Filter series
         series = app.selected('Series')
         for sery in series:
-            filtered = scipy.label(
+            filtered = scipy.label_2d(
                 sery, 
                 structure=structure
             )
             app.display(filtered)
+        app.refresh()
+
+
+class Label3D(wezel.gui.Action): 
+
+    def enable(self, app):
+        return app.nr_selected('Series') != 0
+
+    def run(self, app):
+        series = app.selected('Series')
+        for sery in series:
+            result = scipy.label_3d(sery)
+            app.display(result)
         app.refresh()
 
 

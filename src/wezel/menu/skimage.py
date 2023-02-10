@@ -92,6 +92,44 @@ class CannyFilter(wezel.gui.Action):
 
 
 
+class PeakLocalMax3D(wezel.gui.Action): 
+
+    def enable(self, app):
+        return app.nr_selected('Series') != 0
+
+    def run(self, app):
+
+        selected = app.selected('Series')
+        series_list = selected[0].parent().children()
+        series_labels = [s.instance().SeriesDescription for s in series_list]
+
+        # Get user input
+        cancel, f = app.dialog.input(
+            {"label":"Find local maxima of series..", "type":"dropdownlist", "list": series_labels, "value": series_list.index(selected[0])},
+            {"label":"Region to search for peaks", "type":"dropdownlist", "list": ['Entire image'] + series_labels, "value": 0},
+            {"label":"Minimal distance between peaks (in pixels)", "type":"integer", "value": 1, "minimum": 1},
+            {"label":"Size of the image border (in pixels)", "type":"integer", "value": 2, "minimum": 0},
+            title = 'Select Local Maximum settings')
+        if cancel: 
+            return
+
+        if f[1]['value'] == 0:
+            labels = None
+        else:
+            labels = series_list[f[1]['value']-1]
+
+        # Filter series
+        filtered = skimage.peak_local_max_3d(
+            series_list[f[0]['value']], 
+            labels = labels,
+            min_distance = f[2]['value'],
+            exclude_border = f[3]['value'],
+        )
+        app.display(filtered)
+        app.refresh()
+
+
+
 class CoregisterToSkImage(wezel.gui.Action): 
 
     def enable(self, app):
@@ -120,114 +158,28 @@ class Watershed2D(wezel.gui.Action):
 
     def run(self, app):
 
-        # Get user input
-        cancel, f = app.dialog.input(
-            {   "label": "Number of labels: ", 
-                "type": "integer", 
-                "value": 250,
-                'minimum': 0,
-            },
-            {   'label': 'Compactness: ',
-                'type': 'float',
-                'value': 0.0, 
-            },
-            {   'label': 'Include watershed line?',
-                'type': 'dropdownlist',
-                'list': ['Yes', 'No'],
-                'value': 1,
-            },
-            title = 'Select settings for watershed segmentation')
-        if cancel: 
-            return
-
-        # Calculate watershed
-        series = app.selected('Series')
-        for sery in series:
-            filtered = skimage.watershed_2d(
-                sery, 
-                markers = f[0]['value'],
-                compactness = f[1]['value'],
-                watershed_line = f[2]['value'] == 0,
-            )
-            app.display(filtered)
-
-        app.refresh()
-
-
-class Watershed2DLabels(wezel.gui.Action): 
-
-    def enable(self, app):
-        return app.nr_selected('Series') != 0
-
-    def run(self, app):
-
         # Filter series
         series = app.selected('Series')
         for sery in series:
 
             # Get user input
-            desc = sery.SeriesDescription
+            desc = sery.label()
+            all_series = sery.parent().children()
+            all_series_desc = [s.label() for s in all_series]
             siblings = sery.siblings()
-            sibling_desc = [s.SeriesDescription for s in siblings]
+            sibling_desc = [s.label() for s in siblings]
             cancel, f = app.dialog.input(
-                {   "label": "Labels: ", 
+                {   "label": "Landscape for watershed: ", 
+                    "type": "dropdownlist", 
+                    "list": all_series_desc, 
+                    "value": all_series.index(sery),
+                },
+                {   "label": "Initial labels: ", 
                     "type": "dropdownlist", 
                     "list": ['use local minima'] + sibling_desc, 
                     "value": 0,
                 },
-                {   'label': 'Compactness: ',
-                    'type': 'float',
-                    'value': 0.0, 
-                },
-                {   'label': 'Include watershed line?',
-                    'type': 'dropdownlist',
-                    'list': ['Yes', 'No'],
-                    'value': 1,
-                },
-                title = 'Select settings for watershed segmentation of ' + desc)
-            if cancel: 
-                return
-            if f[0]['value'] == 0:
-                markers = None
-            else:
-                markers = siblings[f[0]['value']-1]
-
-             # Calculate watershed
-            filtered = skimage.watershed_2d_labels(
-                sery, 
-                markers = markers,
-                compactness = f[1]['value'],
-                watershed_line = f[2]['value'] == 0,
-            )
-            app.display(filtered)
-
-        app.refresh()
-
-
-
-class Watershed3D(wezel.gui.Action): 
-
-    def enable(self, app):
-        return app.nr_selected('Series') != 0
-
-    def run(self, app):
-
-        # Calculate watershed
-        series = app.selected('Series')
-        for sery in series:
-
-            desc = sery.SeriesDescription
-            siblings = sery.siblings()
-            sibling_desc = [s.SeriesDescription for s in siblings]
-
-            # Get user input
-            cancel, f = app.dialog.input(
-                {   "label": "Number of labels: ", 
-                    "type": "integer", 
-                    "value": 250,
-                    'minimum': 0,
-                },
-                {   "label": "Mask: ", 
+                {   "label": "Label pixels in: ", 
                     "type": "dropdownlist", 
                     "list": ['Entire image'] + sibling_desc, 
                     "value": 0,
@@ -244,21 +196,79 @@ class Watershed3D(wezel.gui.Action):
                 title = 'Select settings for watershed segmentation of ' + desc)
             if cancel: 
                 return
-            if f[1]['value'] == 0:
-                mask = None
-            else:
-                mask = siblings[f[1]['value']-1]
 
-            filtered = skimage.watershed_3d(
-                sery, 
-                markers = f[0]['value'],
-                mask = mask,
-                compactness = f[2]['value'],
-                watershed_line = f[3]['value'] == 0,
+             # Calculate watershed
+            result = skimage.watershed_2d(
+                all_series[f[0]['value']], 
+                markers = None if f[1]['value']==0 else siblings[f[1]['value']-1],
+                mask = None if f[2]['value']==0 else siblings[f[2]['value']-1],
+                compactness = f[3]['value'],
+                watershed_line = f[4]['value'] == 0,
             )
-            app.display(filtered)
+            app.display(result)
 
         app.refresh()
+
+
+class Watershed3D(wezel.gui.Action): 
+
+    def enable(self, app):
+        return app.nr_selected('Series') != 0
+
+    def run(self, app):
+
+        # Filter series
+        series = app.selected('Series')
+        for sery in series:
+
+            # Get user input
+            desc = sery.label()
+            all_series = sery.parent().children()
+            all_series_desc = [s.label() for s in all_series]
+            siblings = sery.siblings()
+            sibling_desc = [s.label() for s in siblings]
+            cancel, f = app.dialog.input(
+                {   "label": "Landscape for watershed: ", 
+                    "type": "dropdownlist", 
+                    "list": all_series_desc, 
+                    "value": all_series.index(sery),
+                },
+                {   "label": "Initial labels: ", 
+                    "type": "dropdownlist", 
+                    "list": ['use local minima'] + sibling_desc, 
+                    "value": 0,
+                },
+                {   "label": "Label pixels in: ", 
+                    "type": "dropdownlist", 
+                    "list": ['Entire image'] + sibling_desc, 
+                    "value": 0,
+                },
+                {   'label': 'Compactness: ',
+                    'type': 'float',
+                    'value': 0.0, 
+                },
+                {   'label': 'Include watershed line?',
+                    'type': 'dropdownlist',
+                    'list': ['Yes', 'No'],
+                    'value': 1,
+                },
+                title = 'Select settings for watershed segmentation of ' + desc)
+            if cancel: 
+                return
+
+             # Calculate watershed
+            result = skimage.watershed_3d(
+                all_series[f[0]['value']], 
+                markers = None if f[1]['value']==0 else siblings[f[1]['value']-1],
+                mask = None if f[2]['value']==0 else siblings[f[2]['value']-1],
+                compactness = f[3]['value'],
+                watershed_line = f[4]['value'] == 0,
+            )
+            app.display(result)
+
+        app.refresh()
+
+
 
 
 class CoregisterSeries(wezel.gui.Action): 

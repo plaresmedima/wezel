@@ -158,9 +158,12 @@ class StatusBar(QStatusBar):
 
         if message is not None: 
             self.message(message)
-        self.progressBar.show()
-        self.progressBar.setRange(0, total)
-        self.progressBar.setValue(value)
+        if total > 1:
+            self.progressBar.show()
+            self.progressBar.setRange(0, total)
+            self.progressBar.setValue(value)
+        else:
+            self.progressBar.hide()
         QApplication.processEvents() # allow gui to update - prevent freezing
 
     def cursorToHourglass(self):
@@ -216,104 +219,71 @@ class UserInput(QDialog):
   """
     def __init__(self, *fields, title="Input Parameters", helpText=None):
         super().__init__()
-        self.fields = fields
+        
         self.setWindowTitle(title)
-        #Hide ? help button
-        #self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
         self.setWindowFlag(QtCore.Qt.WindowContextHelpButtonHint, False)
-        #Hide top right hand corner X close button
-        #self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowCloseButtonHint)
         self.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, False)
-        # The following line creates a Customized Window where there are no close and help buttons - relevant for MacOS
-        # Consider Qt.FramelessWindowHint if it works for Mac OS
         self.setWindowFlag(QtCore.Qt.CustomizeWindowHint, True)
         QBtn = QDialogButtonBox.Ok | QDialogButtonBox.Cancel   #OK and Cancel button
-        #QBtn = QDialogButtonBox.Ok    #OK button only
         self.buttonBox = QDialogButtonBox(QBtn)
         self.buttonBox.accepted.connect(self.clickedOK)   #OK button
         self.buttonBox.rejected.connect(self.clickedCancel)  #Cancel button
-        #self.closeDialog = False
         self.layout = QFormLayout()
         if helpText:
             self.helpTextLbl = QLabel("<H4>" + helpText  +"</H4>")
             self.helpTextLbl.setWordWrap(True)
             self.layout.addRow(self.helpTextLbl)
+
+        self.fields = fields
         self.listWidget = []
-        #listCounter = 0
-        #paramDict, lists = self._processInput(*fields)
-        #for key in paramDict:
-            #paramType, value1, value2, value3 = self._getParamData(paramDict[key])
         for field in self._processInput(*fields):
 
             if field['type'] == "integer":
-                self.input = QSpinBox()
-                self.input.setMinimum(int(field['minimum']))
-                self.input.setMaximum(int(field['maximum']))
-                self.input.setValue(int(field['value']))
+                widget = QSpinBox()
+                widget.setMinimum(int(field['minimum']))
+                widget.setMaximum(int(field['maximum']))
+                widget.setValue(int(field['value']))
 
             elif field['type'] == "float":
-                self.input = QDoubleSpinBox()
-                self.input.setMinimum(float(field['minimum']))
-                self.input.setMaximum(float(field['maximum']))
-                self.input.setValue(float(field['value']))
+                widget = QDoubleSpinBox()
+                widget.setMinimum(float(field['minimum']))
+                widget.setMaximum(float(field['maximum']))
+                widget.setValue(float(field['value']))
 
             elif field['type'] == "string":
-                self.input = QLineEdit()
-                self.input.setText(str(field['value']))
+                widget = QLineEdit()
+                widget.setText(str(field['value']))
                 
             elif field['type'] == "dropdownlist":
-                self.input = QComboBox()
-                self.input.addItems([str(v) for v in field["list"]])
-                self.input.setCurrentIndex(int(field['value'])) 
+                widget = QComboBox()
+                widget.addItems([str(v) for v in field["list"]])
+                widget.setCurrentIndex(int(field['value'])) 
 
             elif field['type'] == "listview":
-                self.input = QListWidget()
-                self.input.setSelectionMode(QAbstractItemView.ExtendedSelection)
-                self.input.addItems([str(v) for v in field["list"]])
-                #self.input.setFlags(item.flags() | Qt.ItemIsUserCheckable)
-                #self.input.setCheckState(Qt.Unchecked)
-                # scroll bar 
+                widget = QListWidget()
+                widget.setSelectionMode(QAbstractItemView.ExtendedSelection)
+                widget.addItems([str(v) for v in field["list"]])
                 scrollBar = QScrollBar(self) 
-                # setting vertical scroll bar to it 
-                self.input.setVerticalScrollBar(scrollBar)
-                self.input.setMinimumHeight(self.input.sizeHintForColumn(0))
-                self.input.setMinimumWidth(self.input.sizeHintForColumn(0))
-                #Initialise selections
+                widget.setVerticalScrollBar(scrollBar)
+                widget.setMinimumHeight(widget.sizeHintForColumn(0))
+                widget.setMinimumWidth(widget.sizeHintForColumn(0))
                 for i in field['value']:
-                    item = self.input.item(i)
+                    item = widget.item(i)
                     item.setSelected(True)
 
-            self.layout.addRow(field['label'], self.input)
-            self.listWidget.append(self.input)
+            self.layout.addRow(field['label'], widget)
+            self.listWidget.append(widget)
 
         self.layout.addRow("", self.buttonBox)
         self.setLayout(self.layout)
-        self.exec_()  #display input dialog
+        self.exec_()  
         self.cancel = self.button=='Cancel'
-        self.values = self.returnListParameterValues()
-
+        self.values = self._processOutput()
 
 
     def _processInput(self, *fields):
         """Processes the dictionary objects in *fields into a format that 
         can be used to create the widgets on the input dialog window.
-        Parameters
-        ----------
-        fields: 
-            a list of dictionaries of one of the following types:
-            {"type":"float", "label":"Name of the field", "value":1.0, "minimum": 0.0, "maximum": 1.0}
-            {"type":"integer", "label":"Name of the field", "value":1, "minimum": 0, "maximum": 100}
-            {"type":"string", "label":"Name of the field", "value":"My string"}
-            {"type":"dropdownlist", "label":"Name of the field", "list":["item 1",...,"item n" ], "value":2}
-            {"type":"listview", "label":"Name of the field", "list":["item 1",...,"item n"]}
-            The type and label keys are required, the others are optional.
-        Return values
-        -------------
-        dict: 
-            dictionary describing each widget on the input window
-        lists:
-            List of lists, where each individual list contains the items in drop down list
-            and list view widgets on the input window.
         """
     
         # set default values for items that are not provided by the user
@@ -363,6 +333,35 @@ class UserInput(QDialog):
         return fields
 
 
+    def _processOutput(self):
+        """Returns a list of parameter values as input by the user, 
+        in the same as order as the widgets
+        on the input dialog from top most (first item in the list) 
+        to the bottom most (last item in the list)."""
+  
+        # Overwrite the value key with the returned parameter
+        for f, field in enumerate(self.fields):
+            widget = self.listWidget[f]
+
+            if field["type"] == "listview":
+                n, sel = widget.count(), widget.selectedItems()
+                field["value"] = [i for i in range(n) if widget.item(i) in sel]
+    
+            elif field["type"] == "dropdownlist":
+                field["value"] = widget.currentIndex()
+
+            elif field["type"] == "string":
+                field["value"] = widget.text()
+
+            elif field["type"] == "integer":
+                field["value"] = widget.value()
+
+            elif field["type"] == "float":
+                field["value"] = widget.value()
+
+        return self.fields
+
+
     def clickedOK(self): # OK button clicked
         self.button = 'OK'
         self.accept()
@@ -372,48 +371,3 @@ class UserInput(QDialog):
         self.accept()
 
 
-    def _processOutput(self, fields, outputList):
-        if outputList is None: 
-            return fields
-        else:
-            # Overwrite the value key with the returned parameter
-            for f, field in enumerate(fields):
-                if field["type"] == "listview":
-                    value = outputList[f]
-                    ls = [str(item) for item in field["list"]]
-                    field["value"] = [ls.index(v) for v in value]
-        
-                elif field["type"] == "dropdownlist":
-                    value = outputList[f]
-                    ls = [str(item) for item in field["list"]]
-                    field["value"] = ls.index(value) 
-    
-                elif field["type"] == "string":
-                    field["value"] = outputList[f]
-    
-                elif field["type"] == "integer":
-                    field["value"] = outputList[f]
-    
-                elif field["type"] == "float":
-                    field["value"] = outputList[f]
-            return fields
-
-
-    def returnListParameterValues(self):
-        """Returns a list of parameter values as input by the user, 
-        in the same as order as the widgets
-        on the input dialog from top most (first item in the list) 
-        to the bottom most (last item in the list)."""
-
-        paramList = []
-        for item in self.listWidget:
-            if isinstance(item, QLineEdit):
-                paramList.append(item.text())
-            elif isinstance(item, QComboBox):
-                paramList.append(item.currentText())
-            elif isinstance(item, QListWidget):
-                paramList.append([itemText.text() for itemText in item.selectedItems()])
-            else:
-                paramList.append(item.value())
-
-        return self._processOutput(self.fields, paramList)
