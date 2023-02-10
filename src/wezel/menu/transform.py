@@ -31,12 +31,14 @@ from wezel.menu.scipy import (
     ResliceSagittal,
     OverlayOn,
     FunctionOfTwoSeries,
+    FunctionOfOneSeries,
 )
 
 
 
 def all(parent): 
-    parent.action(FunctionOfTwoSeries, text="Image calculator")
+    parent.action(FunctionOfOneSeries, text="new_series = f(series)")
+    parent.action(FunctionOfTwoSeries, text="new_series = f(series 1, series 2)")
     parent.separator()
     parent.action(Zoom, text="Resample images")
     parent.action(Resample3Disotropic, text="Resample 3D volume (isotropic)")
