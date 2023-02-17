@@ -39,6 +39,8 @@ from wezel.canvas.mask_filter import(
     MaskRegionGrowing,
     MaskDilate,
     MaskShrink,
+    MaskOpen,
+    MaskClose,
     MaskKidneyEdgeDetection,
 )
 from wezel.canvas.series_canvas import (

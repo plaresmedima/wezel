@@ -2,6 +2,179 @@ import wezel
 from dbdicom.wrappers import skimage
 
 
+class AreaOpening2D(wezel.gui.Action): 
+
+    def enable(self, app):
+        return app.nr_selected('Series') != 0
+
+    def run(self, app):
+        cancel, f = app.dialog.input(
+            {"label":"Remove bright structures with an area less than.. (in pixels)", "type":"integer", "value": 9, "minimum": 1},
+            {"label":"Connectivity (in pixels)", "type":"integer", "value": 1, "minimum": 1},
+            title = 'Select area opening settings')
+        if cancel: 
+            return
+        for series in app.selected('Series'):
+            result = skimage.area_opening_2d(
+                series, 
+                area_threshold = f[0]['value'],
+                connectivity = f[1]['value'])
+            app.display(result)
+        app.refresh()
+
+
+class AreaOpening3D(wezel.gui.Action): 
+
+    def enable(self, app):
+        return app.nr_selected('Series') != 0
+
+    def run(self, app):
+        cancel, f = app.dialog.input(
+            {"label":"Remove bright structures with a volume less than.. (in pixels)", "type":"integer", "value": 9, "minimum": 1},
+            {"label":"Connectivity (in pixels)", "type":"integer", "value": 1, "minimum": 1},
+            title = 'Select area opening settings')
+        if cancel: 
+            return
+        for series in app.selected('Series'):
+            result = skimage.area_opening_3d(
+                series, 
+                area_threshold = f[0]['value'],
+                connectivity = f[1]['value'])
+            app.display(result)
+        app.refresh()
+
+
+class AreaClosing2D(wezel.gui.Action): 
+
+    def enable(self, app):
+        return app.nr_selected('Series') != 0
+
+    def run(self, app):
+        cancel, f = app.dialog.input(
+            {"label":"Remove dark structures with an area less than.. (in pixels)", "type":"integer", "value": 27, "minimum": 1},
+            {"label":"Connectivity (in pixels)", "type":"integer", "value": 1, "minimum": 1},
+            title = 'Select area opening settings')
+        if cancel: 
+            return
+        for series in app.selected('Series'):
+            result = skimage.area_closing_2d(
+                series, 
+                area_threshold = f[0]['value'],
+                connectivity = f[1]['value'])
+            app.display(result)
+        app.refresh()
+
+
+class AreaClosing3D(wezel.gui.Action): 
+
+    def enable(self, app):
+        return app.nr_selected('Series') != 0
+
+    def run(self, app):
+        cancel, f = app.dialog.input(
+            {"label":"Remove dark structures with volume less than.. (in pixels)", "type":"integer", "value": 27, "minimum": 1},
+            {"label":"Connectivity (in pixels)", "type":"integer", "value": 1, "minimum": 1},
+            title = 'Select area opening settings')
+        if cancel: 
+            return
+        for series in app.selected('Series'):
+            result = skimage.area_closing_3d(
+                series, 
+                area_threshold = f[0]['value'],
+                connectivity = f[1]['value'])
+            app.display(result)
+        app.refresh()
+
+
+class Opening2D(wezel.gui.Action): 
+
+    def enable(self, app):
+        return app.nr_selected('Series') != 0
+
+    def run(self, app):
+        for series in app.selected('Series'):
+            result = skimage.opening_2d(series)
+            app.display(result)
+        app.refresh()
+
+
+class Opening3D(wezel.gui.Action): 
+
+    def enable(self, app):
+        return app.nr_selected('Series') != 0
+
+    def run(self, app):
+        for series in app.selected('Series'):
+            result = skimage.opening_3d(series)
+            app.display(result)
+        app.refresh()
+
+
+class Closing2D(wezel.gui.Action): 
+
+    def enable(self, app):
+        return app.nr_selected('Series') != 0
+
+    def run(self, app):
+        for series in app.selected('Series'):
+            result = skimage.closing_2d(series)
+            app.display(result)
+        app.refresh()
+
+
+class Closing3D(wezel.gui.Action): 
+
+    def enable(self, app):
+        return app.nr_selected('Series') != 0
+
+    def run(self, app):
+        for series in app.selected('Series'):
+            result = skimage.closing_3d(series)
+            app.display(result)
+        app.refresh()
+
+
+class RemoveSmallHoles2D(wezel.gui.Action): 
+
+    def enable(self, app):
+        return app.nr_selected('Series') != 0
+
+    def run(self, app):
+        cancel, f = app.dialog.input(
+            {"label":"Remove dark structures with an area less than.. (in pixels)", "type":"integer", "value": 9, "minimum": 1},
+            {"label":"Connectivity (in pixels)", "type":"integer", "value": 1, "minimum": 1},
+            title = 'Select area opening settings')
+        if cancel: 
+            return
+        for series in app.selected('Series'):
+            result = skimage.remove_small_holes_2d(
+                series, 
+                area_threshold = f[0]['value'],
+                connectivity = f[1]['value'])
+            app.display(result)
+        app.refresh()
+
+
+class RemoveSmallHoles3D(wezel.gui.Action): 
+
+    def enable(self, app):
+        return app.nr_selected('Series') != 0
+
+    def run(self, app):
+        cancel, f = app.dialog.input(
+            {"label":"Remove dark structures with volume less than.. (in pixels)", "type":"integer", "value": 27, "minimum": 1},
+            {"label":"Connectivity (in pixels)", "type":"integer", "value": 1, "minimum": 1},
+            title = 'Select area opening settings')
+        if cancel: 
+            return
+        for series in app.selected('Series'):
+            result = skimage.remove_small_holes_3d(
+                series, 
+                area_threshold = f[0]['value'],
+                connectivity = f[1]['value'])
+            app.display(result)
+        app.refresh()
+
 
 class Skeletonize_3D(wezel.gui.Action): 
 
@@ -14,7 +187,6 @@ class Skeletonize_3D(wezel.gui.Action):
             result = skimage.skeletonize_3d(sery)
             app.display(result)
         app.refresh()
-
 
 
 class Skeletonize(wezel.gui.Action): 
@@ -91,7 +263,6 @@ class CannyFilter(wezel.gui.Action):
         app.refresh()
 
 
-
 class PeakLocalMax3D(wezel.gui.Action): 
 
     def enable(self, app):
@@ -127,7 +298,6 @@ class PeakLocalMax3D(wezel.gui.Action):
         )
         app.display(filtered)
         app.refresh()
-
 
 
 class CoregisterToSkImage(wezel.gui.Action): 
@@ -267,8 +437,6 @@ class Watershed3D(wezel.gui.Action):
             app.display(result)
 
         app.refresh()
-
-
 
 
 class CoregisterSeries(wezel.gui.Action): 

@@ -181,21 +181,6 @@ class MaskPenFreehand(MaskPen):
         self.path = None
         # self.xc = None
         # self.yc = None
-
-    # def initialize(self):
-    #     # Called by the canvas after the filter is set to a scene
-    #     # And when a new image is set to the scene
-    #     item = self.scene().parent().imageItem
-    #     set_attributes = False
-    #     if self.xc is None:
-    #         set_attributes = True
-    #     elif self.xc.shape != item._array.shape:
-    #         set_attributes = True
-    #     if set_attributes:
-    #         nx, ny = item._array.shape[0], item._array.shape[1]
-    #         x, y = np.arange(0.5, 0.5+nx), np.arange(0.5, 0.5+ny)
-    #         self.xc, self.yc = np.meshgrid(x, y, indexing='ij')
-    #         self.locations = list(zip(self.xc.flatten(), self.yc.flatten()))
         
     def paint(self, painter, option, widget):
         if self.path is None: 
@@ -660,8 +645,6 @@ class MaskPenAllContours(MaskPenFreehand):
         item.setDisplay()
 
 
-
-
 class MaskThreshold(canvas.FilterItem):
     """Create mask by thresholding an image"""
     def __init__(self):
@@ -803,12 +786,6 @@ class MaskRegionGrowing(MaskBrush):
             self.text = 'Erase by growing..'
         self.icon = QIcon(pixMap)
 
-    # def initialize(self):
-    #     #cnvs = self.scene().parent()
-    #     #self.array = cnvs.image.get_pixel_array()
-    #     item = self.scene().parent().imageItem
-    #     self.array = item._array
-
     def paintPixels(self):
         # Get range of values under brush
         item = self.scene().parent().maskItem
@@ -840,19 +817,19 @@ class MaskRegionGrowing(MaskBrush):
         max, min = center+width, center-width
         # Grow region to include all pixels in the same range
         if self.mode == 'paint':
-            #canvas.utils.region_grow_add(self.array, item.bin(), seed, min, max)
             canvas.utils.region_grow_add(array, item.bin(), seed, min, max)
         else:
-            #canvas.utils.region_grow_remove(self.array, item.bin(), seed, min, max)
             canvas.utils.region_grow_remove(array, item.bin(), seed, min, max)
         item.setDisplay()
+
 
     def setOptions(self, option):
         if 'tolerance' in option:
             self.tolerance = option['tolerance']
-        if 'size' in option:
+        elif 'size' in option:
             self.brushSize = option['size']
         self.pick()
+
 
     def menuOptions(self):
         menu = QMenu()
@@ -909,6 +886,7 @@ class MaskDilate(canvas.FilterItem):
     def __init__(self, kernelSize=3):
         super().__init__()
         self.setKernel(kernelSize)
+        self.mode = 'draw'
         pixMap = QPixmap(icons.arrow_out)
         self.icon = QIcon(pixMap)
         self.cursor = QCursor(pixMap, hotX=8, hotY=8)
@@ -925,33 +903,33 @@ class MaskDilate(canvas.FilterItem):
         self.y = int(event.pos().y())
         item = self.scene().parent().maskItem
         if event.button() == Qt.LeftButton:
-            item.extend()
+            bin = item.bin()
+            if bin is None:
+                return
             p = [self.x, self.y]
-            mask = item.bin().astype(np.uint8)
-            if item.bin()[p[0],p[1]]:
-                cluster = np.zeros(mask.shape, dtype=np.bool8)
-                cluster = canvas.utils.region_grow_add(mask, cluster, [p], 0.5, 1.5)
-                cluster = cv2.dilate(cluster.astype(np.uint8), self.kernel)
-                item.setBin(np.logical_or(item.bin(), cluster.astype(np.bool8)))
-            else:
-                mask = cv2.dilate(mask, self.kernel)
-                item.setBin(mask.astype(np.bool8))
-            item.setDisplay()
+            if bin[p[0],p[1]]:
+                bin = canvas.utils.dilate_cluster(bin, p, self.kernel, mode=self.mode)
+                item.extend()
+                item.setBin(bin)
+                item.setDisplay()
         
     def mouseMoveEvent(self, event):
         self.x = int(event.pos().x())
         self.y = int(event.pos().y())
 
-    def setOptions(self, kernelSize):
-        self.setKernel(kernelSize)
+    def setOptions(self, option):
+        if 'size' in option:
+            self.setKernel(option['size'])
+        if 'mode' in option:
+            self.mode = option['mode']
         self.pick()
 
     def menuOptions(self):
         menu = QMenu()
         menu.triggered.connect(lambda action: self.setOptions(action.option))
+
         actionGroup = QActionGroup(menu)
         options = {
-            '1 pixel': 1,
             '3 pixels': 3,
             '5 pixels': 5,
             '7 pixels': 7,
@@ -962,9 +940,33 @@ class MaskDilate(canvas.FilterItem):
         }
         for text, value in options.items():
             action = QAction(text)
-            action.option = value
+            action.option = {'size': value}
             action.setCheckable(True)
             action.setChecked(value == self.kernelSize)
+            actionGroup.addAction(action)
+            menu.addAction(action)
+
+        self.addSeparator(menu)
+
+        actionGroup = QActionGroup(menu)
+        options = {
+            'Draw': 'draw',
+            'Cut': 'cut',
+            'Rescue': 'rescue',
+        }
+        icon = [
+            QIcon(icons.pencil), 
+            QIcon(icons.cutter), 
+            QIcon(icons.lifebuoy),
+        ]
+        i=0
+        for text, value in options.items():
+            action = QAction(text)
+            action.option = {'mode': value}
+            action.setCheckable(True)
+            action.setChecked(value == self.mode)
+            action.setIcon(icon[i])
+            i+=1
             actionGroup.addAction(action)
             menu.addAction(action)
 
@@ -991,20 +993,85 @@ class MaskShrink(MaskDilate):
         self.y = int(event.pos().y())
         item = self.scene().parent().maskItem
         if event.button() == Qt.LeftButton:
+            bin = item.bin()
+            if bin is None:
+                return
             p = [self.x, self.y]
-            item.extend()
-            mask = item.bin().astype(np.uint8)
-            if item.bin()[p[0],p[1]]:
-                # Find the selected cluster, take it out, erode it and put it back in
-                cluster = np.zeros(mask.shape, dtype=np.bool8)
-                cluster = canvas.utils.region_grow_add(mask, cluster, [p], 0.5, 1.5)
-                item.setBin(np.logical_and(item.bin(), np.logical_not(cluster)))
-                cluster = cv2.erode(cluster.astype(np.uint8), self.kernel)
-                item.setBin(np.logical_or(item.bin(), cluster.astype(np.bool8)))
-            else:
-                mask = cv2.erode(mask, self.kernel)
-                item.setBin(mask.astype(np.bool8))
-            item.setDisplay()
+            if bin[p[0],p[1]]:
+                bin = canvas.utils.erode_cluster(bin, p, self.kernel, mode=self.mode)
+                item.extend()
+                item.setBin(bin)
+                item.setDisplay()
+
+
+class MaskOpen(MaskDilate):
+    """
+    Open Button (remove bright spots)
+    """
+    def __init__(self, kernelSize=3):
+        super().__init__(kernelSize=kernelSize)
+        pixMap = QPixmap(icons.minus_small_circle)
+        self.icon = QIcon(pixMap)
+        self.cursor = QCursor(pixMap, hotX=8, hotY=8)
+        self.toolTip = 'Remove bright spots'
+        self.text = 'Remove bright spots'
+        self.setActionPick()
+
+    def mousePressEvent(self, event):
+        self.x = int(event.pos().x())
+        self.y = int(event.pos().y())
+        item = self.scene().parent().maskItem
+        if event.button() == Qt.LeftButton:
+            bin = item.bin()
+            if bin is None:
+                return
+            p = [self.x, self.y]
+            
+            if bin[p[0],p[1]]:
+                bin = canvas.utils.open_cluster(bin, p, self.kernel, mode=self.mode)
+                item.extend()
+                item.setBin(bin)
+                item.setDisplay()
+            elif self.mode == 'draw':
+                # Region grow from pixel on image
+                pass
+            
+
+
+
+
+class MaskClose(MaskDilate):
+    """
+    Close Button (remove dark spots)
+    """
+    def __init__(self, kernelSize=3):
+        super().__init__(kernelSize=kernelSize)
+        pixMap = QPixmap(icons.plus_small_white)
+        self.icon = QIcon(pixMap)
+        self.cursor = QCursor(pixMap, hotX=8, hotY=8)
+        self.toolTip = 'Remove dark spots'
+        self.text = 'Remove dark spots'
+        self.setActionPick()
+
+    def mousePressEvent(self, event):
+        self.x = int(event.pos().x())
+        self.y = int(event.pos().y())
+        item = self.scene().parent().maskItem
+        if event.button() == Qt.LeftButton:
+            bin = item.bin()
+            if bin is None:
+                return
+            p = [self.x, self.y]
+            close_cluster = False
+            if bin[p[0],p[1]]:
+                close_cluster = True
+            elif self.mode == 'draw':
+                close_cluster = True
+            if close_cluster:
+                bin = canvas.utils.close_cluster(bin, p, self.kernel, mode=self.mode)
+                item.extend()
+                item.setBin(bin)
+                item.setDisplay()
 
 
 class MaskKidneyEdgeDetection(canvas.FilterItem):
