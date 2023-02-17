@@ -27,9 +27,20 @@ from wezel.menu.skimage import (
     Skeletonize,
     Skeletonize_3D,
     PeakLocalMax3D,
+    AreaOpening2D,
+    AreaOpening3D,
+    AreaClosing2D,
+    AreaClosing3D,
+    Opening2D,
+    Opening3D,
+    Closing2D,
+    Closing3D,
+    RemoveSmallHoles2D,
+    RemoveSmallHoles3D,
 )
 from wezel.menu.sklearn import (
     KMeans,
+    SequentialKMeans,
 )
 
 
@@ -38,18 +49,34 @@ def all(parent):
     parent.action(ThresholdRelative, text="Threshold (relative values)")
     parent.action(MedianOtsu, text="Median Otsu segmentation")
     parent.action(KMeans, text='K-Means clustering')
+    parent.action(SequentialKMeans, text='Sequential K-Means clustering')
+    parent.action(Watershed2D, text="Watershed (2D)")
+    parent.action(Watershed3D, text="Watershed (3D)")
     parent.separator()
     parent.action(CannyFilter, text="Canny Edge Detection")
+    parent.action(DistanceTransformEdt, text="Euclidian distance transform (3D)")
+    parent.action(PeakLocalMax3D, text="Local maxima (3D)")
     parent.separator()
-    parent.action(BinaryFillHoles, text="Fill holes")
     parent.action(Label2D, text="Label structures (2D)")
     parent.action(Label3D, text="Label structures (3D)")
     parent.action(ConvexHullImage, text="Convex hull (2D)")
     parent.action(Skeletonize, text="Skeletonize (2D)")
     parent.action(Skeletonize_3D, text="Skeletonize (3D)")
-    parent.action(DistanceTransformEdt, text="Euclidian distance transform (3D)")
-    parent.action(PeakLocalMax3D, text="Local maxima (3D)")
-    parent.action(Watershed2D, text="Watershed (2D)")
-    parent.action(Watershed3D, text="Watershed (3D)")
+    parent.separator()
+    parent.action(Opening2D, text="Remove bright spots (2D)")
+    parent.action(Opening3D, text="Remove bright spots (3D)")
+    parent.action(Closing2D, text="Remove dark spots (2D)")
+    parent.action(Closing3D, text="Remove dark spots (3D)")
+    parent.separator()
+    parent.action(AreaOpening2D, text="Remove bright spots smaller than.. (2D)")
+    parent.action(AreaOpening3D, text="Remove bright spots smaller than.. (3D)")
+    parent.action(AreaClosing2D, text="Remove dark spots smaller than.. (2D)")
+    parent.action(AreaClosing3D, text="Remove dark spots smaller than.. (3D)")
+    parent.separator()
+    parent.action(BinaryFillHoles, text="Fill holes in labels")
+    parent.action(RemoveSmallHoles2D, text="Fill holes in labels smaller than.. (2D)")
+    parent.action(RemoveSmallHoles3D, text="Fill holes in labels smaller than.. (3D)")
+
+
 
 

@@ -42,6 +42,8 @@ __all__ = [
     'magnifier_zoom_in',
     'magnifier_zoom_out',
     'minus',
+    'minus_small_circle',
+    'minus_small_white',
     'paint',
     'paint_brush',
     'paint_brush__arrow',
@@ -51,6 +53,7 @@ __all__ = [
     'paint_can__plus',
     'pencil',
     'plus',
+    'plus_small_white',
     'question_mark',
     'spectrum',
     'wand',
@@ -126,6 +129,8 @@ magnifier_zoom_in = str(f.joinpath('magnifier-zoom-in.png'))
 magnifier_zoom_out = str(f.joinpath('magnifier-zoom-out.png'))
 magnifier_zoom_fit = str(f.joinpath('magnifier-zoom-fit.png'))
 minus = str(f.joinpath('minus.png'))
+minus_small_circle = str(f.joinpath('minus-small-circle.png'))
+minus_small_white = str(f.joinpath('minus-small-white.png'))
 paint = str(f.joinpath('paint.png'))
 paint_can__minus = str(f.joinpath('paint-can--minus.png'))
 paint_can__plus = str(f.joinpath('paint-can--plus.png'))
@@ -135,6 +140,7 @@ paint_brush__minus = str(f.joinpath('paint-brush--minus.png'))
 paint_brush__plus = str(f.joinpath('paint-brush--plus.png'))
 pencil = str(f.joinpath('pencil.png'))
 plus = str(f.joinpath('plus.png'))
+plus_small_white = str(f.joinpath('plus-small-white.png'))
 spectrum = str(f.joinpath('spectrum.png'))
 wand = str(f.joinpath('wand.png'))
 wand_hat = str(f.joinpath('wand-hat.png'))

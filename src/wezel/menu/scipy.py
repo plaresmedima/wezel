@@ -50,25 +50,21 @@ class FunctionOfOneSeries(wezel.gui.Action):
         return app.nr_selected('Series') != 0
 
     def run(self, app):
+        operation = [
+            '1 - series', 
+            '- series',
+            '1 / series',
+            'exp(- series)',
+            'exp(+ series)',
+            'integer(series)',
+            ]
+        input = wezel.widgets.UserInput(
+            {"label":"Operation: ", "type":"dropdownlist", "list": operation, 'value':0},
+            title = "Please select operation")
+        if input.cancel:
+            return
+        operation = operation[input.values[0]["value"]]
         for series in app.selected('Series'):
-            seriesList = series.parent().children()
-            seriesLabels = [s.label() for s in seriesList]
-            value = seriesList.index(series)
-            operation = [
-                '1 - series', 
-                '- series',
-                '1 / series',
-                'exp(- series)',
-                'exp(+ series)',
-                ]
-            input = wezel.widgets.UserInput(
-                {"label":"series", "type":"dropdownlist", "list": seriesLabels, 'value':value},
-                {"label":"Operation: ", "type":"dropdownlist", "list": operation, 'value':0},
-                title = "Please select series and operation")
-            if input.cancel:
-                return
-            series = seriesList[input.values[0]["value"]]
-            operation = operation[input.values[1]["value"]]
             result = scipy.series_calculator(series, operation)
             app.display(result)
         app.refresh()
