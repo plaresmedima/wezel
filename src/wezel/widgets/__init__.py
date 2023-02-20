@@ -18,6 +18,9 @@ from .series_display import (
     SeriesDisplay,
     SeriesDisplay4D,
 )
+from .surface_display import (
+    SurfaceDisplay,
+)
 from .plot_curve import (
     PlotCurve,
 )

@@ -26,9 +26,8 @@ def defaultFilters():
         canvas.MaskPenSet(mode='catch'),
         canvas.MaskDilate(),
         canvas.MaskShrink(),
-        canvas.MaskOpen(),
-        canvas.MaskClose(),
-        canvas.MaskKidneyEdgeDetection(),
+        canvas.MaskWand(),
+        #canvas.MaskKidneyEdgeDetection(),
     ]
 
 
@@ -364,12 +363,6 @@ class ToolBarView():
         w = QToolBar()
         w.addAction(toolBar.filters[15].actionPick)
         framegrid.addWidget(w,5,0)
-        w = QToolBar()
-        w.addAction(toolBar.filters[16].actionPick)
-        framegrid.addWidget(w,5,1)
-        w = QToolBar()
-        w.addAction(toolBar.filters[17].actionPick)
-        framegrid.addWidget(w,5,2)
         frame.setLayout(framegrid)
         return frame
 
