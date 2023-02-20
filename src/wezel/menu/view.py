@@ -7,6 +7,7 @@ def all(parent):
     parent.action(Series, text = 'Series (2D)')
     parent.action(Array4D, text = 'Series (2D + 1D)')
     parent.action(HeaderDICOM, text = 'Series (Header)')
+    parent.action(MaskSurface, text = '3D surface (mask)')
     parent.separator()
     parent.action(ToolBar, text='Toolbar')
     parent.action(CloseWindows, text='Close windows')
@@ -65,6 +66,18 @@ class Array4D(wezel.gui.Action):
     def run(self, app):
         for series in app.selected('Series'):
             viewer = wezel.widgets.SeriesDisplay4D()
+            viewer.setSeries(series)
+            app.addWidget(viewer, series.label())
+
+
+class MaskSurface(wezel.gui.Action):
+
+    def enable(self, app):
+        return app.nr_selected('Series') != 0
+
+    def run(self, app):
+        for series in app.selected('Series'):
+            viewer = wezel.widgets.SurfaceDisplay()
             viewer.setSeries(series)
             app.addWidget(viewer, series.label())
 

@@ -9,3 +9,5 @@ opencv-python<=4.5.3.56
 scikit-image
 scipy
 pyinstaller
+pyvista
+pyvistaqt

@@ -56,30 +56,39 @@ def erode_cluster(bin, p, kernel, mode='draw'):
     return bin
 
 
-def open_cluster(bin, p, kernel, mode='draw'):
+def open_cluster(bin, p, kernel, mode='draw', split=False):
     # Find the selected cluster
-    # mask = bin.astype(np.uint8)
-    # cluster = np.zeros(mask.shape, dtype=np.bool8)
-    # cluster = region_grow_add(mask, cluster, [p], 0.5, 1.5)
     cluster = pick_cluster(bin, p)
     if mode == 'draw':
         # Take it out of the ROI
         bin = np.logical_and(bin, np.logical_not(cluster))
         # Erode it then dilate it
-        cluster = cv2.erode(cluster.astype(np.uint8), kernel)
-        cluster = cv2.dilate(cluster.astype(np.uint8), kernel)
+        if kernel is not None:
+            cluster = cv2.erode(cluster.astype(np.uint8), kernel)
+            cluster = cv2.dilate(cluster.astype(np.uint8), kernel)
+        # Pick it again in case it was split up in multiple
+        if not split:
+            cluster = pick_cluster(cluster, p)
         # Put it back into the ROI
         bin = np.logical_or(bin, cluster.astype(np.bool8))
     elif mode == 'cut':
         # Erode it then dilate it
-        cluster = cv2.erode(cluster.astype(np.uint8), kernel)
-        cluster = cv2.dilate(cluster.astype(np.uint8), kernel)
+        if kernel is not None:
+            cluster = cv2.erode(cluster.astype(np.uint8), kernel)
+            cluster = cv2.dilate(cluster.astype(np.uint8), kernel)
+        # Pick it again in case it was split up in multiple
+        if not split:
+            cluster = pick_cluster(cluster, p)
         # Remove it from the ROI
         bin = np.logical_and(bin, np.logical_not(cluster.astype(np.bool8)))
     elif mode == 'rescue':
         # Erode it then dilate it
-        cluster = cv2.erode(cluster.astype(np.uint8), kernel)
-        cluster = cv2.dilate(cluster.astype(np.uint8), kernel)
+        if kernel is not None:
+            cluster = cv2.erode(cluster.astype(np.uint8), kernel)
+            cluster = cv2.dilate(cluster.astype(np.uint8), kernel)
+        # Pick it again in case it was split up in multiple
+        if not split:
+            cluster = pick_cluster(cluster, p)
         # Set as ROI
         bin = cluster
     return bin
@@ -87,28 +96,28 @@ def open_cluster(bin, p, kernel, mode='draw'):
 
 def close_cluster(bin, p, kernel, mode='draw'):
     # Find the selected cluster
-    # mask = bin.astype(np.uint8)
-    # cluster = np.zeros(mask.shape, dtype=np.bool8)
-    # cluster = region_grow_add(mask, cluster, [p], 0.5, 1.5)
     cluster = pick_cluster(bin, p)
     if mode == 'draw':
         # Take it out of the ROI
         bin = np.logical_and(bin, np.logical_not(cluster))
         # Dilate and then erode
-        cluster = cv2.dilate(cluster.astype(np.uint8), kernel)
-        cluster = cv2.erode(cluster.astype(np.uint8), kernel)
+        if kernel is not None:
+            cluster = cv2.dilate(cluster.astype(np.uint8), kernel)
+            cluster = cv2.erode(cluster.astype(np.uint8), kernel)
         # Put it back into the ROI
         bin = np.logical_or(bin, cluster.astype(np.bool8))
     elif mode == 'cut':
         # Dilate and then erode
-        cluster = cv2.dilate(cluster.astype(np.uint8), kernel)
-        cluster = cv2.erode(cluster.astype(np.uint8), kernel)
+        if kernel is not None:
+            cluster = cv2.dilate(cluster.astype(np.uint8), kernel)
+            cluster = cv2.erode(cluster.astype(np.uint8), kernel)
         # Remove it from the ROI
         bin = np.logical_and(bin, np.logical_not(cluster.astype(np.bool8)))
     elif mode == 'rescue':
         # Dilate and then erode
-        cluster = cv2.dilate(cluster.astype(np.uint8), kernel)
-        cluster = cv2.erode(cluster.astype(np.uint8), kernel)
+        if kernel is not None:
+            cluster = cv2.dilate(cluster.astype(np.uint8), kernel)
+            cluster = cv2.erode(cluster.astype(np.uint8), kernel)
         # Set as ROI
         bin = cluster
     return bin
@@ -129,7 +138,8 @@ def region_grow_select(img, seed, min, max):
     ]
     while seed != []:
         p = seed.pop()
-        selected[p[0], p[1]] = True
+        if min <= img[p[0], p[1]] <= max:
+            selected[p[0], p[1]] = True
         for next in neighbours:
             x = p[0] + next[0]
             y = p[1] + next[1]
@@ -151,7 +161,8 @@ def region_grow_add(img, selected, seed, min, max):
     ]
     while seed != []:
         p = seed.pop()
-        selected[p[0], p[1]] = True
+        if min <= img[p[0], p[1]] <= max:
+            selected[p[0], p[1]] = True
         for next in neighbours:
             x = p[0] + next[0]
             y = p[1] + next[1]
@@ -173,7 +184,8 @@ def region_grow_remove(img, selected, seed, min, max):
     ]
     while seed != []:
         p = seed.pop()
-        selected[p[0], p[1]] = False
+        if min <= img[p[0], p[1]] <= max:
+            selected[p[0], p[1]] = False
         for next in neighbours:
             x = p[0] + next[0]
             y = p[1] + next[1]

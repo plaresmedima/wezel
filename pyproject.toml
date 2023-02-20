@@ -22,6 +22,8 @@ dependencies = [
   "scikit-image",
   "scipy",
   'pyinstaller', # This has become part of wezel - package icnludes api's to create executables
+  "pyvista", 
+  "pyvistaqt",
 ]
 
 # optional information

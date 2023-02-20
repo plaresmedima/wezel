@@ -1023,22 +1023,35 @@ class MaskOpen(MaskDilate):
         item = self.scene().parent().maskItem
         if event.button() == Qt.LeftButton:
             bin = item.bin()
-            if bin is None:
-                return
             p = [self.x, self.y]
+            if bin is None:
+                if self.mode == 'draw':
+                    bin = self._grow_from(p)
+                    self._open(p, bin)
+            else:
+                if bin[p[0],p[1]]:
+                    self._open(p, bin, split=True)
+                elif self.mode == 'draw':
+                    cluster = self._grow_from(p)
+                    cluster = canvas.utils.open_cluster(cluster, p, self.kernel, mode=self.mode)
+                    bin = np.logical_or(bin, cluster.astype(np.bool8))
+                    item = self.scene().parent().maskItem
+                    item.extend()
+                    item.setBin(bin)
+                    item.setDisplay()
+
+    def _grow_from(self, p):
+        array = self.scene().parent().imageItem._array
+        return canvas.utils.pick_cluster(array, p)
+
+    def _open(self, p, bin, split=False):
+        if np.count_nonzero(bin) > 0:
+            bin = canvas.utils.open_cluster(bin, p, self.kernel, mode=self.mode, split=split)
+            item = self.scene().parent().maskItem
+            item.extend()
+            item.setBin(bin)
+            item.setDisplay()
             
-            if bin[p[0],p[1]]:
-                bin = canvas.utils.open_cluster(bin, p, self.kernel, mode=self.mode)
-                item.extend()
-                item.setBin(bin)
-                item.setDisplay()
-            elif self.mode == 'draw':
-                # Region grow from pixel on image
-                pass
-            
-
-
-
 
 class MaskClose(MaskDilate):
     """
@@ -1059,19 +1072,188 @@ class MaskClose(MaskDilate):
         item = self.scene().parent().maskItem
         if event.button() == Qt.LeftButton:
             bin = item.bin()
-            if bin is None:
-                return
             p = [self.x, self.y]
-            close_cluster = False
-            if bin[p[0],p[1]]:
-                close_cluster = True
-            elif self.mode == 'draw':
-                close_cluster = True
-            if close_cluster:
-                bin = canvas.utils.close_cluster(bin, p, self.kernel, mode=self.mode)
-                item.extend()
-                item.setBin(bin)
-                item.setDisplay()
+            if bin is None:
+                if self.mode == 'draw':
+                    bin = self._grow_from(p)
+                    self._close(p, bin)
+            else:
+                if bin[p[0],p[1]]:
+                    self._close(p, bin)
+                elif self.mode == 'draw':
+                    cluster = self._grow_from(p)
+                    cluster = canvas.utils.close_cluster(cluster, p, self.kernel, mode=self.mode)
+                    bin = np.logical_or(bin, cluster.astype(np.bool8))
+                    item = self.scene().parent().maskItem
+                    item.extend()
+                    item.setBin(bin)
+                    item.setDisplay()
+
+    def _grow_from(self, p):
+        array = self.scene().parent().imageItem._array
+        return canvas.utils.pick_cluster(array, p)
+
+    def _close(self, p, bin):
+        if np.count_nonzero(bin) > 0:
+            item = self.scene().parent().maskItem
+            bin = canvas.utils.close_cluster(bin, p, self.kernel, mode=self.mode)
+            item.extend()
+            item.setBin(bin)
+            item.setDisplay()
+
+
+class MaskWand(canvas.FilterItem):
+    """
+    Close then open
+    """
+    def __init__(self, brightKernelSize=1, darkKernelSize=1):
+        super().__init__()
+        self.setBrightKernel(brightKernelSize)
+        self.setDarkKernel(darkKernelSize)
+        self.mode = 'draw'
+        pixMap = QPixmap(icons.wand)
+        self.icon = QIcon(pixMap)
+        self.cursor = QCursor(pixMap, hotX=0, hotY=16)
+        self.toolTip = 'Remove spots'
+        self.text = 'Remove spots'
+        self.setActionPick()
+
+    def setDarkKernel(self, kernelSize):
+        self.darkKernelSize = kernelSize
+        if kernelSize == 1:
+            self.darkKernel = None
+        else:
+            self.darkKernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernelSize, kernelSize))
+
+    def setBrightKernel(self, kernelSize):
+        self.brightKernelSize = kernelSize
+        if kernelSize == 1:
+            self.brightKernel = None
+        else:
+            self.brightKernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernelSize, kernelSize))
+
+    def setOptions(self, option):
+        if 'dark size' in option:
+            self.setDarkKernel(option['dark size'])
+        elif 'bright size' in option:
+            self.setBrightKernel(option['bright size'])
+        elif 'mode' in option:
+            self.mode = option['mode']
+        self.pick()
+
+    def menuOptions(self):
+        menu = QMenu()
+        menu.triggered.connect(lambda action: self.setOptions(action.option))
+
+        actionGroup = QActionGroup(menu)
+        options = {
+            'Do not remove dark spots': 1,
+            'Remove dark spots less than 3 pixels': 3,
+            'Remove dark spots less than 5 pixels': 5,
+            'Remove dark spots less than 7 pixels': 7,
+            'Remove dark spots less than 9 pixels': 9,
+            'Remove dark spots less than 11 pixels': 11,
+            'Remove dark spots less than 21 pixels': 21,
+            'Remove dark spots less than 31 pixels': 31,
+        }
+        for text, value in options.items():
+            action = QAction(text)
+            action.option = {'dark size': value}
+            action.setCheckable(True)
+            action.setChecked(value == self.darkKernelSize)
+            actionGroup.addAction(action)
+            menu.addAction(action)
+
+        self.addSeparator(menu)
+
+        actionGroup = QActionGroup(menu)
+        options = {
+            'Do not remove bright spots': 1,
+            'Remove bright spots less than 3 pixels': 3,
+            'Remove bright spots less than 5 pixels': 5,
+            'Remove bright spots less than 7 pixels': 7,
+            'Remove bright spots less than 9 pixels': 9,
+            'Remove bright spots less than 11 pixels': 11,
+            'Remove bright spots less than 21 pixels': 21,
+            'Remove bright spots less than 31 pixels': 31,
+        }
+        for text, value in options.items():
+            action = QAction(text)
+            action.option = {'bright size': value}
+            action.setCheckable(True)
+            action.setChecked(value == self.brightKernelSize)
+            actionGroup.addAction(action)
+            menu.addAction(action)
+
+        self.addSeparator(menu)
+
+        actionGroup = QActionGroup(menu)
+        options = {
+            'Draw': 'draw',
+            'Cut': 'cut',
+            'Rescue': 'rescue',
+        }
+        icon = [
+            QIcon(icons.pencil), 
+            QIcon(icons.cutter), 
+            QIcon(icons.lifebuoy),
+        ]
+        i=0
+        for text, value in options.items():
+            action = QAction(text)
+            action.option = {'mode': value}
+            action.setCheckable(True)
+            action.setChecked(value == self.mode)
+            action.setIcon(icon[i])
+            i+=1
+            actionGroup.addAction(action)
+            menu.addAction(action)
+
+        return menu
+
+    def contextMenu(self):
+        return self.actionPick.menu()
+
+    def mouseMoveEvent(self, event):
+        self.x = int(event.pos().x())
+        self.y = int(event.pos().y())
+
+    def mousePressEvent(self, event):
+        self.x = int(event.pos().x())
+        self.y = int(event.pos().y())
+        item = self.scene().parent().maskItem
+        if event.button() == Qt.LeftButton:
+            bin = item.bin()
+            p = [self.x, self.y]
+            if bin is None:
+                if self.mode == 'draw':
+                    bin = self._grow_from(p)
+                    self._close_open(p, bin)
+            else:
+                if bin[p[0],p[1]]:
+                    self._close_open(p, bin, split=True)
+                elif self.mode == 'draw':
+                    cluster = self._grow_from(p)
+                    cluster = canvas.utils.open_cluster(cluster, p, self.brightKernel, mode=self.mode)
+                    cluster = canvas.utils.close_cluster(cluster, p, self.darkKernel, mode=self.mode)
+                    bin = np.logical_or(bin, cluster.astype(np.bool8))
+                    item = self.scene().parent().maskItem
+                    item.extend()
+                    item.setBin(bin)
+                    item.setDisplay()
+
+    def _grow_from(self, p):
+        array = self.scene().parent().imageItem._array
+        return canvas.utils.pick_cluster(array, p)
+
+    def _close_open(self, p, bin, split=False):
+        if np.count_nonzero(bin) > 0:
+            bin = canvas.utils.open_cluster(bin, p, self.brightKernel, mode=self.mode, split=split)
+            bin = canvas.utils.close_cluster(bin, p, self.darkKernel, mode=self.mode)
+            item = self.scene().parent().maskItem
+            item.extend()
+            item.setBin(bin)
+            item.setDisplay()         
 
 
 class MaskKidneyEdgeDetection(canvas.FilterItem):

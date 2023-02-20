@@ -398,12 +398,17 @@ class Main(QMainWindow):
         # The widget continues to exist - memory issues?
         # Delete widget when subwindow closes
         widget = subWindow.widget().__class__.__name__
+        # Hack
+        # The widget is sometimes destroyed by removeSubWindow but not always - not sure why
+        if widget == 'QWidget':
+            return
         if 0 == self.central.countSubWindow(widget):
             toolBar = subWindow.widget().toolBar
             if toolBar is not None:
                 toolBar.setEnabled(False)
             #self.toolBarDockWidget.hide()
         #self.refresh()
+
 
     def activateSubWindow(self, subWindow):
         if self.central.activeWindow == subWindow:
@@ -521,7 +526,6 @@ class MenuBar(QMenuBar):
     def add(self, menu):
         menu._QMenu(self)
         #self.addMenu(menu)
-
 
 
 class Menu(QMenu):
