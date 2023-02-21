@@ -2,9 +2,28 @@ import wezel
 from dbdicom.wrappers import numpy
 
 
-def all(parent):   
-    parent.action(ThresholdAbsolute, text="Threshold (absolute values)")
-    parent.action(ThresholdRelative, text="Threshold (relative values)")
+class MeanIntensityProjection(wezel.gui.Action):
+
+    def enable(self, app):
+        return app.nr_selected('Series') != 0
+
+    def run(self, app):
+        for series in app.selected('Series'):
+            new_series = numpy.mean_intensity_projection(series)
+            app.display(new_series)
+        app.refresh()
+
+
+class MaximumIntensityProjection(wezel.gui.Action):
+
+    def enable(self, app):
+        return app.nr_selected('Series') != 0
+
+    def run(self, app):
+        for series in app.selected('Series'):
+            new_series = numpy.maximum_intensity_projection(series)
+            app.display(new_series)
+        app.refresh()
 
 
 
