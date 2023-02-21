@@ -13,6 +13,7 @@ def default(parent):
     wezel.menu.filter.all(parent.menu('Filter'))
     wezel.menu.segment.all(parent.menu('Segment'))
     wezel.menu.transform.all(parent.menu('Transform'))
+    wezel.menu.measure.all(parent.menu('Measure'))
     wezel.menu.about.all(parent.menu('About'))
 
 def test(parent):

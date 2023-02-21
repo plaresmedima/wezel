@@ -10,6 +10,7 @@ from . import (
     filter,
     segment,
     transform,
+    measure,
     menubar,
 )
 

@@ -9,7 +9,10 @@ SimpleITK
 itk-elastix
 """
 
-
+from wezel.menu.numpy import (
+    MeanIntensityProjection,
+    MaximumIntensityProjection,
+)
 from wezel.menu.dipy import (
     CoregisterToDiPy,
 )
@@ -57,3 +60,6 @@ def all(parent):
     parent.action(CoregisterSeries, text='Align time series')
     parent.action(MDRegConstant2D, text='Align time series (mdreg 2D - constant)')
     parent.action(MDRegConstant3D, text='Align time series (mdreg 3D - constant)')
+    parent.separator()
+    parent.action(MeanIntensityProjection, text='Mean Intensity Projection')
+    parent.action(MaximumIntensityProjection, text='Maximum Intensity Projection')

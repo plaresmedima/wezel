@@ -2,6 +2,17 @@ import wezel
 from dbdicom.wrappers import skimage
 
 
+class VolumeFeatures(wezel.gui.Action):
+
+    def enable(self, app):
+        return app.nr_selected('Series') != 0 
+
+    def run(self, app):
+        for series in app.selected('Series'):
+            result = skimage.volume_features(series)
+            #display
+
+
 class AreaOpening2D(wezel.gui.Action): 
 
     def enable(self, app):
