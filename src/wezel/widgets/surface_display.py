@@ -24,6 +24,19 @@ class SurfaceDisplay(wezel.gui.MainWidget):
 
     def setSeries(self, series):
 
+        series.status.message('Getting array dimensions...')
+
+        affine = series.affine_matrix()
+        if isinstance(affine, list):
+            series.dialog.information('This series contains multiple orientations')
+            return
+        else:
+            affine = affine[0]
+        column_spacing = np.linalg.norm(affine[:3, 0])
+        row_spacing = np.linalg.norm(affine[:3, 1])
+        slice_spacing = np.linalg.norm(affine[:3, 2])
+        spacing = (column_spacing, row_spacing, slice_spacing)  #mm
+
         # Get array sorted by slice location
         arr, _ = series.array('SliceLocation', pixels_first=True)
 
@@ -49,20 +62,37 @@ class SurfaceDisplay(wezel.gui.MainWidget):
 
     
         series.status.message('Extracting surface...')
-        verts, faces, _, _ = skimage.measure.marching_cubes(array, level=0.5, step_size=1.0)
-        cloud = pv.PolyData(verts, faces)
-        surf = cloud.reconstruct_surface()
 
-    
+        try:
+            verts, faces, _, _ = skimage.measure.marching_cubes(array, level=0.5, spacing=spacing, step_size=1.0)
+        except:
+            print('Error extracting surface')
+            series.dialog.information('Error extracting surface')
+            return
+
+        series.status.message('Reconstructing surface...')
+            
+        try:
+            cloud = pv.PolyData(verts, faces)
+            surf = cloud.reconstruct_surface()
+        except:
+            print('Error reconstructing surface')
+            series.dialog.information('Error reconstructing surface')
+            return
+
         series.status.message('Displaying surface...')
-        self.plotter.add_mesh(surf, 
-            scalars = np.linalg.norm(surf.points, axis=1), 
-            show_edges = False, 
-            smooth_shading = True, 
-            specular = 0, 
-            cmap = "plasma", 
-            show_scalar_bar = False,
-        )
+
+        try:
+            self.plotter.add_mesh(surf, 
+                scalars = np.linalg.norm(surf.points, axis=1), 
+                show_edges = False, 
+                smooth_shading = True, 
+                specular = 0, 
+                cmap = "plasma", 
+                show_scalar_bar = False,
+            )
+        except:
+            series.dialog.information('Error plotting surface')
 
         ## Note: In script, plotting can also be done as:
         # surf.plot(scalars=dist, show_edges=False, smooth_shading=True, specular=5, cmap="plasma", show_scalar_bar=False)
