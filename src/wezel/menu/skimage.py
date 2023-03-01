@@ -1,5 +1,7 @@
+import pandas as pd
 import wezel
 from dbdicom.wrappers import skimage
+from wezel.widgets import TableDisplay
 
 
 class VolumeFeatures(wezel.gui.Action):
@@ -8,9 +10,18 @@ class VolumeFeatures(wezel.gui.Action):
         return app.nr_selected('Series') != 0 
 
     def run(self, app):
-        for series in app.selected('Series'):
-            result = skimage.volume_features(series)
-            #display
+        # df = None
+        # for series in app.selected('Series'):
+        #     df_series = skimage.volume_features(series)
+        #     if df is None:
+        #         df = df_series
+        #     else:
+        #         df = pd.concat([df, df_series], ignore_index=True)
+        series = app.selected('Series')
+        df = skimage.volume_features(series)
+        viewer = TableDisplay(df)
+        app.addWidget(viewer, 'Volume features')
+        app.status.hide()
 
 
 class AreaOpening2D(wezel.gui.Action): 
@@ -222,6 +233,19 @@ class ConvexHullImage(wezel.gui.Action):
 
         for sery in app.selected('Series'):
             result = skimage.convex_hull_image(sery)
+            app.display(result)
+        app.refresh()
+
+
+class ConvexHullImage3D(wezel.gui.Action): 
+
+    def enable(self, app):
+        return app.nr_selected('Series') != 0
+
+    def run(self, app):
+
+        for sery in app.selected('Series'):
+            result = skimage.convex_hull_image_3d(sery)
             app.display(result)
         app.refresh()
 

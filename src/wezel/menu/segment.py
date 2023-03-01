@@ -14,7 +14,9 @@ from wezel.menu.numpy import (
 from wezel.menu.scipy import (
     DistanceTransformEdt,
     BinaryFillHoles, 
-    Label2D, Label3D,
+    Label2D, 
+    Label3D,
+    ExtractLargestCluster3D,
 )
 from wezel.menu.dipy import (
     MedianOtsu,
@@ -24,6 +26,7 @@ from wezel.menu.skimage import (
     Watershed2D, 
     Watershed3D,
     ConvexHullImage,
+    ConvexHullImage3D,
     Skeletonize,
     Skeletonize_3D,
     PeakLocalMax3D,
@@ -59,7 +62,9 @@ def all(parent):
     parent.separator()
     parent.action(Label2D, text="Label structures (2D)")
     parent.action(Label3D, text="Label structures (3D)")
+    parent.action(ExtractLargestCluster3D, text="Extract largest cluster (3D)")
     parent.action(ConvexHullImage, text="Convex hull (2D)")
+    parent.action(ConvexHullImage3D, text="Convex hull (3D)")
     parent.action(Skeletonize, text="Skeletonize (2D)")
     parent.action(Skeletonize_3D, text="Skeletonize (3D)")
     parent.separator()

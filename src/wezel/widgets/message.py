@@ -191,50 +191,47 @@ class StatusBar(QStatusBar):
 
 class UserInput(QDialog):
     """
-    This class  generates a pop-up dialog window with 
-    one or more input widgets that can accept the following data types: 
-        integer - spin box, 
-        float - double spin box
-        string - text box, drop down list or list view. 
-  The order and type of input widgets is defined in the *fields
-  input parameter in the class initialisation function. 
-  
-  Input Parameters
-  *****************
-  fields: 
-            a list of dictionaries of one of the following types:
-            {"type":"float", "label":"Name of the field", "value":1.0, "minimum": 0.0, "maximum": 1.0}
-            {"type":"integer", "label":"Name of the field", "value":1, "minimum": 0, "maximum": 100}
-            {"type":"string", "label":"Name of the field", "value":"My string"}
-            {"type":"dropdownlist", "label":"Name of the field", "list":["item 1",...,"item n" ], "value":2}
-            {"type":"listview", "label":"Name of the field", "list":["item 1",...,"item n"]}
-          
-          Widgets are created in the same order on the dialog they occupy in the dictionary; ie., 
-          the first dictionary item is uppermost input widget on the dialog 
-          and the last dictionary item is the last input widget on the dialog.
-  
-  title - optional string containing the input dialog title. 
-          Has a default string "Input Parameters"
-  helpText - optional help text to be displayed above the input widgets.
-  """
+    Pop-up window for user input
+    
+    Input Parameters
+    *****************
+    fields: 
+                a list of dictionaries of one of the following types:
+                {"type":"float", "label":"Name of the field", "value":1.0, "minimum": 0.0, "maximum": 1.0}
+                {"type":"integer", "label":"Name of the field", "value":1, "minimum": 0, "maximum": 100}
+                {"type":"string", "label":"Name of the field", "value":"My string"}
+                {"type":"dropdownlist", "label":"Name of the field", "list":["item 1",...,"item n" ], "value":2}
+                {"type":"listview", "label":"Name of the field", "list":["item 1",...,"item n"]}
+            
+            Widgets are created in the same order on the dialog they occupy in the dictionary; ie., 
+            the first dictionary item is uppermost input widget on the dialog 
+            and the last dictionary item is the last input widget on the dialog.
+    
+    title - optional string containing the input dialog title. 
+            Has a default string "Input Parameters"
+    helpText - optional help text to be displayed above the input widgets.
+    """
     def __init__(self, *fields, title="Input Parameters", helpText=None):
         super().__init__()
+
+        self.button = 'Cancel'
+        self.fields = fields
         
         self.setWindowTitle(title)
-        self.setWindowFlag(QtCore.Qt.WindowContextHelpButtonHint, False)
-        self.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, False)
-        self.setWindowFlag(QtCore.Qt.CustomizeWindowHint, True)
-        QBtn = QDialogButtonBox.Ok | QDialogButtonBox.Cancel   #OK and Cancel button
+        self.setWindowFlag(Qt.WindowContextHelpButtonHint, False)
+        self.setWindowFlag(Qt.WindowCloseButtonHint, False)
+        self.setWindowFlag(Qt.CustomizeWindowHint, True)
+        self.setSizeGripEnabled(True)
+        QBtn = QDialogButtonBox.Ok | QDialogButtonBox.Cancel   # OK and Cancel button
         self.buttonBox = QDialogButtonBox(QBtn)
-        self.buttonBox.accepted.connect(self.clickedOK)   #OK button
-        self.buttonBox.rejected.connect(self.clickedCancel)  #Cancel button
+        self.buttonBox.accepted.connect(self.clickedOK)   # OK button
+        self.buttonBox.rejected.connect(self.clickedCancel)  # Cancel button
         self.layout = QFormLayout()
         if helpText:
             self.helpTextLbl = QLabel("<H4>" + helpText  +"</H4>")
             self.helpTextLbl.setWordWrap(True)
             self.layout.addRow(self.helpTextLbl)
 
-        self.fields = fields
         self.listWidget = []
         for field in self._processInput(*fields):
 
@@ -265,8 +262,10 @@ class UserInput(QDialog):
                 widget.addItems([str(v) for v in field["list"]])
                 scrollBar = QScrollBar(self) 
                 widget.setVerticalScrollBar(scrollBar)
-                widget.setMinimumHeight(widget.sizeHintForColumn(0))
+                #widget.setMinimumHeight(widget.sizeHintForColumn(0))
+                #widget.setMaximumHeight(300)
                 widget.setMinimumWidth(widget.sizeHintForColumn(0))
+                widget.resize(widget.sizeHintForColumn(0),300)
                 for i in field['value']:
                     item = widget.item(i)
                     item.setSelected(True)

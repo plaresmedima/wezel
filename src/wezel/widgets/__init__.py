@@ -21,6 +21,9 @@ from .series_display import (
 from .surface_display import (
     SurfaceDisplay,
 )
+from .table_display import (
+    TableDisplay,
+)
 from .plot_curve import (
     PlotCurve,
 )

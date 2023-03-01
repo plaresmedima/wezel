@@ -284,14 +284,15 @@ class SeriesCanvasModel:
             return
         seriesList = [seriesList[i] for i in input.values[0]["value"]]
         seriesLabels = [seriesLabels[i] for i in input.values[0]["value"]]
-        suffix = ' mapped to ' + self._series.instance().SeriesDescription
+        #suffix = ' mapped to ' + self._series.instance().SeriesDescription
         # Overlay each of the selected series on the displayed series
         for s, series in enumerate(seriesList):
             # Create overlay
             #region, images = series.map_mask_to(self._series)
             region, images = scipy.map_mask_to(series, self._series)
             # Add new region
-            newRegion = {'name': seriesLabels[s] + suffix, 'color': self.newColor()}
+            #newRegion = {'name': seriesLabels[s] + suffix, 'color': self.newColor()}
+            newRegion = {'name': seriesLabels[s], 'color': self.newColor()}
             if isinstance(region, list): # If self._series has multiple slice groups
                 for r, reg in enumerate(region):
                     for i, image in np.ndenumerate(images[r]):

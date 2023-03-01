@@ -12,8 +12,15 @@ from wezel import widgets, canvas
 
 class SeriesDisplay(wezel.gui.MainWidget):
 
-    def __init__(self):
+    def __init__(self, series=None):
         super().__init__()
+
+        self.setupUI()
+        self.setSeries(series)
+
+    def setupUI(self):
+
+        # Toolbar
         self.toolBarClass = canvas.ToolBar
 
         # Widgets
@@ -27,8 +34,14 @@ class SeriesDisplay(wezel.gui.MainWidget):
             lambda x, y: self.series().status.pixelValue(x,y,self.canvas.array())
         )
 
-        # Display
-        self._view = SeriesDisplayView(self)
+        # Layout
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        layout.addWidget(self.canvas)
+        layout.addWidget(self.sliders)
+        self.setLayout(layout)
+
 
     def setToolBar(self, toolBar):
         super().setToolBar(toolBar)
@@ -51,6 +64,8 @@ class SeriesDisplay(wezel.gui.MainWidget):
         return self.canvas._model._series
         
     def setSeries(self, series):
+        if series is None:
+            return
         if series.instances() == []:
             self.setError('Series ' + series.label() + ' is empty. \n\n Nothing to show here..')
             return
@@ -106,14 +121,7 @@ class SeriesDisplay(wezel.gui.MainWidget):
             image_after.clear()
 
 
-class SeriesDisplayView():
-    def __init__(self, controller):
-        layout = QVBoxLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
-        layout.addWidget(controller.canvas)
-        layout.addWidget(controller.sliders)
-        controller.setLayout(layout)
+
 
 
 

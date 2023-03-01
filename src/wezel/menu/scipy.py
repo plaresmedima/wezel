@@ -1,47 +1,25 @@
 import numpy as np
 import wezel
 from dbdicom.wrappers import scipy
+from wezel.widgets import TableDisplay
 
 
-def all(parent): 
-    parent.action(FunctionOfOneSeries, text='series => new series')
-    parent.action(FunctionOfTwoSeries, text='(series 1, series 2) => new series')
-    parent.separator()
-    parent.action(Zoom, text="Resample images")
-    parent.action(Resample3Disotropic, text="Resample 3D volume (isotropic)")
-    parent.action(Resample3D, text="Resample 3D volume")
-    parent.separator()
-    parent.action(ResliceAxial, text='Reslice (axial)')
-    parent.action(ResliceCoronal, text='Reslice (coronal)')
-    parent.action(ResliceSagittal, text='Reslice (sagittal)')
-    parent.separator()
-    parent.action(OverlayOn, text='Overlay on..')
-    parent.separator()
-    parent.action(DistanceTransformEdt, text="Euclidian distance transform")
-    parent.action(BinaryFillHoles, text="Fill holes")
-    parent.action(Label2D, text="Label structures (2D)")
-    parent.action(Label3D, text="Label structures (3D)")
-    parent.separator()
-    parent.action(GaussianFilter, text="Gaussian Filter")
-    parent.separator()
-    parent.action(UniformFilter, text="Uniform Filter")
-    parent.action(MinimumFilter, text="Minimum Filter")
-    parent.action(MaximumFilter, text="Maximum Filter")
-    parent.action(RankFilter, text="Rank Filter")
-    parent.action(PercentileFilter, text="Percentile Filter")
-    parent.action(MedianFilter, text="Median Filter")
-    parent.separator()
-    parent.action(PrewittFilter, text="Prewitt Filter")
-    parent.action(SobelFilter, text="Sobel Filter")
-    parent.action(LaplaceFilter, text="Laplace Filter")
-    parent.action(GaussianLaplaceFilter, text="Gaussian Laplace Filter")
-    parent.action(GaussianGradientMagnitudeFilter, text="Gaussian Gradient Magnitude Filter")
-    parent.separator()
-    parent.action(FourierShift, text="Shift image")
-    parent.action(FourierGaussianFilter, text="Fourier Gaussian Filter")
-    parent.action(FourierUniformFilter, text="Fourier Uniform Filter")
-    parent.action(FourierEllipsoidFilter, text="Fourier Ellipsoid Filter")
-    
+class ROIstatistics(wezel.gui.Action): 
+
+    def run(self, app):
+        all_series = app.database().series()
+        series_labels = [s.label() for s in all_series]
+        cancel, f = app.dialog.input(
+            {"label":"Regions of interest", "type":"listview", "list": series_labels, 'value':[]},
+            {"label":"Parameters", "type":"listview", "list": series_labels, 'value':[]},
+            title = "Please select input for ROI statistics")
+        if cancel:
+            return
+        masks = [all_series[i] for i in f[0]['value']]
+        images = [all_series[i] for i in f[1]['value']]
+        df = scipy.mask_statistics(masks, images)
+        app.addWidget(TableDisplay(df), 'ROI statistics')
+        app.status.hide()
 
 
 class FunctionOfOneSeries(wezel.gui.Action): 
@@ -79,7 +57,7 @@ class FunctionOfTwoSeries(wezel.gui.Action):
         selected = app.selected('Series')
         if selected == []:
             return
-        seriesList = selected[0].parent().children()
+        seriesList = selected[0].parent().parent().series()
         value1 = seriesList.index(selected[0])
         try:
             value2 = seriesList.index(selected[1])
@@ -401,6 +379,19 @@ class Label3D(wezel.gui.Action):
         series = app.selected('Series')
         for sery in series:
             result = scipy.label_3d(sery)
+            app.display(result)
+        app.refresh()
+
+
+class ExtractLargestCluster3D(wezel.gui.Action): 
+
+    def enable(self, app):
+        return app.nr_selected('Series') != 0
+
+    def run(self, app):
+        series = app.selected('Series')
+        for sery in series:
+            result = scipy.extract_largest_cluster_3d(sery)
             app.display(result)
         app.refresh()
 

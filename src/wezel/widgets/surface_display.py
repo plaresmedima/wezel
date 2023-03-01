@@ -1,6 +1,5 @@
 import numpy as np
 import scipy.ndimage as ndi
-import skimage
 import pyvista as pv
 
 from PyQt5.QtWidgets import (
@@ -13,16 +12,28 @@ import wezel
 
 class SurfaceDisplay(wezel.gui.MainWidget):
 
-    def __init__(self):
+    def __init__(self, series=None):
         super().__init__()
+        self.initUI()
+        self.setSeries(series)
+
+    def initUI(self):
 
         # Widgets
         self.plotter = QtInteractor(self)
 
-        # Display
-        self._view = SurfaceDisplayView(self)
+        # Layout
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        layout.addWidget(self.plotter)
+        self.setLayout(layout)
+
 
     def setSeries(self, series):
+
+        if series is None:
+            return
 
         series.status.message('Getting array dimensions...')
 
@@ -53,34 +64,21 @@ class SurfaceDisplay(wezel.gui.MainWidget):
 
         # add zeropadding at the boundary slices
         shape = list(arr.shape)
-        shape[-1] = shape[-1] + 2*4
+        npad = 4
+        shape[-1] = shape[-1] + 2*npad
         array = np.zeros(shape)
-        array[:,:,4:-4] = arr
+        array[:,:,npad:-npad] = arr
 
         # Smooth surface
-        array = ndi.gaussian_filter(array, 1.5)
-
-    
-        series.status.message('Extracting surface...')
-
-        try:
-            verts, faces, _, _ = skimage.measure.marching_cubes(array, level=0.5, spacing=spacing, step_size=1.0)
-        except:
-            print('Error extracting surface')
-            series.dialog.information('Error extracting surface')
-            return
-
-        series.status.message('Reconstructing surface...')
-            
-        try:
-            cloud = pv.PolyData(verts, faces)
-            surf = cloud.reconstruct_surface()
-        except:
-            print('Error reconstructing surface')
-            series.dialog.information('Error reconstructing surface')
-            return
+        array = ndi.gaussian_filter(array, 1.0)
 
         series.status.message('Displaying surface...')
+
+        # Extracting surface
+        grid = pv.UniformGrid(dimensions=array.shape, spacing=spacing)
+        surf = grid.contour([0.5], array.flatten(order="F"), method='marching_cubes')
+        # This works but does not help with the visualisation
+        # surf = surf.reconstruct_surface()
 
         try:
             self.plotter.add_mesh(surf, 
@@ -90,28 +88,15 @@ class SurfaceDisplay(wezel.gui.MainWidget):
                 specular = 0, 
                 cmap = "plasma", 
                 show_scalar_bar = False,
-            )
-        except:
-            series.dialog.information('Error plotting surface')
+                opacity = 1.0)
+        except Exception as msg:
+            series.dialog.information(str(msg))
 
         ## Note: In script, plotting can also be done as:
         # surf.plot(scalars=dist, show_edges=False, smooth_shading=True, specular=5, cmap="plasma", show_scalar_bar=False)
 
-
-        ## Note: Extracting surface using pyVista does not work for some reason:
-        # grid = pv.UniformGrid(
-        #     dimensions=array.shape,
-        #     spacing=(1, 1, 1),
-        #     origin=(0, 0, 0),
-        # )
-        # cloud = grid.contour([0.5], array.flatten(), method='marching_cubes')
+        # Extracting surfaces with skimage causes erratic crashes of PolyData
+        # verts, faces, _, _ = skimage.measure.marching_cubes(array, level=0.5, spacing=spacing, step_size=1.0)
+        # cloud = pv.PolyData(verts, faces, n_faces=faces.shape[0])
         # surf = cloud.reconstruct_surface()
 
-
-class SurfaceDisplayView():
-    def __init__(self, controller):
-        layout = QVBoxLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
-        layout.addWidget(controller.plotter)
-        controller.setLayout(layout)

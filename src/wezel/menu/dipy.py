@@ -62,12 +62,12 @@ class MedianOtsu(wezel.gui.Action):
         # Filter series
         series = app.selected('Series')
         for sery in series:
-            masked_series, mask = dipy.median_otsu(
+            _, mask = dipy.median_otsu(
                 sery, 
                 median_radius=f[0]['value'], 
                 numpass=f[1]['value'],
             )
-            app.display(masked_series)
+            #app.display(masked_series)
             app.display(mask)
         app.refresh()
 
