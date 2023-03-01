@@ -257,7 +257,7 @@ class Main(QMainWindow):
         self.menuBar().enable()
         self.status.hide()
         
-    def display(self, object):
+    def display(self, object, view=None):
         if isinstance(object, list):
             for o in object:
                 self.display(o)
@@ -276,9 +276,11 @@ class Main(QMainWindow):
         elif object.type() == 'Study': # No Study Viewer yet
             pass
         elif object.type() == 'Series':
-            seriesDisplay = wezel.widgets.SeriesDisplay()
-            seriesDisplay.setSeries(object)
-            self.addWidget(seriesDisplay, title=object.label())
+            if view == 'Surface':
+                viewer = wezel.widgets.SurfaceDisplay(object)
+            else:
+                viewer = wezel.widgets.SeriesDisplay(object)
+            self.addWidget(viewer, title=object.label())
         elif object.type() == 'Instance':
             pass
 

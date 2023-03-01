@@ -11,6 +11,7 @@ __all__ = [
     'bin_metal',
     'blue_document_export',
     'brightness',
+    'clipboard__plus',
     'color',
     'color__arrow',
     'contrast',
@@ -20,6 +21,8 @@ __all__ = [
     'cursor',
     'cutter',
     'disk',
+    'document_excel',
+    'document_excel_csv',
     'eraser',
     'eraser__arrow',
     'eraser__plus',
@@ -98,6 +101,7 @@ arrow_resize_090 = str(f.joinpath('arrow-resize-090.png'))
 bin_metal = str(f.joinpath('bin-metal.png'))
 blue_document_export = str(f.joinpath('blue-document-export.png'))
 brightness = str(f.joinpath('brightness.png'))
+clipboard__plus = str(f.joinpath('clipboard--plus.png'))
 color = str(f.joinpath('color.png'))
 color__arrow = str(f.joinpath('color--arrow.png'))
 contrast = str(f.joinpath('contrast.png'))
@@ -107,6 +111,8 @@ cross_script = str(f.joinpath('cross-script.png'))
 cursor = str(f.joinpath('cursor.png'))
 cutter = str(f.joinpath('cutter.png'))
 disk = str(f.joinpath('disk.png'))
+document_excel = str(f.joinpath('document-excel.png'))
+document_excel_csv = str(f.joinpath('document-excel-csv.png'))
 eraser = str(f.joinpath('eraser.png'))
 eraser__plus = str(f.joinpath('eraser--plus.png'))
 eraser__arrow = str(f.joinpath('eraser--arrow.png'))
