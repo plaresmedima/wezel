@@ -78,8 +78,6 @@ class MaskSurface(wezel.gui.Action):
     def run(self, app):
         for series in app.selected('Series'):
             app.display(series, view='Surface')
-            # viewer = wezel.widgets.SurfaceDisplay(series)
-            # app.addWidget(viewer, series.label())
 
             
 class HeaderDICOM(wezel.gui.Action):

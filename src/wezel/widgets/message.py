@@ -201,11 +201,16 @@ class UserInput(QDialog):
                 {"type":"integer", "label":"Name of the field", "value":1, "minimum": 0, "maximum": 100}
                 {"type":"string", "label":"Name of the field", "value":"My string"}
                 {"type":"dropdownlist", "label":"Name of the field", "list":["item 1",...,"item n" ], "value":2}
-                {"type":"listview", "label":"Name of the field", "list":["item 1",...,"item n"]}
+                {"type":"listview", "label":"Name of the field", "list":["item 1",...,"item n"], "value": [0,3]}
+                {"type":"select record", "label":"Name of the field", "options":["item 1",...,"item n" ], default":item 1} # Note: default can be a list
+                {"type":"select records", "label":"Name of the field", "options":["item 1",...,"item n"], "default": [item 1, item 3]}
             
             Widgets are created in the same order on the dialog they occupy in the dictionary; ie., 
             the first dictionary item is uppermost input widget on the dialog 
             and the last dictionary item is the last input widget on the dialog.
+
+    Raises:
+        ValueError if default values for listr items are provided that are not in the list of options
     
     title - optional string containing the input dialog title. 
             Has a default string "Input Parameters"
@@ -254,7 +259,27 @@ class UserInput(QDialog):
             elif field['type'] == "dropdownlist":
                 widget = QComboBox()
                 widget.addItems([str(v) for v in field["list"]])
-                widget.setCurrentIndex(int(field['value'])) 
+                try:
+                    widget.setCurrentIndex(int(field['value'])) 
+                except:
+                    msg = 'Default list index is out of range'
+                    raise ValueError(msg)
+
+            elif field['type'] == "select record":
+                widget = QComboBox()
+                widget.addItems([v.label() for v in field["options"]])
+                if isinstance(field['default'], list):
+                    field['default'] = None if field['default']==[] else field['default'][0]
+                if field['default'] is None:
+                    idx = 0
+                else:
+                    try:
+                        idx = field["options"].index(field['default'])
+                    except:
+                        msg = 'Default value is not in the list of options provided'
+                        raise ValueError(msg)
+                widget.setCurrentIndex(idx)
+                    
 
             elif field['type'] == "listview":
                 widget = QListWidget()
@@ -270,6 +295,24 @@ class UserInput(QDialog):
                     item = widget.item(i)
                     item.setSelected(True)
 
+            elif field['type'] == "select records":
+                widget = QListWidget()
+                widget.setSelectionMode(QAbstractItemView.ExtendedSelection)
+                widget.addItems([v.label() for v in field["options"]])
+                scrollBar = QScrollBar(self) 
+                widget.setVerticalScrollBar(scrollBar)
+                #widget.setMinimumHeight(widget.sizeHintForColumn(0))
+                #widget.setMaximumHeight(300)
+                widget.setMinimumWidth(widget.sizeHintForColumn(0))
+                widget.resize(widget.sizeHintForColumn(0),300)
+                for record in field['default']:
+                    try:
+                        idx = field["options"].index(record)
+                    except:
+                        msg = 'Default value is not in the list of options provided'
+                        raise ValueError(msg)
+                    widget.item(idx).setSelected(True)
+
             self.layout.addRow(field['label'], widget)
             self.listWidget.append(widget)
 
@@ -284,11 +327,21 @@ class UserInput(QDialog):
         """Processes the dictionary objects in *fields into a format that 
         can be used to create the widgets on the input dialog window.
         """
+
+        types = (
+            "integer", 
+            "float", 
+            "string", 
+            "dropdownlist", 
+            "listview", 
+            "select record", 
+            "select records",
+        )
     
         # set default values for items that are not provided by the user
         for field in fields:
 
-            if field['type'] not in ("integer", "float", "string", "dropdownlist", "listview"):
+            if field['type'] not in types:
                 msg = field['label'] + ' is not a valid type \n'
                 msg += 'Must be either integer, float, string, dropdownlist or listview'
                 raise TypeError(msg)
@@ -297,9 +350,17 @@ class UserInput(QDialog):
                 if "value" not in field: 
                     field['value'] = []
 
+            elif field['type'] == "select records":
+                if "default" not in field: 
+                    field['default'] = []
+
             elif field["type"] == "dropdownlist":
                 if "value" not in field: 
                     field["value"] = 0
+
+            elif field["type"] == "select record":
+                if "default" not in field: 
+                    field["default"] = field['options'][0]
 
             elif field["type"] == "string":
                 if "value" not in field: 
@@ -339,26 +400,42 @@ class UserInput(QDialog):
         to the bottom most (last item in the list)."""
   
         # Overwrite the value key with the returned parameter
+        output = []
         for f, field in enumerate(self.fields):
             widget = self.listWidget[f]
 
             if field["type"] == "listview":
                 n, sel = widget.count(), widget.selectedItems()
                 field["value"] = [i for i in range(n) if widget.item(i) in sel]
-    
+                output.append(field)
+
+            elif field["type"] == "select records":
+                n, sel = widget.count(), widget.selectedItems()
+                records = [field["options"][i] for i in range(n) if widget.item(i) in sel]
+                output.append(records)
+
             elif field["type"] == "dropdownlist":
                 field["value"] = widget.currentIndex()
+                output.append(field)
+
+            elif field["type"] == "select record":
+                record = field["options"][widget.currentIndex()]
+                output.append(record)
 
             elif field["type"] == "string":
                 field["value"] = widget.text()
+                output.append(field)
 
             elif field["type"] == "integer":
                 field["value"] = widget.value()
+                output.append(field)
 
             elif field["type"] == "float":
                 field["value"] = widget.value()
+                output.append(field)
 
-        return self.fields
+        return output
+        #return self.fields
 
 
     def clickedOK(self): # OK button clicked

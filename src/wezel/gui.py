@@ -428,6 +428,7 @@ class Main(QMainWindow):
                 subWindow.widget().setToolBarState()
                 self.toolBarDockWidget.setWidget(toolBar)
 
+
     def addWidget(self, widget, title):
         # rename to addSubWindow()
         # widget needs to be subclassed from MainWidget
