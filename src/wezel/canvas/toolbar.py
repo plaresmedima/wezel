@@ -144,15 +144,20 @@ class ToolBar(QWidget):
     def setEditMaskEnabled(self, enable=None):
         if enable is None:
             item = self.canvas.maskItem
-            undoEnable = item._current!=0 and item._current is not None
-            redoEnable = item._current!=len(item._bin)-1 and item._current is not None
-            # Small bug here - does not reset properly when slices
-            # are changed. Skipping for now..
-            # if item.bin() is None:
-            #     eraseEnable = False
-            # else:
-            #     eraseEnable = item.bin().any()
-            eraseEnable = True
+            if item is None:
+                undoEnable = False
+                redoEnable = False
+                eraseEnable = False
+            else:
+                undoEnable = item._current!=0 and item._current is not None
+                redoEnable = item._current!=len(item._bin)-1 and item._current is not None
+                # Small bug here - does not reset properly when slices
+                # are changed. Skipping for now..
+                # if item.bin() is None:
+                #     eraseEnable = False
+                # else:
+                #     eraseEnable = item.bin().any()
+                eraseEnable = True
         else:
             undoEnable = enable
             redoEnable = enable
@@ -163,18 +168,24 @@ class ToolBar(QWidget):
 
     def undo(self):
         item = self.canvas.maskItem
+        if item is None:
+            return
         item.undo()
         self.canvas.saveMask()
         self.setEditMaskEnabled()
 
     def redo(self):
         item = self.canvas.maskItem
+        if item is None:
+            return
         item.redo()
         self.canvas.saveMask()
         self.setEditMaskEnabled()
 
     def erase(self):
         item = self.canvas.maskItem
+        if item is None:
+            return
         item.erase()
         self.canvas.saveMask()
         self.setEditMaskEnabled()

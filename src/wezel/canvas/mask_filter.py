@@ -62,6 +62,8 @@ class MaskBrush(canvas.FilterItem):
         button = event.button()
         if button == Qt.LeftButton:
             item = self.scene().parent().maskItem
+            if item is None:
+                return
             item.extend()
             self.paintPixels()
 
@@ -82,6 +84,8 @@ class MaskBrush(canvas.FilterItem):
     def paintPixels(self):
         cnvs = self.scene().parent() 
         item = cnvs.maskItem
+        if item is None:
+            return
         w = int((self.brushSize - 1)/2)
         for x in range(self.x-w, self.x+w+1, 1):
             if 0 <= x < item.bin().shape[0]:
@@ -204,6 +208,8 @@ class MaskPenFreehand(MaskPen):
         self.y = int(event.pos().y())
         if event.button() == Qt.LeftButton:
             item = self.scene().parent().maskItem
+            if item is None:
+                return
             item.extend()
             position = [event.pos().x(), event.pos().y()]
             self.path = [position]
@@ -223,14 +229,17 @@ class MaskPenFreehand(MaskPen):
         buttons = event.buttons()
         if buttons == Qt.LeftButton:
             position = [event.pos().x(), event.pos().y()]
-            if position != self.path[-1]:
-                self.path.append(position)
-                self.update()
+            if self.path is not None:
+                if position != self.path[-1]:
+                    self.path.append(position)
+                    self.update()
 
     def fillPath(self):
         if len(self.path) == 0: 
             return
         item = self.scene().parent().maskItem
+        if item is None:
+            return
         bin = np.zeros(item.bin().shape, dtype=bool)
         rr, cc = skimage.draw.polygon([p[0]-0.5 for p in self.path], [p[1]-0.5 for p in self.path], item.bin().shape)
         bin[rr, cc] = True
@@ -261,6 +270,8 @@ class MaskPenPolygon(MaskPenFreehand):
         if self.path is not None:
             self.path[-1] = [event.pos().x(), event.pos().y()]
             item = self.scene().parent().maskItem
+            if item is None:
+                return
             item.update()
         super().hoverMoveEvent(event) 
 
@@ -284,6 +295,8 @@ class MaskPenPolygon(MaskPenFreehand):
         if self.path is not None:
             self.path[-1] = [event.pos().x(), event.pos().y()]
             item = self.scene().parent().maskItem
+            if item is None:
+                return
             item.update()
     
     def mouseDoubleClickEvent(self, event):
@@ -293,10 +306,12 @@ class MaskPenPolygon(MaskPenFreehand):
         if button == Qt.LeftButton:
             if self.path is not None:
                 item = self.scene().parent().maskItem
+                if item is None:
+                    return
                 item.extend()
                 self.path[-1] = [event.pos().x(), event.pos().y()]
                 self.fillPath()
-                item = self.scene().parent().maskItem
+                #item = self.scene().parent().maskItem
                 item.update()
                 self.path = None
 
@@ -318,6 +333,8 @@ class MaskPenRectangle(MaskPenFreehand):
         # Called by the canvas after the filter is set to a scene
         # And when a new image is set to the scene
         item = self.scene().parent().imageItem
+        if item is None:
+            return
         set_attributes = False
         if self.xc is None:
             set_attributes = True
@@ -345,6 +362,8 @@ class MaskPenRectangle(MaskPenFreehand):
         self.y = int(event.pos().y())
         if event.button() == Qt.LeftButton:
             item = self.scene().parent().maskItem
+            if item is None:
+                return
             item.extend()
             self.corner1 = [event.pos().x(), event.pos().y()]
 
@@ -355,6 +374,8 @@ class MaskPenRectangle(MaskPenFreehand):
         if buttons == Qt.LeftButton:
             self.corner2 = [event.pos().x(), event.pos().y()]
             item = self.scene().parent().maskItem
+            if item is None:
+                return
             item.update()
 
     def mouseReleaseEvent(self, event):
@@ -369,6 +390,8 @@ class MaskPenRectangle(MaskPenFreehand):
 
     def fillRect(self):
         item = self.scene().parent().maskItem
+        if item is None:
+            return
         x = [self.corner1[0], self.corner2[0]]
         y = [self.corner1[1], self.corner2[1]]
         rectx = np.logical_and(min(x) <= self.xc, self.xc <= max(x))
@@ -405,6 +428,8 @@ class MaskPenCircle(MaskPenFreehand):
         # Called by the canvas after the filter is set to a scene
         # And when a new image is set to the scene
         item = self.scene().parent().imageItem
+        if item is None:
+            return
         set_attributes = False
         if self.xc is None:
             set_attributes = True
@@ -430,6 +455,8 @@ class MaskPenCircle(MaskPenFreehand):
         self.y = int(event.pos().y())
         if event.button() == Qt.LeftButton:
             item = self.scene().parent().maskItem
+            if item is None:
+                return
             item.extend()
             self.center = [event.pos().x(), event.pos().y()]
             self.radius = 0
@@ -439,10 +466,12 @@ class MaskPenCircle(MaskPenFreehand):
         self.y = int(event.pos().y())
         buttons = event.buttons()
         if buttons == Qt.LeftButton:
+            item = self.scene().parent().maskItem
+            if item is None:
+                return
             dx = event.pos().x() - self.center[0]
             dy = event.pos().y() - self.center[1]
             self.radius = math.sqrt(dx**2 + dy**2)
-            item = self.scene().parent().maskItem
             item.update()
 
     def mouseReleaseEvent(self, event):
@@ -456,6 +485,8 @@ class MaskPenCircle(MaskPenFreehand):
 
     def fillCircle(self):
         item = self.scene().parent().maskItem
+        if item is None:
+            return
         d_sq = (self.xc-self.center[0])**2 + (self.yc-self.center[1])**2
         if self.mode == "draw":
             item.setBin(np.logical_or(item.bin(), d_sq <= self.radius**2))
@@ -506,6 +537,8 @@ class MaskPenContour(MaskPenFreehand):
         if event.button() == Qt.LeftButton:
             self.contour = self.findContour()
             item = self.scene().parent().maskItem
+            if item is None:
+                return
             item.extend()
             item.update()
 
@@ -516,6 +549,8 @@ class MaskPenContour(MaskPenFreehand):
         if buttons == Qt.LeftButton:
             self.contour = self.findContour()
             item = self.scene().parent().maskItem
+            if item is None:
+                return
             item.update()
 
     def mouseReleaseEvent(self, event):
@@ -528,7 +563,10 @@ class MaskPenContour(MaskPenFreehand):
                 self.contour = None
 
     def findContour(self):
-        array = self.scene().parent().imageItem._array
+        item = self.scene().parent().imageItem
+        if item is None:
+            return
+        array = item._array
         nx, ny = array.shape
         if (self.x < 0) or (self.y < 0) or (self.x > nx-1) or (self.y > ny-1):
             return
@@ -543,6 +581,8 @@ class MaskPenContour(MaskPenFreehand):
 
     def fillContour(self):
         item = self.scene().parent().maskItem
+        if item is None:
+            return
         bin = np.zeros(item.bin().shape, dtype=bool)
         rr, cc = skimage.draw.polygon(self.contour[:, 0], self.contour[:, 1], item.bin().shape)
         bin[rr, cc] = True
@@ -596,6 +636,8 @@ class MaskPenAllContours(MaskPenFreehand):
         if event.button() == Qt.LeftButton:
             self.contours = self.findContours()
             item = self.scene().parent().maskItem
+            if item is None:
+                return
             item.extend()
             item.update()
 
@@ -606,6 +648,8 @@ class MaskPenAllContours(MaskPenFreehand):
         if buttons == Qt.LeftButton:
             self.contours = self.findContours()
             item = self.scene().parent().maskItem
+            if item is None:
+                return
             item.update()
 
     def mouseReleaseEvent(self, event):
@@ -618,11 +662,16 @@ class MaskPenAllContours(MaskPenFreehand):
                 self.contours = None
 
     def findContours(self):
-        array = self.scene().parent().imageItem._array
+        item = self.scene().parent().imageItem
+        if item is None:
+            return
+        array = item._array
         nx, ny = array.shape
         if (self.x < 0) or (self.y < 0) or (self.x > nx-1) or (self.y > ny-1):
             return
         item = self.scene().parent().maskItem
+        if item is None:
+            return
         if item.bin() is None:
             return skimage.measure.find_contours(array, level=array[self.x, self.y])
         elif item.bin().any():
@@ -632,6 +681,8 @@ class MaskPenAllContours(MaskPenFreehand):
 
     def fillContours(self):
         item = self.scene().parent().maskItem
+        if item is None:
+            return
         bin = np.zeros(item.bin().shape, dtype=bool)
         for contour in self.contours:
             rr, cc = skimage.draw.polygon(contour[:, 0], contour[:, 1], item.bin().shape)
@@ -658,6 +709,8 @@ class MaskThreshold(canvas.FilterItem):
 
     def initialize(self):
         item = self.scene().parent().imageItem
+        if item is None:
+            return
         self.center, self.width = item._center, item._width
         self.array = item._array
         self.min = np.amin(self.array)
@@ -670,6 +723,8 @@ class MaskThreshold(canvas.FilterItem):
         self.y = int(event.pos().y())
         if event.button() == Qt.LeftButton:
             item = self.scene().parent().maskItem
+            if item is None:
+                return
             item.extend()
 
     def mouseMoveEvent(self, event):
@@ -687,6 +742,10 @@ class MaskThreshold(canvas.FilterItem):
 
     def window(self, dx, dy):
         """Change intensity and contrast"""
+
+        item = self.scene().parent().maskItem
+        if item is None:
+            return
        
         # Move 1024 to change the center over the full range
         # Speed is faster further away from the center of the range
@@ -708,7 +767,6 @@ class MaskThreshold(canvas.FilterItem):
         # Update display
         min, max = self.center-self.width/2, self.center+self.width/2
         threshold = np.logical_and(min<=self.array, self.array<=max)
-        item = self.scene().parent().maskItem
         item.setBin(threshold)
         item.setDisplay()
 
@@ -729,14 +787,10 @@ class MaskPaintByNumbers(MaskBrush):
             self.text = 'Erase by numbers'
         self.icon = QIcon(pixMap)
 
-    # def initialize(self):
-    #     #cnvs = self.scene().parent()
-    #     #self.array = cnvs.image.get_pixel_array()
-    #     item = self.scene().parent().imageItem
-    #     self.array = item._array
-
     def paintPixels(self):
         item = self.scene().parent().maskItem
+        if item is None:
+            return
         array = self.scene().parent().imageItem._array
         min = max = None 
         w = int((self.brushSize - 1)/2)
@@ -789,6 +843,8 @@ class MaskRegionGrowing(MaskBrush):
     def paintPixels(self):
         # Get range of values under brush
         item = self.scene().parent().maskItem
+        if item is None:
+            return
         array = self.scene().parent().imageItem._array
         # Build a seed list of all pixels under the brush
         # and find minimum and maximum value over the seeds
@@ -902,6 +958,8 @@ class MaskDilate(canvas.FilterItem):
         self.x = int(event.pos().x())
         self.y = int(event.pos().y())
         item = self.scene().parent().maskItem
+        if item is None:
+            return
         if event.button() == Qt.LeftButton:
             bin = item.bin()
             if bin is None:
@@ -992,6 +1050,8 @@ class MaskShrink(MaskDilate):
         self.x = int(event.pos().x())
         self.y = int(event.pos().y())
         item = self.scene().parent().maskItem
+        if item is None:
+            return
         if event.button() == Qt.LeftButton:
             bin = item.bin()
             if bin is None:
@@ -1021,6 +1081,8 @@ class MaskOpen(MaskDilate):
         self.x = int(event.pos().x())
         self.y = int(event.pos().y())
         item = self.scene().parent().maskItem
+        if item is None:
+            return
         if event.button() == Qt.LeftButton:
             bin = item.bin()
             p = [self.x, self.y]
@@ -1036,18 +1098,25 @@ class MaskOpen(MaskDilate):
                     cluster = canvas.utils.open_cluster(cluster, p, self.kernel, mode=self.mode)
                     bin = np.logical_or(bin, cluster.astype(np.bool8))
                     item = self.scene().parent().maskItem
+                    if item is None:
+                        return
                     item.extend()
                     item.setBin(bin)
                     item.setDisplay()
 
     def _grow_from(self, p):
-        array = self.scene().parent().imageItem._array
+        item = self.scene().parent().imageItem
+        if item is None:
+            return
+        array = item._array
         return canvas.utils.pick_cluster(array, p)
 
     def _open(self, p, bin, split=False):
         if np.count_nonzero(bin) > 0:
             bin = canvas.utils.open_cluster(bin, p, self.kernel, mode=self.mode, split=split)
             item = self.scene().parent().maskItem
+            if item is None:
+                return
             item.extend()
             item.setBin(bin)
             item.setDisplay()
@@ -1070,6 +1139,8 @@ class MaskClose(MaskDilate):
         self.x = int(event.pos().x())
         self.y = int(event.pos().y())
         item = self.scene().parent().maskItem
+        if item is None:
+            return
         if event.button() == Qt.LeftButton:
             bin = item.bin()
             p = [self.x, self.y]
@@ -1085,17 +1156,24 @@ class MaskClose(MaskDilate):
                     cluster = canvas.utils.close_cluster(cluster, p, self.kernel, mode=self.mode)
                     bin = np.logical_or(bin, cluster.astype(np.bool8))
                     item = self.scene().parent().maskItem
+                    if item is None:
+                        return
                     item.extend()
                     item.setBin(bin)
                     item.setDisplay()
 
     def _grow_from(self, p):
-        array = self.scene().parent().imageItem._array
+        item = self.scene().parent().imageItem
+        if item is None:
+            return
+        array = item._array
         return canvas.utils.pick_cluster(array, p)
 
     def _close(self, p, bin):
         if np.count_nonzero(bin) > 0:
             item = self.scene().parent().maskItem
+            if item is None:
+                return
             bin = canvas.utils.close_cluster(bin, p, self.kernel, mode=self.mode)
             item.extend()
             item.setBin(bin)
@@ -1222,6 +1300,8 @@ class MaskWand(canvas.FilterItem):
         self.x = int(event.pos().x())
         self.y = int(event.pos().y())
         item = self.scene().parent().maskItem
+        if item is None:
+            return
         if event.button() == Qt.LeftButton:
             bin = item.bin()
             p = [self.x, self.y]
@@ -1238,12 +1318,17 @@ class MaskWand(canvas.FilterItem):
                     cluster = canvas.utils.close_cluster(cluster, p, self.darkKernel, mode=self.mode)
                     bin = np.logical_or(bin, cluster.astype(np.bool8))
                     item = self.scene().parent().maskItem
+                    if item is None:
+                        return
                     item.extend()
                     item.setBin(bin)
                     item.setDisplay()
 
     def _grow_from(self, p):
-        array = self.scene().parent().imageItem._array
+        item = self.scene().parent().imageItem
+        if item is None:
+            return
+        array = item._array
         return canvas.utils.pick_cluster(array, p)
 
     def _close_open(self, p, bin, split=False):
@@ -1251,6 +1336,8 @@ class MaskWand(canvas.FilterItem):
             bin = canvas.utils.open_cluster(bin, p, self.brightKernel, mode=self.mode, split=split)
             bin = canvas.utils.close_cluster(bin, p, self.darkKernel, mode=self.mode)
             item = self.scene().parent().maskItem
+            if item is None:
+                return
             item.extend()
             item.setBin(bin)
             item.setDisplay()         
@@ -1267,17 +1354,18 @@ class MaskKidneyEdgeDetection(canvas.FilterItem):
         self.text = 'Kidney picker'
         self.setActionPick()
 
-    # def initialize(self):
-    #     item = self.scene().parent().imageItem
-    #     self.array = item._array
 
     def mousePressEvent(self, event):
         self.x = int(event.pos().x())
         self.y = int(event.pos().y())
         if event.button() == Qt.LeftButton:
             cnvs = self.scene().parent()
+            if cnvs.imageItem is None:
+                return
             array = cnvs.imageItem._array
             item = cnvs.maskItem
+            if item is None:
+                return
             pixelSize = cnvs.parent().sliders.image.PixelSpacing # Hack!!! Some filters need access to geometry!
             pixels = canvas.utils.kidneySegmentation(array, self.y, self.x, pixelSize)
             if pixels is not None:

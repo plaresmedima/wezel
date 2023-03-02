@@ -52,6 +52,10 @@ class Canvas(QGraphicsView):
     @property
     def filterItem(self):
         return self.item(2)
+    
+    def setBlank(self):
+        self.removeItem(self.imageItem)
+        self.removeItem(self.maskItem)
 
     def setImage(self, array, center, width, cmap, lut=None):
         if lut is None:
@@ -64,7 +68,6 @@ class Canvas(QGraphicsView):
         filter = self.filterItem
         if filter is not None:
             filter.prepareGeometryChange()
-            #filter.boundingRectangle = self.scene().sceneRect()
             filter.boundingRectangle = item.boundingRectangle
             filter.initialize()
         self.setMask(None)
@@ -108,6 +111,8 @@ class Canvas(QGraphicsView):
             self.fitInView(item, Qt.KeepAspectRatio)
 
     def setColormap(self, cmap=None):
+        if self.imageItem is None:
+            return
         if cmap is None:
             cmap = 'Greyscale'
         RGB = colormap_to_LUT(cmap)
@@ -116,6 +121,8 @@ class Canvas(QGraphicsView):
         self.imageItem.setDisplay()
 
     def setWindow(self, center=None, width=None):
+        if self.imageItem is None:
+            return
         if (center is None) or (width is None):
             array = self.imageItem._array
             min = np.min(array)
@@ -128,18 +135,28 @@ class Canvas(QGraphicsView):
         self.imageItem.setDisplay()
 
     def array(self):
+        if self.imageItem is None:
+            return
         return self.imageItem._array
 
     def lut(self):
+        if self.imageItem is None:
+            return
         return self.imageItem._lut
 
     def colormap(self):
+        if self.imageItem is None:
+            return
         return self.imageItem._cmap
 
     def center(self):
+        if self.imageItem is None:
+            return
         return self.imageItem._center
         
     def width(self):
+        if self.imageItem is None:
+            return
         return self.imageItem._width
 
 

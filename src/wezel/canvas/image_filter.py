@@ -28,6 +28,8 @@ class ImageWindow(canvas.FilterItem):
 
         cnvs = self.scene().parent()
         item = cnvs.imageItem
+        if item is None:
+            return
         if self._min is None:
             self._min = np.amin(item._array)
             self._max = np.amax(item._array)

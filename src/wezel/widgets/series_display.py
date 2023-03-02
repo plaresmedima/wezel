@@ -92,6 +92,7 @@ class SeriesDisplay(wezel.gui.MainWidget):
     def slidersChanged(self):
         image = self.sliders.image
         if image is None:
+            self.canvas.setBlank()
             return
         image.read()
         self.canvas.changeArray(
