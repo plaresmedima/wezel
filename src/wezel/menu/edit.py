@@ -11,6 +11,7 @@ def all(parent):
     parent.action(MoveSeries, text='Series > Move to..')
     parent.action(MergeSeries, text='Series > Merge')
     parent.action(GroupSeries, text='Series > Group')
+    parent.action(SplitSeries, text='Series > Split by..')
     parent.action(SeriesRename, text='Series > Rename')
     parent.action(SeriesExtractByIndex, text='Series > Extract subseries (by index)')
     parent.action(SeriesExtractByValue, text='Series > Extract subseries (by value)')
@@ -217,11 +218,34 @@ class MergeSeries(wezel.gui.Action):
 
         app.status.message('Merging..')
         records = app.selected('Series')
-        #study = records[0].new_pibling(StudyDescription='Merger')
         study = records[0].parent()
         series = study.new_series(SeriesDescription='Merged series')
         db.merge(records, series)
         app.refresh()
+
+
+class SplitSeries(wezel.gui.Action):
+
+    def enable(self, app):
+        return app.nr_selected('Series') != 0
+
+    def run(self, app): 
+        series = app.database().series()
+        sel = app.selected('Series')        
+        cancel, sel = app.dialog.input(
+            {"label":"Split series..", "type":"select record", "options": series, 'default': 0 if sel==[] else sel[0]},
+            {"label":"Split by which DICOM keyword?", "type":"string", "value": "ImageType"},
+            title = "Input for series splitting")
+        if cancel:
+            return
+        try:
+            split = sel[0].split_by(sel[1]['value'])
+        except Exception as e:
+            app.dialog.information(e)
+        else:
+            for s in split:
+                app.display(s)
+            app.refresh()
 
 
 class MergeStudies(wezel.gui.Action):
