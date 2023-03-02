@@ -16,6 +16,7 @@ def all(parent):
     parent.addAction('Export as CSV', on_clicked=export_as_csv, is_clickable=is_series_selected)
     parent.addAction('Export as PNG', on_clicked=export_as_png, is_clickable=is_series_selected)
     parent.addAction('Export as NIfTI', on_clicked=export_as_nifti, is_clickable=is_series_selected)
+    parent.addAction('Export as numpy', on_clicked=export_as_npy, is_clickable=is_series_selected)
     parent.separator()
     parent.addAction('Import DICOM files', on_clicked=import_dicom_files, is_clickable=is_database_open)
     parent.addAction('Import DICOM folder', on_clicked=import_dicom_folder, is_clickable=is_database_open)
@@ -197,6 +198,22 @@ def export_as_nifti(app):
     for i, record in enumerate(selected):
         app.status.progress(i, len(selected), 'Exporting to ' + path)
         record.export_as_nifti(path)
+    app.status.hide()
+    app.status.message('Finished exporting..')
+
+
+def export_as_npy(app):
+    path = app.dialog.directory("Where do you want to export the data?")
+    if path == '':
+        return
+    selected = app.selected('Series')
+    if selected == []:
+        app.dialog.information("Please select at least one series")
+        return
+    app.status.message('Exporting to ' + path)
+    for i, record in enumerate(selected):
+        app.status.progress(i, len(selected), 'Exporting to ' + path)
+        record.export_as_npy(path, sortby=['SliceLocation', 'AcquisitionTime'], pixels_first=True)
     app.status.hide()
     app.status.message('Finished exporting..')
 
