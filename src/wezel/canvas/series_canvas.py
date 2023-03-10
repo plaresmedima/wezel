@@ -298,32 +298,40 @@ class SeriesCanvasModel:
     def loadRegion(self):
         # Build list of series for all series in the same study
         seriesList = self._series.parent().children()
-        seriesLabels = [series.instance().SeriesDescription for series in seriesList]
         # Ask the user to select series to import as regions
         input = widgets.UserInput(
-            {"label":"Series:", "type":"listview", "list": seriesLabels}, 
+            {"label":"Import as mask:", "type":"select records", "options": seriesList}, 
             title = "Please select regions to load")
         if input.cancel:
             return
-        seriesList = [seriesList[i] for i in input.values[0]["value"]]
-        seriesLabels = [seriesLabels[i] for i in input.values[0]["value"]]
-        #suffix = ' mapped to ' + self._series.instance().SeriesDescription
         # Overlay each of the selected series on the displayed series
-        for s, series in enumerate(seriesList):
-            # Create overlay
-            #region, images = series.map_mask_to(self._series)
-            region, images = scipy.map_mask_to(series, self._series)
-            # Add new region
-            #newRegion = {'name': seriesLabels[s] + suffix, 'color': self.newColor()}
-            newRegion = {'name': seriesLabels[s], 'color': self.newColor()}
-            if isinstance(region, list): # If self._series has multiple slice groups
-                for r, reg in enumerate(region):
-                    for i, image in np.ndenumerate(images[r]):
-                        if image is not None:
-                            newRegion[image.SOPInstanceUID] = reg[:,:,i[0]] != 0
+        for series in input.values[0]:
+            try:
+                # Add new region
+                newRegion = {
+                    'name': series.instance().SeriesDescription, 
+                    'color': self.newColor()}
+                # Create overlay
+                region, images = scipy.mask_array(series, on=self._series)
+                _add_slice_groups_to(newRegion, region, images)
+            except:
+                self._series.dialog.error()
             else:
-                for i, image in np.ndenumerate(images):
-                    if image is not None:
-                        newRegion[image.SOPInstanceUID] = region[:,:,i[0]] != 0
-            self._regions.append(newRegion)
-            self._currentRegion = newRegion
+                self._regions.append(newRegion)
+                self._currentRegion = newRegion
+
+def _add_slice_groups_to(newRegion, region, images):
+    if isinstance(region, list): 
+        # If self._series has multiple slice groups
+        for r, reg in enumerate(region):
+            _add_to(newRegion, reg, images[r])
+    else:
+        # Single slice group only
+        _add_to(newRegion, region, images)
+
+def _add_to(newRegion, region, images):
+    for i, image in np.ndenumerate(images):
+        if image is not None:
+            mask = region[:,:,i[0],i[1]] 
+            if np.count_nonzero(mask) > 0:
+                newRegion[image.SOPInstanceUID] = mask != 0

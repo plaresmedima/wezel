@@ -137,7 +137,7 @@ SMALLSTYLESHEET = """
 
 class Main(QMainWindow):
 
-    def __init__(self, wzl): 
+    def __init__(self, wzl, project=None): 
         """
         Initialize the Wezel class and its attributes.
         
@@ -159,7 +159,10 @@ class Main(QMainWindow):
         super().__init__()
         self.wezel = wzl
         #self.setStyleSheet(SMALLSTYLESHEET)
-        self.setWindowTitle("Wezel")
+        title = "  Wezel"
+        if project is not None:
+            title += ' -- project ' + project
+        self.setWindowTitle(title)
         
         # self.offset = None
         # self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowMinMaxButtonsHint)
@@ -253,7 +256,8 @@ class Main(QMainWindow):
         Refreshes the Wezel display.
         """
         self.status.message('Refreshing display..')
-        self.treeView.setDatabase()
+        if self.treeView is not None:
+            self.treeView.setDatabase()
         self.menuBar().enable()
         self.status.hide()
         
@@ -614,7 +618,8 @@ class Action(QAction):
         if text is None:
             text = self.__class__.__name__
         self.setText(text)
-        self.triggered.connect(lambda: self.run(self.main))
+        #self.triggered.connect(lambda: self.run(self.main))
+        self.triggered.connect(self.__run)
     
         if icon is not None: 
             self.setIcon(QIcon(icon))
@@ -626,6 +631,15 @@ class Action(QAction):
         # Dictionary with optional settings
         for option in kwargs:
             self.__dict__[option] = kwargs[option]
+
+    def __run(self):
+        try:
+            self.run(self.main)
+        except:
+            self.main.dialog.error()
+            self.main.refresh()
+        self.main.status.hide()
+        self.main.status.message('Ready for your next move.. Give it to me!')
 
     def enable(self, app):
         if self._is_clickable is not None:

@@ -39,14 +39,16 @@ class SurfaceDisplay(wezel.gui.MainWidget):
 
         affine = series.affine_matrix()
         if isinstance(affine, list):
-            series.dialog.information('This series contains multiple orientations')
+            msg = 'Cannot display this as a single volume \n'
+            msg += 'This series contains multiple slice groups.'
+            series.dialog.information(msg)
             return
         else:
             affine = affine[0]
         column_spacing = np.linalg.norm(affine[:3, 0])
         row_spacing = np.linalg.norm(affine[:3, 1])
         slice_spacing = np.linalg.norm(affine[:3, 2])
-        spacing = (column_spacing, row_spacing, slice_spacing)  #mm
+        spacing = (column_spacing, row_spacing, slice_spacing)  # mm
 
         # Get array sorted by slice location
         arr, _ = series.array('SliceLocation', pixels_first=True)

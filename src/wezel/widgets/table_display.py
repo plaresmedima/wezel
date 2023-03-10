@@ -2,6 +2,7 @@
 Main widget for displaying tabular data
 """
 
+import pandas as pd
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (QFileDialog, QLineEdit, QApplication,                           
@@ -20,6 +21,9 @@ class TableDisplay(wezel.gui.MainWidget):
 
     def __init__(self, df):  
         super().__init__()
+        
+        if isinstance(df, list):
+            df = pd.concat(df, ignore_index=True)
         if df.empty:
             self.setError('Empty dataset. \n\n Nothing to show here..')
             return 

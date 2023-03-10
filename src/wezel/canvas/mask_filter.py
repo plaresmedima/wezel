@@ -3,12 +3,69 @@ import numpy as np
 from matplotlib.path import Path as MplPath
 import cv2 as cv2
 import skimage
+from scipy import ndimage as ndi
 
 from PyQt5.QtCore import Qt, QRectF, QPointF
 from PyQt5.QtWidgets import QAction, QMenu, QActionGroup
 from PyQt5.QtGui import QPixmap, QCursor, QIcon, QColor, QPen
 
 from wezel import canvas, icons
+
+
+class MaskMove(canvas.FilterItem):
+    """Painting or erasing tool.
+    """
+    def __init__(self):
+        super().__init__()
+        pixMap = QPixmap(icons.arrow_move)
+        self.cursor = QCursor(pixMap, hotX=8, hotY=8)
+        self.icon = QIcon(pixMap)
+        self.toolTip = 'Move mask'
+        self.text = 'Move mask'
+        self.setActionPick()
+
+    def hoverMoveEvent(self, event):
+        self.x = int(event.pos().x())
+        self.y = int(event.pos().y())
+        self.update() 
+        cnvs = self.scene().parent()
+        cnvs.mousePositionMoved.emit(self.x, self.y)   
+
+    def mousePressEvent(self, event):
+        self.x = int(event.pos().x())
+        self.y = int(event.pos().y())
+        button = event.button()
+        if button == Qt.LeftButton:
+            item = self.scene().parent().maskItem
+            if item is None:
+                return
+            item.extend()
+            self.x0 = self.x
+            self.y0 = self.y
+            self.bin0 = item.bin()
+
+    def mouseReleaseEvent(self, event):
+        self.x = int(event.pos().x())
+        self.y = int(event.pos().y())
+        self.update()
+
+    def mouseMoveEvent(self, event):
+        self.x = int(event.pos().x())
+        self.y = int(event.pos().y())
+        buttons = event.buttons()
+        if buttons == Qt.LeftButton:
+            self.moveMask() 
+        cnvs = self.scene().parent() 
+        cnvs.mousePositionMoved.emit(self.x, self.y)
+ 
+    def moveMask(self):
+        cnvs = self.scene().parent() 
+        item = cnvs.maskItem
+        if item is None:
+            return
+        bin = ndi.shift(self.bin0, [self.x-self.x0, self.y-self.y0], order=0, mode='grid-wrap')
+        item.setBin(bin)
+        item.setDisplay()
 
 
 class MaskBrush(canvas.FilterItem):

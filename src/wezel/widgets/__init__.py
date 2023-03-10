@@ -14,12 +14,17 @@ from .dbimage import (
 from .series_sliders import (
     SeriesSliders,
 )
+from .series_display_4d import (
+    SeriesDisplay4D,
+)
 from .series_display import (
     SeriesDisplay,
-    SeriesDisplay4D,
 )
 from .surface_display import (
     SurfaceDisplay,
+)
+from .plot_display import (
+    PlotDisplay,
 )
 from .table_display import (
     TableDisplay,
@@ -41,6 +46,8 @@ from .main_mdi import (
 from .message import (
     Dialog, 
     StatusBar,
+)
+from .user_input import (
     UserInput,
 )
 from .dbdatabase import (
