@@ -1,9 +1,10 @@
 import os
-import wezel
 import dbdicom as db
+
 
 def all(parent):
 
+    parent.addAction('New', shortcut='Ctrl+N', on_clicked=new_database)
     parent.addAction('Open', shortcut='Ctrl+O', on_clicked=open_database)
     parent.addAction('Read', on_clicked=read_database, is_clickable=is_database_open)
     parent.addAction('Save', shortcut='Ctrl+S', on_clicked=save_database, is_clickable=is_database_open)
@@ -21,6 +22,7 @@ def all(parent):
     parent.addAction('Import DICOM files', on_clicked=import_dicom_files, is_clickable=is_database_open)
     parent.addAction('Import DICOM folder', on_clicked=import_dicom_folder, is_clickable=is_database_open)
     parent.addAction('Import NIfTI files', on_clicked=import_nifti, is_clickable=is_database_open)
+    parent.addAction('Import GIF file', on_clicked=import_gif, is_clickable=is_database_open)
 
 
 def is_database_open(app): 
@@ -30,6 +32,25 @@ def is_database_open(app):
 
 def is_series_selected(app):
     return app.nr_selected('Series') != 0
+
+
+def new_database(app):
+    """
+    Create a new DICOM folder, open it and update display.
+    """
+    app.status.message("Opening a folder..")
+    path = app.dialog.directory("Select a folder for the new database..")
+    if path == '':
+        app.status.message('') 
+        return
+    app.status.cursorToHourglass()
+    app.close()
+    folder = db.database(path=path, 
+        status = app.status, 
+        dialog = app.dialog)
+    app.display(folder)
+    app.status.hide()
+    app.status.cursorToNormal()
 
 
 def open_database(app):
@@ -225,9 +246,22 @@ def import_nifti(app):
     try:
         app.database().import_nifti(files)
     except:
-        msg = 'NIfTI import is work in progress and failed in this case. \n'
-        msg += 'Please contact the developer and send a sample of your data if you can..'
-        app.dialog.information(msg)
+        app.dialog.error()
+    app.status.hide()
+    app.refresh()
+
+
+def import_gif(app):
+    files = app.dialog.files("Select GIF files to import")
+    if files == []:
+        return
+    try:
+        app.status.message('Reading gif file(s)')
+        study = app.database().import_gif(files)
+        for series in study.series():
+            app.display(series)
+    except:
+        app.dialog.error()
     app.status.hide()
     app.refresh()
 

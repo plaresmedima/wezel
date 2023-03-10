@@ -1,6 +1,8 @@
 __all__ = [
     'favicon',
     'slider_icon', 
+    'animal_dog',
+    'bug',
     'application_import',
     'arrow_curve_180_left',
     'arrow_curve',
@@ -91,6 +93,8 @@ question_mark = str(f.joinpath('question-mark.png'))
 
 f = importlib_resources.files('wezel.icons.fugue_icons')
 
+animal_dog = str(f.joinpath('animal-dog.png'))
+bug = str(f.joinpath('bug.png'))
 application_import = str(f.joinpath('application-import.png'))
 arrow_curve = str(f.joinpath('arrow-curve.png'))
 arrow_curve_180_left = str(f.joinpath('arrow-curve-180-left.png'))

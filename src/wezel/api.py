@@ -14,22 +14,24 @@ QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
 
 class Wezel:
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.log = logger()
         self.QApp = QApplication(sys.argv)
-        self.QApp.setWindowIcon(QIcon(wezel.icons.favicon))
-        self.main = wezel.gui.Main(self)
+        self.QApp.setWindowIcon(QIcon(wezel.icons.animal_dog))
+        self.main = wezel.gui.Main(self, **kwargs)
 
     def show(self):    
         self.log.info('Launching Wezel!')
-        try:
-            self.main.show()
-            self.QApp.exec()
-            #sys.exit(self.QApp.exec())
-        except Exception as e:
-            # Use QMessage
-            print('Wezel Error: ' + str(e))
-            self.log.exception('Wezel Error: ' + str(e))
+        self.main.show()
+        self.QApp.exec()
+        # try:
+        #     self.main.show()
+        #     self.QApp.exec()
+        #     #sys.exit(self.QApp.exec())
+        # except Exception as e:
+        #     # Use QMessage
+        #     print('Wezel Error: ' + str(e))
+        #     self.log.exception('Wezel Error: ' + str(e))
 
     def open(self, path):
         self.main.open(path)
@@ -143,7 +145,7 @@ class MenuBar():
         return mbar
     
 
-def app():
+def app(**kwargs):
 
     # Otional
     # This closes the splash screen
@@ -155,7 +157,7 @@ def app():
     except:
         pass
 
-    return Wezel()
+    return Wezel(**kwargs)
 
 
 def logger():

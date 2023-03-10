@@ -1,23 +1,53 @@
 import numpy as np
+import pandas as pd
 import wezel
 from dbdicom.wrappers import scipy
-from wezel.widgets import TableDisplay
+from wezel.widgets import TableDisplay, PlotDisplay
+
+
+class ROIcurve(wezel.gui.Action): 
+
+    def enable(self, app):
+        return app.database() is not None
+
+    def run(self, app):
+        all_series = app.database().series()
+        cancel, f = app.dialog.input(
+            {'label':"Region(s) of interest", "type":"select records", "options": all_series},
+            {'label':"Series", "type":"select records", "options": all_series},
+            {'label':'Curve along dimension..', 'type':'string', 'value':'AcquisitionTime'},
+            title = "Please select input for ROI curves")
+        if cancel:
+            return
+        dim = f[2]['value']
+        data = scipy.mask_curve_3d(f[0], f[1], dim=dim) 
+        app.addWidget(TableDisplay(data), 'ROI curves - data')
+        for df in data:
+            series = df['SeriesDescription'].values[0]
+            region = df['Region of Interest'].values[0]
+            plot = PlotDisplay(df[dim].values, df['Mean'].values)
+            plot.set_xlabel(dim)
+            plot.set_ylabel(series)
+            plot.draw()
+            title = 'ROI: ' + region
+            app.addWidget(plot, title)
+        app.status.hide()
 
 
 class ROIstatistics(wezel.gui.Action): 
 
+    def enable(self, app):
+        return app.database() is not None
+
     def run(self, app):
         all_series = app.database().series()
-        series_labels = [s.label() for s in all_series]
         cancel, f = app.dialog.input(
-            {"label":"Regions of interest", "type":"listview", "list": series_labels, 'value':[]},
-            {"label":"Parameters", "type":"listview", "list": series_labels, 'value':[]},
+            {'label':'Regions of interest', 'type':'select records', 'options': all_series},
+            {'label':'Parameters', 'type':'select records', 'options': all_series},
             title = "Please select input for ROI statistics")
         if cancel:
             return
-        masks = [all_series[i] for i in f[0]['value']]
-        images = [all_series[i] for i in f[1]['value']]
-        df = scipy.mask_statistics(masks, images)
+        df = scipy.mask_statistics(f[0], f[1])
         app.addWidget(TableDisplay(df), 'ROI statistics')
         app.status.hide()
 
@@ -847,7 +877,7 @@ class RankFilter(wezel.gui.Action):
                 )
             except Exception as e:
                 msg = str(e) + '\n Please try again with different parameters'
-                app.dialog.error(msg)
+                app.dialog.information(msg)
             else:
                 app.display(resized)
         app.refresh()

@@ -63,7 +63,7 @@ class PlotCurve(QWidget):
         self.subPlot.set_ylabel(
             self.yLabel, loc='center', 
             fontsize=10)
-        self.subPlot.grid()
+        self.subPlot.grid(axis='y')
         self.subPlot.plot(x, y)
         if index is not None:
             self.subPlot.plot(x[index], y[index], 'bo')
