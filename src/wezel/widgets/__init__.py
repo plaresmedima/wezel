@@ -8,8 +8,6 @@ in `wezel` applications.
 
 from .dbimage import (
     ImageWindow,
-    ImageBrightness, 
-    ImageContrast,
 )
 from .series_sliders import (
     SeriesSliders,

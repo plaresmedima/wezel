@@ -10,6 +10,8 @@ __all__ = [
     'arrow_move',
     'arrow_out',
     'arrow_resize_090',
+    'arrow_stop_090',
+    'arrow_stop_270',
     'bin_metal',
     'blue_document_export',
     'brightness',
@@ -102,6 +104,8 @@ arrow_in = str(f.joinpath('arrow-in.png'))
 arrow_move = str(f.joinpath('arrow-move.png'))
 arrow_out = str(f.joinpath('arrow-out.png'))
 arrow_resize_090 = str(f.joinpath('arrow-resize-090.png'))
+arrow_stop_090 = str(f.joinpath('arrow-stop-090.png'))
+arrow_stop_270 = str(f.joinpath('arrow-stop-270.png'))
 bin_metal = str(f.joinpath('bin-metal.png'))
 blue_document_export = str(f.joinpath('blue-document-export.png'))
 brightness = str(f.joinpath('brightness.png'))

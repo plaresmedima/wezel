@@ -45,7 +45,7 @@ class ToolBar(QWidget):
 
         # Define UI elements
         self.regionList = widgets.RegionList(layout=None)
-        self.window = widgets.ImageWindow(layout=False)
+        self.window = widgets.ImageWindow()
         self.actionFitItem = QAction(QIcon(icons.magnifier_zoom_fit), 'Fit in view', self)
         self.menuZoomToScale = self.menuZoomTo()
         self.actionZoomTo = QAction(QIcon(icons.magnifier_zoom_actual), 'Zoom to..', self)
@@ -133,7 +133,7 @@ class ToolBar(QWidget):
         if array is None:
             return
         self.setEditMaskEnabled()
-        if self.window.mode.isLocked:
+        if self.window.isLocked():
             v = self.window.getValue()
             cmap = self.filters[2].getColorMap()
             self.canvas.setWindow(v[0], v[1])
@@ -297,8 +297,10 @@ class ToolBarView():
         w = QToolBar()
         w.addAction(toolBar.filters[2].actionPick)
         framegrid.addWidget(w,0,2)
-        framegrid.addWidget(toolBar.window.brightness.spinBox, 1, 0, 1, 3)
-        framegrid.addWidget(toolBar.window.contrast.spinBox, 2, 0, 1, 3)
+        #framegrid.addWidget(toolBar.window.spinBox(1), 1, 0, 1, 3)
+        #framegrid.addWidget(toolBar.window.spinBox(0), 2, 0, 1, 3)
+        framegrid.addWidget(toolBar.window.upper, 1, 0, 1, 3)
+        framegrid.addWidget(toolBar.window.lower, 2, 0, 1, 3)
         frame.setLayout(framegrid)
         return frame
     
