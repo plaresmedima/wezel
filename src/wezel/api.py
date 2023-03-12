@@ -7,9 +7,50 @@ from PyQt5.QtGui import QIcon
 
 import wezel
 
+# Import necessary modules
+from PyQt5.QtCore import Qt
+
+# Define font size
+font_size = 8
+
+# Create application-wide style sheet
+STYLESHEET = """
+    /* Set font size for all widgets */
+    QWidget {{
+        font-size: {}pt;
+    }}
+
+    /* Set font size for QComboBox drop-down list */
+    QComboBox QAbstractItemView {{
+        font-size: {}pt;
+    }}
+
+    /* Set font size for QLabel text */
+    QLabel {{
+        font-size: {}pt;
+    }}
+
+    /* Set font size for QLineEdit text */
+    QLineEdit {{
+        font-size: {}pt;
+    }}
+
+    /* Set font size for QPushButton text */
+    QPushButton {{
+        font-size: {}pt;
+    }}
+
+    /* Set font size for QTextEdit text */
+    QTextEdit {{
+        font-size: {}pt;
+    }}
+""".format(font_size, font_size, font_size, font_size, font_size, font_size)
+
+
 
 QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
 QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+
 
 
 class Wezel:
@@ -18,6 +59,7 @@ class Wezel:
         self.log = logger()
         self.QApp = QApplication(sys.argv)
         self.QApp.setWindowIcon(QIcon(wezel.icons.animal_dog))
+        self.QApp.setStyleSheet(STYLESHEET)
         self.main = wezel.gui.Main(self, **kwargs)
 
     def show(self):    
@@ -152,7 +194,25 @@ def app(**kwargs):
     # pyi_splash is part of pyinstaller
     try:
         import pyi_splash
-        pyi_splash.update_text('Loaded wezel..')
+
+        ## Attempt at showing progress bar - does not work
+        # count = 0
+        # direction = 'right'
+        # while pyi_splash.is_alive():
+        #     move = '\u0020' * count
+        #     pyi_splash.update_text(f'{move}\u2591\u2591')
+        #     if direction == 'right':
+        #         if len(move) < 97:
+        #             count += 1
+        #         else:
+        #             direction = 'left'
+        #     else:
+        #         if len(move) > 0:
+        #             count -= 1
+        #         else:
+        #             direction = 'right'
+        #     time.sleep(0.05)
+
         pyi_splash.close()
     except:
         pass
