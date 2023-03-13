@@ -1,7 +1,6 @@
-import pandas as pd
 import wezel
 from dbdicom.wrappers import skimage
-from wezel.widgets import TableDisplay
+from wezel.displays import TableDisplay
 
 
 class VolumeFeatures(wezel.gui.Action):

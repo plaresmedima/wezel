@@ -281,9 +281,9 @@ class Main(QMainWindow):
             pass
         elif object.type() == 'Series':
             if view == 'Surface':
-                viewer = wezel.widgets.SurfaceDisplay(object)
+                viewer = wezel.displays.SurfaceDisplay(object)
             else:
-                viewer = wezel.widgets.SeriesDisplay(object)
+                viewer = wezel.displays.SeriesDisplay(object)
             self.addWidget(viewer, title=object.label())
         elif object.type() == 'Instance':
             pass

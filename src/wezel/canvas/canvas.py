@@ -509,7 +509,7 @@ class FilterItem(AnyItem):
 
     def pick(self):
         self.actionPick.setChecked(True)
-        self.actionPick.triggered.emit(True)
+        self.actionPick.triggered.emit()
         self.update()
 
 
@@ -524,7 +524,7 @@ class FilterSet():
         self.current = filter
         self.actionPick.filter = filter
         self.actionPick.setChecked(True)
-        self.actionPick.triggered.emit(True)
+        self.actionPick.triggered.emit()
         #self.update()
 
     def setActionPick(self):

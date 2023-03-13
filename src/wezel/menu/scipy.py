@@ -1,8 +1,7 @@
 import numpy as np
-import pandas as pd
 import wezel
 from dbdicom.wrappers import scipy
-from wezel.widgets import TableDisplay, PlotDisplay
+from wezel.displays import TableDisplay, PlotDisplay
 
 
 class ROIcurve(wezel.gui.Action): 

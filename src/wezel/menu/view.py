@@ -65,7 +65,7 @@ class Array4D(wezel.gui.Action):
 
     def run(self, app):
         for series in app.selected('Series'):
-            viewer = wezel.widgets.SeriesDisplay4D()
+            viewer = wezel.displays.SeriesDisplay4D()
             viewer.setSeries(series)
             app.addWidget(viewer, series.label())
 
@@ -87,7 +87,7 @@ class HeaderDICOM(wezel.gui.Action):
 
     def run(self, app):
        for series in app.selected('Series'):
-            viewer = wezel.widgets.SeriesViewerMetaData(series)
+            viewer = wezel.displays.SeriesViewerMetaData(series)
             app.addWidget(viewer, series.label())
 
 

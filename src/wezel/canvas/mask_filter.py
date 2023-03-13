@@ -1,6 +1,5 @@
 import math
 import numpy as np
-from matplotlib.path import Path as MplPath
 import cv2 as cv2
 import skimage
 from scipy import ndimage as ndi

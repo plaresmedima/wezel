@@ -12,21 +12,6 @@ from .dbimage import (
 from .series_sliders import (
     SeriesSliders,
 )
-from .series_display_4d import (
-    SeriesDisplay4D,
-)
-from .series_display import (
-    SeriesDisplay,
-)
-from .surface_display import (
-    SurfaceDisplay,
-)
-from .plot_display import (
-    PlotDisplay,
-)
-from .table_display import (
-    TableDisplay,
-)
 from .plot_curve import (
     PlotCurve,
 )
@@ -56,7 +41,4 @@ from .region_list import (
 )
 from .file_display import (
     ImageLabel,
-)
-from .dicom_header import (
-    SeriesViewerMetaData,
 )
