@@ -2,7 +2,7 @@ import numpy as np
 import scipy.ndimage as ndi
 import pyvista as pv
 
-from PyQt5.QtWidgets import (
+from PySide2.QtWidgets import (
     QVBoxLayout,
 )
 

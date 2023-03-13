@@ -1,14 +1,14 @@
 import numpy as np
 
-from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtWidgets import QAction, QMenu, QActionGroup
-from PyQt5.QtGui import QPixmap, QCursor, QIcon
+from PySide2.QtCore import Qt, Signal
+from PySide2.QtWidgets import QAction, QMenu, QActionGroup
+from PySide2.QtGui import QPixmap, QCursor, QIcon
 
 from wezel import canvas, icons
 
 
 class ImageWindow(canvas.FilterItem):
-    windowChanged = pyqtSignal(object, float, float, bool)
+    windowChanged = Signal(object, float, float, bool)
 
     """Change contrast
     """

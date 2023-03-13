@@ -1,6 +1,6 @@
 import numpy as np
 
-from PyQt5.QtWidgets import (
+from PySide2.QtWidgets import (
     QWidget, 
     QSplitter,
     QVBoxLayout,

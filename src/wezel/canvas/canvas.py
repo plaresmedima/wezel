@@ -3,10 +3,10 @@ import numpy as np
 import copy
 
 
-from PyQt5.QtCore import Qt, pyqtSignal, QRectF
-from PyQt5.QtWidgets import (QGraphicsObject, QGraphicsItem,
+from PySide2.QtCore import Qt, Signal, QRectF
+from PySide2.QtWidgets import (QGraphicsObject, QGraphicsItem,
     QAction, QMenu, QGraphicsView, QGraphicsScene, QActionGroup)
-from PyQt5.QtGui import QPixmap, QBrush, QIcon, QTransform, QCursor, QImage
+from PySide2.QtGui import QPixmap, QBrush, QIcon, QTransform, QCursor, QImage
 
 from wezel import canvas, icons
 from wezel.canvas.utils import colormap_to_LUT
@@ -14,11 +14,11 @@ from wezel.canvas.utils import colormap_to_LUT
 class Canvas(QGraphicsView):
     """Wrapper for ImageItem displaying it in a scrollable Widget"""
 
-    #imageUpdated = pyqtSignal(object)
-    newMaskSeries = pyqtSignal(object)
-    mousePositionMoved = pyqtSignal(int, int)
-    arrowKeyPress = pyqtSignal(str)
-    #maskChanged = pyqtSignal()
+    #imageUpdated = Signal(object)
+    newMaskSeries = Signal(object)
+    mousePositionMoved = Signal(int, int)
+    arrowKeyPress = Signal(str)
+    #maskChanged = Signal()
 
     def __init__(self, parent=None): 
         super().__init__(parent)
@@ -268,7 +268,7 @@ class ImageItem(AnyItem):
 class MaskItem(AnyItem):
     """Displays a mask as an overlay on an image.
     """
-    maskChanged = pyqtSignal()
+    maskChanged = Signal()
 
     def __init__(self, imageItem, mask, opacity=0.75, color=0): 
         super().__init__(imageItem)

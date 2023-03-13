@@ -1,10 +1,10 @@
 import timeit
 import numpy as np
-from PyQt5.QtCore import pyqtSignal, Qt
-from PyQt5.QtWidgets import (QToolBar,
+from PySide2.QtCore import Signal, Qt
+from PySide2.QtWidgets import (QToolBar,
     QAction, QComboBox, QPushButton, QLabel, 
     QWidget, QDoubleSpinBox, QHBoxLayout, QVBoxLayout)
-from PyQt5.QtGui import QIcon, QPixmap
+from PySide2.QtGui import QIcon, QPixmap
 
 from wezel import icons
 
@@ -40,7 +40,7 @@ QComboBox:down-arrow
 class ImageWindow(QWidget):
     """Widget to set and manage color and window settings of a Series"""
 
-    valueChanged = pyqtSignal(list)  # emitted when the color settings are changed by the widget
+    valueChanged = Signal(list)  # emitted when the color settings are changed by the widget
 
     def __init__(self):
         super().__init__()
@@ -98,7 +98,7 @@ class ImageWindow(QWidget):
 
 class ImageUpper(QWidget):
 
-    valueChanged = pyqtSignal(float)
+    valueChanged = Signal(float)
 
     def __init__(self):
         super().__init__()
@@ -158,7 +158,7 @@ class ImageUpper(QWidget):
 
 class ImageLower(QWidget):
 
-    valueChanged = pyqtSignal(float)
+    valueChanged = Signal(float)
 
     def __init__(self):
         super().__init__() 
@@ -218,7 +218,7 @@ class ImageLower(QWidget):
 class ImageContrastWindow(QWidget):
     """Widget to set and manage color and window settings of a Series"""
 
-    valueChanged = pyqtSignal(list)  # emitted when the color settings are changed by the widget
+    valueChanged = Signal(list)  # emitted when the color settings are changed by the widget
 
     def __init__(self, layout=True):
         super().__init__()
@@ -270,7 +270,7 @@ class ImageContrastWindow(QWidget):
 
 class ImageContrast(QWidget):
 
-    valueChanged = pyqtSignal(float)
+    valueChanged = Signal(float)
 
     def __init__(self, layout=True):
         super().__init__()
@@ -329,7 +329,7 @@ class ImageContrast(QWidget):
 
 class ImageBrightness(QWidget):
 
-    valueChanged = pyqtSignal(float)
+    valueChanged = Signal(float)
 
     def __init__(self, layout=True):
         super().__init__() 
@@ -387,7 +387,7 @@ class ImageBrightness(QWidget):
 
 class LockUnlockWidget(QToolBar):
 
-    toggled = pyqtSignal()
+    toggled = Signal()
 
     def __init__(self, toolTip = 'Lock state'):
         super().__init__()
@@ -413,7 +413,7 @@ class LockUnlockWidget(QToolBar):
 
 class DeleteImageButton(QPushButton):
 
-    buttonClicked = pyqtSignal()
+    buttonClicked = Signal()
 
     def __init__(self, image=None):
         super().__init__()
@@ -457,7 +457,7 @@ class ExportImageButton(QPushButton):
 
 class RestoreImageButton(QPushButton):
 
-    buttonClicked = pyqtSignal()
+    buttonClicked = Signal()
 
     def __init__(self, image=None):
         super().__init__()
@@ -479,7 +479,7 @@ class RestoreImageButton(QPushButton):
 
 class SaveImageButton(QPushButton):
 
-    buttonClicked = pyqtSignal()
+    buttonClicked = Signal()
 
     def __init__(self, image=None):
         super().__init__()

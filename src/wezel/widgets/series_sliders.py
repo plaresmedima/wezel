@@ -1,10 +1,10 @@
 import pandas as pd
 
-from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtWidgets import (
+from PySide2.QtCore import Qt, Signal
+from PySide2.QtWidgets import (
     QWidget, QHBoxLayout, QPushButton,
     )
-from PyQt5.QtGui import QIcon
+from PySide2.QtGui import QIcon
 
 from wezel import widgets, icons
 
@@ -12,7 +12,7 @@ from wezel import widgets, icons
 class SeriesSliders(QWidget):
     """Widget with sliders to navigate through a DICOM series."""
 
-    valueChanged = pyqtSignal(object)
+    valueChanged = Signal(object)
 
     def __init__(self, series=None, image=None, dimensions=[]):  
         super().__init__()

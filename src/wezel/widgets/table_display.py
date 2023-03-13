@@ -4,11 +4,11 @@ Main widget for displaying tabular data
 
 import pandas as pd
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import (QFileDialog, QLineEdit, QApplication,                           
+from PySide2.QtCore import Qt
+from PySide2.QtWidgets import (QFileDialog, QLineEdit, QApplication,                           
         QVBoxLayout, QHBoxLayout, QTableWidgetItem, QLabel, QToolBar, QAction,
         QWidget, QHeaderView,  QTableWidget,  QAbstractItemView)
-from PyQt5.QtGui import QIcon
+from PySide2.QtGui import QIcon
 
 import wezel
 import wezel.icons as icons
