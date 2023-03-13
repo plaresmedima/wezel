@@ -3,7 +3,7 @@
 
 from PySide2.QtCore import Qt
 from PySide2.QtWidgets import (QFileDialog, QLineEdit, QApplication,                           
-        QMessageBox, QWidget, QVBoxLayout, QHBoxLayout, QTableWidgetItem,
+        QWidget, QVBoxLayout, QHBoxLayout, QTableWidgetItem,
         QPushButton, QLabel,  QHeaderView,  QTableWidget,  QAbstractItemView, QScrollArea)
 
 import pydicom

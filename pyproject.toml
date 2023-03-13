@@ -10,15 +10,16 @@ version = "0.1.1"
 dependencies = [
   "PySide2",
   "dbdicom",
-  "matplotlib",
+  "matplotlib", # for plotting curves and creating colormaps
   "numpy",
   "pandas",
-  "importlib-resources>=1.1.0",
+  "openpyxl", # required for pandas export to excel
+  "importlib-resources>=1.1.0", # for icon inventory
 
-  # "opencv-python<=4.5.3.56", # hack to fix a bug in building executable
+  # Using only dilate and erode functions - replace by skimage
+  # "opencv-python<=4.5.3.56", # previous hack to fix a bug in building executable
   # Consider removing limit on open-cvversion number 
   # -> creates installation issues (wheel no longer up to date)
-  # Or consider removing opencv as dependency. Is scikit not enough?
   "opencv-python",
 
   # restricting to the latest stable release for now due to a bug
@@ -31,12 +32,17 @@ dependencies = [
   # pip install --pre scikit-image<=0.19.0 
   # until a new version is released (0.21.0)
   "scikit-image<=0.19.0",
+  
+  # This has become part of wezel - package includes api's to create executables
+  # package manager module needs extending though
+  'pyinstaller', 
 
-  "scipy",
-  'pyinstaller', # This has become part of wezel - package icnludes api's to create executables
+  # Dependencies for surface display - create as plugin
+  # create surface display as optional plugin so this becomes an optional requirement
   "pyvista", 
-  "pyvistaqt",
-  "openpyxl",
+  "pyvistaqt", # currently only used in surface display
+  "scipy", # currently only used in surface display and the shift function in mask_filter (can be replaced)
+  
 ]
 
 # optional information
@@ -88,7 +94,7 @@ include-package-data = true
 where = ["src"]
 
 [project.optional-dependencies]
-# importlib-resources # removed - necessary? where?
+
 docs = [
     "sphinx",
     "sphinx_rtd_theme",
@@ -96,7 +102,7 @@ docs = [
     "sphinx-copybutton",
     "sphinx-remove-toctrees",
 ]
-plugins = [
+plugins = [ # create a clearer plugin architecture so these are separated out.
   "dipy",
   "SimpleITK",
   "itk-elastix",

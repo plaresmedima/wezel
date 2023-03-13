@@ -5,7 +5,7 @@ on the GUI from a calculation running in its own thread.
 import sys
 import datetime
 import traceback
-from PySide2.QtCore import (QObject, QRunnable, QThreadPool, Signal, pyqtSlot)
+from PySide2.QtCore import (QObject, QRunnable, QThreadPool, Signal, Slot)
 from PySide2.QtWidgets import (QVBoxLayout, QWidget, QPlainTextEdit)
 
 
@@ -61,7 +61,7 @@ class Worker(QRunnable):
           self.kwargs = kwargs
           
 
-      @pyqtSlot()
+      @Slot()
       def run(self):
           """
           Executes the function passed into the Worker object 
