@@ -1,7 +1,7 @@
 
 
-from PyQt5.QtCore import  pyqtSignal, Qt
-from PyQt5.QtWidgets import (
+from PySide2.QtCore import  Signal, Qt
+from PySide2.QtWidgets import (
     QWidget, 
     #QApplication, 
     QMainWindow, 
@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import (
     QMenuBar, 
     QDockWidget, 
     QMessageBox) 
-from PyQt5.QtGui import QIcon
+from PySide2.QtGui import QIcon
 
 import dbdicom as db
 import wezel
@@ -462,7 +462,7 @@ class Main(QMainWindow):
 class MainWidget(QWidget):
     """Base class for widgets that are set as subWindow widgets"""
 
-    databaseUpdated = pyqtSignal() 
+    databaseUpdated = Signal() 
 
     def __init__(self):
         super().__init__()

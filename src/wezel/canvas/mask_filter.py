@@ -5,9 +5,9 @@ import cv2 as cv2
 import skimage
 from scipy import ndimage as ndi
 
-from PyQt5.QtCore import Qt, QRectF, QPointF
-from PyQt5.QtWidgets import QAction, QMenu, QActionGroup
-from PyQt5.QtGui import QPixmap, QCursor, QIcon, QColor, QPen
+from PySide2.QtCore import Qt, QRectF, QPointF
+from PySide2.QtWidgets import QAction, QMenu, QActionGroup
+from PySide2.QtGui import QPixmap, QCursor, QIcon, QColor, QPen
 
 from wezel import canvas, icons
 

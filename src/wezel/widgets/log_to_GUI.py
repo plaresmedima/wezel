@@ -5,8 +5,8 @@ on the GUI from a calculation running in its own thread.
 import sys
 import datetime
 import traceback
-from PyQt5.QtCore import (QObject, QRunnable, QThreadPool, pyqtSignal, pyqtSlot)
-from PyQt5.QtWidgets import (QVBoxLayout, QWidget, QPlainTextEdit)
+from PySide2.QtCore import (QObject, QRunnable, QThreadPool, Signal, pyqtSlot)
+from PySide2.QtWidgets import (QVBoxLayout, QWidget, QPlainTextEdit)
 
 
 class WorkerSignals(QObject):
@@ -22,11 +22,11 @@ class WorkerSignals(QObject):
       An object instanciated from this class must be passed into the 
       callback function, so that it can communicate with the GUI.
       """
-      finished = pyqtSignal()
-      error = pyqtSignal(tuple)
-      result = pyqtSignal(object)
-      progress = pyqtSignal(int)
-      log = pyqtSignal(str)
+      finished = Signal()
+      error = Signal(tuple)
+      result = Signal(object)
+      progress = Signal(int)
+      log = Signal(str)
 
 
 class Worker(QRunnable):

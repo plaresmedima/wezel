@@ -1,6 +1,6 @@
-from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtWidgets import (
+from PySide2.QtGui import QIcon
+from PySide2.QtCore import Qt, Signal
+from PySide2.QtWidgets import (
     QAction,
     QWidget, 
     QComboBox, QToolBar, 

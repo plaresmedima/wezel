@@ -1,14 +1,14 @@
 import sys
 import logging
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtGui import QIcon
+from PySide2.QtCore import Qt
+from PySide2.QtWidgets import QApplication
+from PySide2.QtGui import QIcon
 
 import wezel
 
 # Import necessary modules
-from PyQt5.QtCore import Qt
+from PySide2.QtCore import Qt
 
 # Define font size
 font_size = 8
@@ -65,7 +65,7 @@ class Wezel:
     def show(self):    
         self.log.info('Launching Wezel!')
         self.main.show()
-        self.QApp.exec()
+        self.QApp.exec_()
         # try:
         #     self.main.show()
         #     self.QApp.exec()

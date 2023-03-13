@@ -8,8 +8,7 @@ build-backend = "setuptools.build_meta"
 name = "wezel"
 version = "0.1.1"
 dependencies = [
-  "PyQt5",
-  #"PyQt5<=5.13.1",  # found some resolution issues with later versions
+  "PySide2",
   "dbdicom",
   "matplotlib",
   "numpy",

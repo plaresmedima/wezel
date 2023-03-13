@@ -1,8 +1,8 @@
 """This module contains custom widgets for the display DICOM Series Metadata in a table."""
 
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import (QFileDialog, QLineEdit, QApplication,                           
+from PySide2.QtCore import Qt
+from PySide2.QtWidgets import (QFileDialog, QLineEdit, QApplication,                           
         QMessageBox, QWidget, QVBoxLayout, QHBoxLayout, QTableWidgetItem,
         QPushButton, QLabel,  QHeaderView,  QTableWidget,  QAbstractItemView, QScrollArea)
 
