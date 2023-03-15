@@ -1,101 +1,84 @@
-import wezel
+from wezel import displays
+from wezel.gui import Menu, Action
 
-def all(parent):
    
-    parent.action(DataBase, text = 'Database')
-    parent.separator()
-    parent.action(Series, text = 'Series (2D)')
-    parent.action(Array4D, text = 'Series (2D + 1D)')
-    parent.action(HeaderDICOM, text = 'Series (Header)')
-    parent.action(MaskSurface, text = '3D surface (mask)')
-    parent.separator()
-    parent.action(ToolBar, text='Toolbar')
-    parent.action(CloseWindows, text='Close windows')
-    parent.action(TileWindows, text='Tile windows')
+
+def no_database(app):
+    if app.database() is None:
+        return False
+    if app.treeViewDockWidget is None:
+        return False
+    #return not app.treeViewDockWidget.isVisible()
+    return True
 
 
-class ToolBar(wezel.gui.Action):
-
-    def enable(self, app):
-        return True
-        # Closer sensitivity control requires enable to be called
-        # whenever the user closes the toolbar dockwidget
-        # if app.toolBarDockWidget.widget() is None:
-        #     return False
-        # return app.toolBarDockWidget.isHidden()
-        
-    def run(self, app):
-        if app.toolBarDockWidget.widget() is None:
-            msg = 'There are currently no toolbars available.'
-            msg += '\n Please open a display first.'
-            app.dialog.information(msg, title='No toolbars available')
-            return
-        app.toolBarDockWidget.show()
-        #self.setEnabled(False)
+def show_database(app):
+    app.treeViewDockWidget.show()
+    app.menuBar().enable()
 
 
-class DataBase(wezel.gui.Action):
-
-    def enable(self, app):
-        if app.treeViewDockWidget is None:
-            return False
-        #return not app.treeViewDockWidget.isVisible()
-        return True
-
-    def run(self, app):
-        app.treeViewDockWidget.show()
-        app.menubar.enable()
-
-        
-class Series(wezel.gui.Action):
-
-    def enable(self, app):
-        return app.nr_selected('Series') != 0
-
-    def run(self, app):
-        for series in app.selected('Series'):
-            app.display(series)      
-        #app.central.tileSubWindows()      
+def is_series_selected(app):
+    return app.nr_selected('Series') != 0
 
 
-class Array4D(wezel.gui.Action):
-
-    def enable(self, app):
-        return app.nr_selected('Series') != 0
-
-    def run(self, app):
-        for series in app.selected('Series'):
-            viewer = wezel.displays.SeriesDisplay4D()
-            viewer.setSeries(series)
-            app.addWidget(viewer, series.label())
+def show_series_2d(app):
+    for series in app.selected('Series'):
+        app.display(series)      
+    #app.central.tileSubWindows()      
 
 
-class MaskSurface(wezel.gui.Action):
-
-    def enable(self, app):
-        return app.nr_selected('Series') != 0
-
-    def run(self, app):
-        for series in app.selected('Series'):
-            app.display(series, view='Surface')
-
-            
-class HeaderDICOM(wezel.gui.Action):
-
-    def enable(self, app):
-        return app.nr_selected('Series') != 0
-
-    def run(self, app):
-       for series in app.selected('Series'):
-            viewer = wezel.displays.SeriesViewerMetaData(series)
-            app.addWidget(viewer, series.label())
+def show_series_4d(app):
+    for series in app.selected('Series'):
+        viewer = displays.SeriesDisplay4D()
+        viewer.setSeries(series)
+        app.addWidget(viewer, series.label())
 
 
-class CloseWindows(wezel.gui.Action):
-    def run(self, app):
-        app.central.closeAllSubWindows()
 
 
-class TileWindows(wezel.gui.Action):
-    def run(self, app):
-        app.central.tileSubWindows()
+
+def show_dicom_header(app):
+    for series in app.selected('Series'):
+        viewer = displays.SeriesViewerMetaData(series)
+        app.addWidget(viewer, series.label())
+
+
+def show_toolbar(app):
+    if app.toolBarDockWidget.widget() is None:
+        msg = 'There are currently no toolbars available.'
+        msg += '\n Please open a display first.'
+        app.dialog.information(msg, title='No toolbars available')
+        return
+    app.toolBarDockWidget.show()
+    #self.setEnabled(False)
+
+
+def close_windows(app):
+    app.central.closeAllSubWindows()
+
+
+def tile_windows(app):
+    app.central.tileSubWindows()
+
+
+
+action_show_database = Action('Database', on_clicked=show_database, is_clickable=no_database)
+action_show_series_2d = Action('Series (2D)', on_clicked=show_series_2d, is_clickable=is_series_selected)
+action_show_series_4d = Action('Series (2D + 1D)', on_clicked=show_series_4d, is_clickable=is_series_selected)
+action_show_dicom_header = Action('Series (Header)', on_clicked=show_dicom_header, is_clickable=is_series_selected)
+action_show_toolbar = Action('Toolbar', on_clicked=show_toolbar, is_clickable=no_database)
+action_close_windows = Action('Close windows', on_clicked=close_windows, is_clickable=no_database)
+action_tile_windows = Action('Tile windows', on_clicked=tile_windows, is_clickable=no_database)
+
+
+
+menu = Menu('View')
+menu.add(action_show_database)
+menu.add_separator()
+menu.add(action_show_series_2d)
+menu.add(action_show_series_4d)
+menu.add(action_show_dicom_header)
+menu.add_separator()
+menu.add(action_show_toolbar)
+menu.add(action_close_windows)
+menu.add(action_tile_windows)

@@ -1,17 +1,20 @@
 import webbrowser
-import wezel
+from wezel import icons
+from wezel.gui import Menu, Action
 
 
-def all(parent):
+def about_wezel(app):
+    webbrowser.open("https://github.com/QIB-Sheffield/wezel")
 
-    parent.action(About, text='Wezel', icon=wezel.icons.animal_dog) 
-    parent.action(Fugue, text='Fugue icons')
+def about_fugue(app):
+    webbrowser.open("https://p.yusukekamiyamane.com/")
 
 
-class About(wezel.gui.Action):
-    def run(self, app):
-        webbrowser.open("https://github.com/QIB-Sheffield/wezel")
 
-class Fugue(wezel.gui.Action):
-    def run(self, app):
-        webbrowser.open("https://p.yusukekamiyamane.com/")
+action_about_wezel = Action('Wezel', on_clicked=about_wezel, icon=icons.animal_dog)
+action_about_fugue = Action('Fugue icons', on_clicked=about_fugue)
+
+
+menu = Menu('About')
+menu.add(action_about_wezel)
+menu.add(action_about_fugue)

@@ -1,9 +1,6 @@
-
-
-from PySide2.QtCore import  Signal, Qt
+from PySide2.QtCore import Signal, Qt
 from PySide2.QtWidgets import (
     QWidget, 
-    #QApplication, 
     QMainWindow, 
     QAction, 
     QMenu, 
@@ -14,9 +11,6 @@ from PySide2.QtGui import QIcon
 
 import dbdicom as db
 import wezel
-
-#QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
-#QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
 
 
 # Examples of style sheets
@@ -186,7 +180,6 @@ class Main(QMainWindow):
         self.central.subWindowActivated.connect(lambda subWindow: self.activateSubWindow(subWindow))
         self.setCentralWidget(self.central)
 
-        self.set_menu(wezel.menu.menubar.minimal)
 
     # def mousePressEvent(self, event):
     #     self.offset = event.pos()
@@ -207,29 +200,12 @@ class Main(QMainWindow):
     #     self.setContentsMargins(8, 8, 8, 8)
     #     super().resizeEvent(event)
 
-
-
     def closeEvent(self, event): #main
         accept = self.close()
         if accept:
             event.accept()
         else:
             event.ignore()
-
-    def set_menu(self, menu_func): # -> setMenu()
-        self.menubar = MenuBar(self, menu_func)
-        self.setMenuBar(self.menubar)
-
-    # def addMenu(self, menu_func):
-    #     menuBar = self.menuBar() 
-    #     menu_func(menuBar)
-    #     menuBar.enable()
-
-    # When menus become objects instead of functions
-    # Needs a menu class that can be built before launching QApp
-    # def _addMenu(self, menu): 
-    #     menuBar = self.menuBar()
-    #     menuBar.addMenu(menu)
 
     def open(self, path):
         folder = db.database(path=path, 
@@ -261,7 +237,7 @@ class Main(QMainWindow):
         self.menuBar().enable()
         self.status.hide()
         
-    def display(self, object, view=None):
+    def display(self, object):
         if isinstance(object, list):
             for o in object:
                 self.display(o)
@@ -280,10 +256,7 @@ class Main(QMainWindow):
         elif object.type() == 'Study': # No Study Viewer yet
             pass
         elif object.type() == 'Series':
-            if view == 'Surface':
-                viewer = wezel.displays.SurfaceDisplay(object)
-            else:
-                viewer = wezel.displays.SeriesDisplay(object)
+            viewer = wezel.displays.SeriesDisplay(object)
             self.addWidget(viewer, title=object.label())
         elif object.type() == 'Instance':
             pass
@@ -500,155 +473,132 @@ class MainWidget(QWidget):
 
 
 class MenuBar(QMenuBar):
-    """
-    Programming interfaces for the Wezel menus. 
-    """
+    def __init__(self, *args):
+        self._menus = list(args)
 
-    def __init__(self, main, menu=None):
+    def menus(self):
+        return self._menus
+
+    def add(self, menu, position=None):
+        if position is None:
+            position = len(self._menus)
+        self._menus.insert(position, menu)
+
+    def add_menu(self, title='Menu'):
+        menu = Menu(title)
+        self.add(menu)
+        return menu
+
+    def setupUI(self, app):
         super().__init__()
-
-        self._menus = []
-        self.main = main
-        if menu is not None:
-            menu(self)
-            self.enable()
-
-    def addMenu(self, menu):
-        super().addMenu(menu)
-        self._menus.append(menu)
-        
-    def menu(self, label = "Menu"):
-        """
-        Creates a top level menu in the menuBar.
-        """
-        return Menu(self, label)
+        for menu in self._menus:
+            menu.setupUI(app)
+            self.addMenu(menu)
+        self.enable()
 
     def enable(self):
-        """
-        Refreshes the enabled status of each menu item.
-        """
         for menu in self._menus:
             menu.enable()
 
-    def add(self, menu):
-        menu._QMenu(self)
-        #self.addMenu(menu)
 
 
 class Menu(QMenu):
 
-    def __init__(self, parent=None, title='Menu'):
+    def __init__(self, title='Menu'):
+        self.app = None
+        self._title = title
+        self._items = []
+
+    def title(self):
+        return self._title
+
+    def setupUI(self, app):
         super().__init__()
+        self.setTitle(self._title)
+        for item in self._items:
+            if isinstance(item, Action):
+                item.setupUI(app)
+                self.addAction(item)
+            elif isinstance(item, Menu):
+                item.setupUI(app)
+                self.addMenu(item)
+            elif isinstance(item, Separator):
+                self.addSeparator()
 
-        self._parent = parent
-        self._actions = []
-        self._menus = []
-        self.setTitle(title)
-        if parent is not None:
-            self.main = parent.main
-            parent.addMenu(self)
+    def add(self, item, position=None):
+        if position is None:
+            position = len(self._items)
+        self._items.insert(position, item)
+        #self._items.append(item)
 
-    def addMenu(self, menu):
-        super().addMenu(menu)
-        self._menus.append(menu)
-        self.enable()
+    def add_action(self, *args, **kwargs):
+        action = Action(*args, **kwargs)
+        self.add(action)
+        #return action
 
-    def menu(self, title='Submenu'):
-        return Menu(self, title)
+    def add_menu(self, *args, **kwargs):
+        menu = Menu(*args, **kwargs)
+        self.add(menu)
+        return menu
 
-    def action(self, action, **kwargs):
-        act = action(self, **kwargs)
-        super().addAction(act)
-        self._actions.append(act)
-        
-    def addAction(self, 
-        text = 'Action',
-        shortcut = None,
-        tooltip = None, 
-        icon = None, 
-        on_clicked = None,
-        is_clickable = None):
-
-        action = Action(self, 
-            text = text,
-            shortcut = shortcut,
-            tooltip = tooltip,
-            icon = icon,
-            on_clicked = on_clicked,
-            is_clickable = is_clickable)
-        super().addAction(action)
-        self._actions.append(action)
-
-    def add(self, action):
-        super().addAction(action)
-        self._actions.append(action)
-        
-    def separator(self):
-        self.addSeparator() 
+    def add_separator(self):
+        sep = Separator()
+        self.add(sep)
 
     def enable(self):
-        """
-        Refreshes the enabled status of each menu item.
-        """
-        for submenu in self._menus:
-            submenu.enable()
-        for action in self._actions:
-            enable = action.enable(action.main)
-            action.setEnabled(enable)
+        for item in self._items:
+            if isinstance(item, Action):
+                enable = item.enable()
+                item.setEnabled(enable)
+            elif isinstance(item, Menu):
+                item.enable()
 
 
 class Action(QAction):
-    """Base class for all wezel actions"""
+    def __init__(self, 
+            text = 'Action',
+            shortcut = None,
+            tooltip = None, 
+            icon = None, 
+            on_clicked = None,
+            is_clickable = None):
 
-    def __init__(self, parent,
-        text = None,
-        shortcut = None,
-        tooltip = None, 
-        icon = None,  
-        on_clicked = None,
-        is_clickable = None,
-        **kwargs):
-        
-        super().__init__()
-
-        self.main = parent.main
+        self._app = None
+        self._text = text
+        self._shortcut = shortcut
+        self._tooltip = tooltip
+        self._icon = icon
         self._on_clicked = on_clicked
         self._is_clickable = is_clickable
+        
+    def setupUI(self, app):
+        super().__init__()
+        self._app = app
+        self.triggered.connect(self._run)
+        self.setText(self._text)
+        if self._icon is not None: 
+            self.setIcon(QIcon(self._icon))
+        if self._shortcut is not None: 
+            self.setShortcut(self._shortcut)
+        if self._tooltip is not None: 
+            self.setToolTip(self._tooltip)
+        
+    def _run(self):
+        if self._on_clicked is not None:
+            try:
+                self._on_clicked(self._app)
+            except:
+                self._app.dialog.error()
+                self._app.refresh()
+        self._app.status.hide()
+        self._app.status.message('Ready for your next move.. Give it to me!')
 
-        if text is None:
-            text = self.__class__.__name__
-        self.setText(text)
-        #self.triggered.connect(lambda: self.run(self.main))
-        self.triggered.connect(self.__run)
-    
-        if icon is not None: 
-            self.setIcon(QIcon(icon))
-        if shortcut is not None: 
-            self.setShortcut(shortcut)
-        if tooltip is not None: 
-            self.setToolTip(tooltip)
-
-        # Dictionary with optional settings
-        for option in kwargs:
-            self.__dict__[option] = kwargs[option]
-
-    def __run(self):
-        try:
-            self.run(self.main)
-        except:
-            self.main.dialog.error()
-            self.main.refresh()
-        self.main.status.hide()
-        self.main.status.message('Ready for your next move.. Give it to me!')
-
-    def enable(self, app):
+    def enable(self):
         if self._is_clickable is not None:
-            return self._is_clickable(app)
+            return self._is_clickable(self._app)
         else:
             return True
+        
 
-    def run(self, app):
-        if self._on_clicked is not None:
-            self._on_clicked(app)
-        else:
-            pass
+class Separator:
+    pass

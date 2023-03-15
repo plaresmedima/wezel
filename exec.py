@@ -13,9 +13,16 @@
 
 
 import wezel
+from wezel.plugins import (
+    hello_world, 
+    surface_display,
+)
 
 if __name__ == "__main__":
 
     app = wezel.app()
-    app.set_menu(wezel.menu.menubar.default)
+    app.add_menu(hello_world.menu, position=-1)
+    app.add_action(hello_world.hello_japan, 'Hello')
+    app.add_action(hello_world.hello_china, 'Hello')
+    app.add_action(surface_display.action, 'View', 5)
     app.show()

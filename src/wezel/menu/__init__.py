@@ -1,7 +1,6 @@
 from . import (
     numpy,
     about,
-    demo,
     edit,
     folder,
     scipy,

@@ -8,6 +8,4 @@ opencv-python
 scikit-image
 scipy
 pyinstaller
-pyvista
-pyvistaqt
 openpyxl

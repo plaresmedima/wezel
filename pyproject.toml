@@ -37,12 +37,7 @@ dependencies = [
   # package manager module needs extending though
   'pyinstaller', 
 
-  # Dependencies for surface display - create as plugin
-  # create surface display as optional plugin so this becomes an optional requirement
-  "pyvista", 
-  "pyvistaqt", # currently only used in surface display
   "scipy", # currently only used in surface display and the shift function in mask_filter (can be replaced)
-  
 ]
 
 # optional information
@@ -102,11 +97,13 @@ docs = [
     "sphinx-copybutton",
     "sphinx-remove-toctrees",
 ]
-plugins = [ # create a clearer plugin architecture so these are separated out.
+plugins = [
   "dipy",
   "SimpleITK",
   "itk-elastix",
   "scikit-learn",
+  "pyvista", 
+  "pyvistaqt", 
 ]
 
 

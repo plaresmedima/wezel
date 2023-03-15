@@ -1,13 +1,27 @@
 import numpy as np
 import scipy.ndimage as ndi
 import pyvista as pv
+from pyvistaqt import QtInteractor
+from PySide2.QtWidgets import QVBoxLayout
 
-from PySide2.QtWidgets import (
-    QVBoxLayout,
+import wezel
+
+
+
+def show_mask_surface(app):
+    for series in app.selected('Series'):
+        viewer = SurfaceDisplay(series)
+        app.addWidget(viewer, title=series.label())
+
+def is_series_selected(app):
+    return app.nr_selected('Series') != 0
+
+action = wezel.gui.Action(
+    '3D surface (Mask)', 
+    on_clicked = show_mask_surface, 
+    is_clickable = is_series_selected,
 )
 
-from pyvistaqt import QtInteractor
-import wezel
 
 
 class SurfaceDisplay(wezel.gui.MainWidget):
