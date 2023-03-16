@@ -511,6 +511,9 @@ class Menu(QMenu):
 
     def title(self):
         return self._title
+    
+    def set_title(self, title):
+        self._title = title
 
     def setupUI(self, app):
         super().__init__()
@@ -525,16 +528,21 @@ class Menu(QMenu):
             elif isinstance(item, Separator):
                 self.addSeparator()
 
-    def add(self, item, position=None):
+    def add(self, item, position=None, text=None):
+        if text is not None:
+            if isinstance(item, Action):
+                item.set_text(text)
+            elif isinstance(item, Menu):
+                item.set_title(text)  
+            elif isinstance(item, Separator):
+                pass
         if position is None:
             position = len(self._items)
         self._items.insert(position, item)
-        #self._items.append(item)
 
     def add_action(self, *args, **kwargs):
         action = Action(*args, **kwargs)
         self.add(action)
-        #return action
 
     def add_menu(self, *args, **kwargs):
         menu = Menu(*args, **kwargs)
@@ -570,6 +578,9 @@ class Action(QAction):
         self._icon = icon
         self._on_clicked = on_clicked
         self._is_clickable = is_clickable
+
+    def set_text(self, text):
+        self._text = text
         
     def setupUI(self, app):
         super().__init__()

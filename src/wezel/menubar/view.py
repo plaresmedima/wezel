@@ -34,9 +34,6 @@ def show_series_4d(app):
         app.addWidget(viewer, series.label())
 
 
-
-
-
 def show_dicom_header(app):
     for series in app.selected('Series'):
         viewer = displays.SeriesViewerMetaData(series)

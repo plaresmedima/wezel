@@ -3,28 +3,10 @@ import scipy.ndimage as ndi
 import pyvista as pv
 from pyvistaqt import QtInteractor
 from PySide2.QtWidgets import QVBoxLayout
-
-import wezel
-
+from wezel.gui import Action, MainWidget
 
 
-def show_mask_surface(app):
-    for series in app.selected('Series'):
-        viewer = SurfaceDisplay(series)
-        app.addWidget(viewer, title=series.label())
-
-def is_series_selected(app):
-    return app.nr_selected('Series') != 0
-
-action = wezel.gui.Action(
-    '3D surface (Mask)', 
-    on_clicked = show_mask_surface, 
-    is_clickable = is_series_selected,
-)
-
-
-
-class SurfaceDisplay(wezel.gui.MainWidget):
+class SurfaceDisplay(MainWidget):
 
     def __init__(self, series=None):
         super().__init__()
@@ -115,4 +97,15 @@ class SurfaceDisplay(wezel.gui.MainWidget):
         # verts, faces, _, _ = skimage.measure.marching_cubes(array, level=0.5, spacing=spacing, step_size=1.0)
         # cloud = pv.PolyData(verts, faces, n_faces=faces.shape[0])
         # surf = cloud.reconstruct_surface()
+
+
+def show_mask_surface(app):
+    for series in app.selected('Series'):
+        viewer = SurfaceDisplay(series)
+        app.addWidget(viewer, title=series.label())
+
+def is_series_selected(app):
+    return app.nr_selected('Series') != 0
+
+action_show_mask_surface = Action('3D surface (Mask)', on_clicked=show_mask_surface, is_clickable=is_series_selected)
 

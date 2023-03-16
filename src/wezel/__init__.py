@@ -1,6 +1,6 @@
 import wezel.gui
 from wezel.api import app
-import wezel.menu
+import wezel.menubar
 import wezel.widgets
 import wezel.displays
 

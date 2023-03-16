@@ -58,10 +58,9 @@ class Wezel:
         self.QApp.setWindowIcon(QIcon(wezel.icons.animal_dog))
         self.QApp.setStyleSheet(STYLESHEET)
         self.menubar = wezel.gui.MenuBar(
-            wezel.menu.folder.menu,
-            wezel.menu.edit.menu,
-            wezel.menu.view.menu,
-            wezel.menu.about.menu,
+            wezel.menubar.folder.menu,
+            wezel.menubar.edit.menu,
+            wezel.menubar.view.menu,
         )
 
     def show(self, **kwargs):    

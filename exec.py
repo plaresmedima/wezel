@@ -15,14 +15,27 @@
 import wezel
 from wezel.plugins import (
     hello_world, 
-    surface_display,
+    pyvista,
+    scipy,
+    measure,
+    transform,
+    segment,
 )
+
 
 if __name__ == "__main__":
 
     app = wezel.app()
-    app.add_menu(hello_world.menu, position=-1)
+    
+    app.add_menu(scipy.menu_filter)
+    app.add_menu(segment.menu)
+    app.add_menu(transform.menu)
+    app.add_menu(measure.menu)
+    app.add_menu(hello_world.menu)
+    app.add_menu(wezel.menubar.about.menu)
+
+    app.add_action(pyvista.action_show_mask_surface, 'View', 5)
     app.add_action(hello_world.hello_japan, 'Hello')
     app.add_action(hello_world.hello_china, 'Hello')
-    app.add_action(surface_display.action, 'View', 5)
+
     app.show()
