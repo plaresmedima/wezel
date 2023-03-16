@@ -77,10 +77,10 @@ class Wezel:
     def add_menu(self, menu, position=None):
         self.menubar.add(menu, position=position)
 
-    def add_action(self, action, title, position=None):
-        for menu in self.menubar.menus():
-            if menu.title() == title:
-                menu.add(action, position=position)
+    def add_action(self, action, menu='File', position=None):
+        for mbar_menu in self.menubar.menus():
+            if mbar_menu.title() == menu:
+                mbar_menu.add(action, position=position)
                 return
 
 

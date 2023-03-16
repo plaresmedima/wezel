@@ -34,8 +34,8 @@ if __name__ == "__main__":
     app.add_menu(hello_world.menu)
     app.add_menu(wezel.menubar.about.menu)
 
-    app.add_action(pyvista.action_show_mask_surface, 'View', 5)
-    app.add_action(hello_world.hello_japan, 'Hello')
-    app.add_action(hello_world.hello_china, 'Hello')
+    app.add_action(pyvista.action_show_mask_surface, menu='View', position=5)
+    app.add_action(hello_world.hello_japan, menu='Hello')
+    app.add_action(hello_world.hello_china, menu='Hello')
 
     app.show()
