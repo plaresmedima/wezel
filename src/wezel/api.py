@@ -52,7 +52,7 @@ QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
 
 class Wezel:
 
-    def __init__(self):
+    def __init__(self, project=None):
         self.log = logger()
         self.QApp = QApplication(sys.argv)
         self.QApp.setWindowIcon(QIcon(wezel.icons.animal_dog))
@@ -62,10 +62,11 @@ class Wezel:
             wezel.menubar.edit.menu,
             wezel.menubar.view.menu,
         )
+        self._project = project
 
-    def show(self, **kwargs):    
+    def show(self):    
         self.log.info('Launching Wezel!')
-        self.main = wezel.gui.Main(self, **kwargs)
+        self.main = wezel.gui.Main(self, project=self._project)
         self.menubar.setupUI(self.main)
         self.main.setMenuBar(self.menubar)
         self.main.show()
