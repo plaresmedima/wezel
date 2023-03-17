@@ -10,9 +10,6 @@ from .series_display_4d import (
 from .series_display import (
     SeriesDisplay,
 )
-from .surface_display import (
-    SurfaceDisplay,
-)
 from .plot_display import (
     PlotDisplay,
 )
