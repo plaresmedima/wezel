@@ -71,7 +71,7 @@ def calculate_sequential_k_means(app):
 
 
 action_k_means = Action('K-Means clustering', on_clicked=calculate_k_means, is_clickable=if_a_database_is_open)
-action_sequential_k_means = Action('K-Means clustering', on_clicked=calculate_sequential_k_means, is_clickable=if_a_database_is_open)
+action_sequential_k_means = Action('K-Means clustering (sequential)', on_clicked=calculate_sequential_k_means, is_clickable=if_a_database_is_open)
 
 menu_all = Menu('sklearn')
 menu_all.add(action_k_means)

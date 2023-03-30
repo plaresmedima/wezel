@@ -73,9 +73,11 @@ class UserInput(QDialog):
 
             elif field['type'] == "float":
                 widget = QDoubleSpinBox()
+                widget.setDecimals(6)
                 widget.setMinimum(float(field['minimum']))
                 widget.setMaximum(float(field['maximum']))
                 widget.setValue(float(field['value']))
+                
 
             elif field['type'] == "string":
                 widget = QLineEdit()
@@ -95,6 +97,7 @@ class UserInput(QDialog):
                 widget.addItems([v.label() for v in field["options"]])
                 if isinstance(field['default'], list):
                     field['default'] = None if field['default']==[] else field['default'][0]
+                    #field['default'] = field["options"][0] if field['default']==[] else field['default'][0]
                 if field['default'] is None:
                     idx = 0
                 else:

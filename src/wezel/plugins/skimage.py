@@ -6,6 +6,9 @@ from wezel.displays import TableDisplay
 def _if_a_series_is_selected(app):
     return app.nr_selected('Series') != 0
 
+def _if_a_database_is_open(app):
+    return app.database() is not None
+
 
 def _volume_features(app):
     # df = None
@@ -249,20 +252,6 @@ def _peak_local_max_3d(app):
     app.refresh()
 
 
-def _coregistration(app):
-    for series in app.selected('Series'):
-        seriesList = series.parent().children()
-        seriesLabels = [s.instance().SeriesDescription for s in seriesList]
-        cancel, f = app.dialog.input(
-            {"label":"Coregister to which fixed series?", "type":"dropdownlist", "list": seriesLabels, 'value':0},
-            {"label":"Attachment (smaller = smoother)", "type":"float", 'value':0.1, 'minimum':0.0}, 
-            title = "Please select fixed series")
-        if cancel:
-            return
-        fixed = seriesList[f[0]["value"]]
-        coregistered = skimage.coregister(series, fixed, attachment=f[1]["value"])
-        app.display(coregistered)
-    app.refresh()
 
 
 def _watershed_2d(app):
@@ -372,15 +361,72 @@ def _watershed_3d(app):
     app.refresh()
 
 
-def _coregister_series(app):
+def _warp(app):
+    series = app.database().series()
+    sel = app.selected('Series')
+    #sel = series[0] if sel==[] else sel[0]
     cancel, f = app.dialog.input(
-        {"label":"Attachment (smaller = smoother)", "type":"float", 'value':0.1, 'minimum':0.0}, 
-        title = "Please select coregistration settings")
+        {"label":"Image to deform", "type":"select record", "options": series, 'default':sel},
+        {"label":"Deformation field", "type":"select record", "options": series, 'default':sel},
+        title = "Please select warping parameters")
     if cancel:
         return
-    for series in app.selected('Series'):
-        coregistered = skimage.coregister_series(series, attachment=f[0]["value"])
-        app.display(coregistered)
+    try:
+        deformed = skimage.warp(f[0], f[1])
+        app.display(deformed)
+        app.refresh()
+    except ValueError as e:
+        app.dialog.information(str(e))
+
+
+def _coregistration_2d_to_2d(app):
+    series = app.database().series()
+    sel = app.selected('Series')
+    #sel = series[0] if sel==[] else sel[0]
+    cancel, f = app.dialog.input(
+        {"label":"Moving series", "type":"select record", "options": series, 'default':sel},
+        {"label":"Fixed series", "type":"select record", "options": series, 'default':sel},
+        {"label":"Attachment (smaller = smoother)", "type":"float", 'value':0.01, 'minimum':0.0}, 
+        title = "Please select 2D-2D coregistration parameters")
+    if cancel:
+        return
+    coregistered, deformation = skimage.coregister_2d_to_2d(f[0], f[1], attachment=f[2]["value"])
+    app.display(coregistered)
+    app.display(deformation)
+    app.refresh()
+
+
+def _coregistration_3d_to_3d(app):
+    series = app.database().series()
+    sel = app.selected('Series')
+    #sel = series[0] if sel==[] else sel[0]
+    cancel, f = app.dialog.input(
+        {"label":"Moving series", "type":"select record", "options": series, 'default':sel},
+        {"label":"Fixed series", "type":"select record", "options": series, 'default':sel},
+        {"label":"Attachment (smaller = smoother)", "type":"float", 'value':0.01, 'minimum':0.0}, 
+        title = "Please select 3D to 3D coregistration parameters")
+    if cancel:
+        return
+    coregistered, deformation = skimage.coregister_3d_to_3d(f[0], f[1], attachment=f[2]["value"])
+    app.display(coregistered)
+    app.display(deformation)
+    app.refresh()
+
+
+def _coregister_series_2d_to_2d(app):
+    series = app.database().series()
+    sel = app.selected('Series')
+    #sel = series[0] if sel==[] else sel[0]
+    cancel, f = app.dialog.input(
+        {"label":"Moving series", "type":"select record", "options": series, 'default':sel},
+        {"label":"Fixed series", "type":"select record", "options": series, 'default':sel},
+        {"label":"Attachment (smaller = smoother)", "type":"float", 'value':0.01, 'minimum':0.0}, 
+        title = "Please select 2D to 2D coregistration parameters")
+    if cancel:
+        return
+    coregistered, deformation = skimage.coregister_2d_to_2d(f[0], f[1], attachment=f[2]["value"])
+    app.display(coregistered)
+    app.display(deformation)
     app.refresh()
 
 
@@ -435,12 +481,15 @@ action_convex_hull_image_2d = Action('Convex Hull (2D)', on_clicked=_convex_hull
 action_convex_hull_image_3d = Action('Convex Hull (3D)', on_clicked=_convex_hull_image_3d, is_clickable=_if_a_series_is_selected)
 action_canny = Action('Canny Edge Detection', on_clicked=_canny, is_clickable=_if_a_series_is_selected)
 action_peak_local_max_3d = Action('Peak local maximum (3D)', on_clicked=_peak_local_max_3d, is_clickable=_if_a_series_is_selected)
-action_coregistration = Action('Coregister', on_clicked=_coregistration, is_clickable=_if_a_series_is_selected)
 action_watershed_2d = Action('Watershed (2D)', on_clicked=_watershed_2d, is_clickable=_if_a_series_is_selected)
 action_watershed_3d = Action('Watershed (3D)', on_clicked=_watershed_3d, is_clickable=_if_a_series_is_selected)
-action_coregister_series = Action('Coregister series', on_clicked=_coregister_series, is_clickable=_if_a_series_is_selected)
+action_warp = Action('Warp', on_clicked=_warp, is_clickable=_if_a_database_is_open)
+action_coregistration_2d_to_2d = Action('Coregister (2D to 2D)', on_clicked=_coregistration_2d_to_2d, is_clickable=_if_a_database_is_open)
+action_coregistration_3d_to_3d = Action('Coregister (3D to 3D)', on_clicked=_coregistration_3d_to_3d, is_clickable=_if_a_database_is_open)
+action_coregister_series_2d_to_2d = Action('Coregister series to mean (2D)', on_clicked=_coregister_series_2d_to_2d, is_clickable=_if_a_series_is_selected)
 action_mdr_constant_2d = Action('Model-driven registration (constant - 2D)', on_clicked=_mdr_constant_2d, is_clickable=_if_a_series_is_selected)
 action_mdr_constant_3d = Action('Model-driven registration (constant - 3D)', on_clicked=_mdr_constant_3d, is_clickable=_if_a_series_is_selected)
+
 
 menu_edit = Menu('Edit mask')
 menu_edit.add(action_area_opening_2d)
@@ -461,15 +510,21 @@ menu_create.add(action_watershed_2d)
 menu_create.add(action_watershed_3d)
 menu_create.add(action_canny)
 
-menu_coreg = Menu('Coregister')
-menu_coreg.add(action_coregistration)
-menu_coreg.add(action_coregister_series)
+menu_coreg = Menu('Coregister (skimage)')
+menu_coreg.add(action_coregistration_2d_to_2d)
+menu_coreg.add(action_coregistration_3d_to_3d)
+menu_coreg.add_separator()
+menu_coreg.add(action_warp)
+menu_coreg.add_separator()
+menu_coreg.add(action_coregister_series_2d_to_2d)
 menu_coreg.add(action_mdr_constant_2d)
 menu_coreg.add(action_mdr_constant_3d)
 
 menu_all = Menu('skimage')
 menu_all.add(action_volume_features)
 menu_all.add(action_peak_local_max_3d)
+menu_all.add(action_warp)
+menu_all.add_separator()
 menu_all.add(menu_edit)
 menu_all.add(menu_create)
 menu_all.add(menu_coreg)
@@ -496,3 +551,20 @@ menu_create_3d = Menu('Create mask (3D)')
 menu_create_3d.add(action_skeletonize_3d)
 menu_create_3d.add(action_convex_hull_image_3d)
 menu_create_3d.add(action_watershed_3d)
+
+menu_dark_spots = Menu('Remove dark spots')
+menu_dark_spots.add(action_closing_2d)
+menu_dark_spots.add(action_closing_3d)
+menu_dark_spots.add_separator()
+menu_dark_spots.add(action_area_closing_2d)
+menu_dark_spots.add(action_area_closing_3d)
+
+menu_bright_spots = Menu('Remove bright spots')
+menu_bright_spots.add(action_opening_2d)
+menu_bright_spots.add(action_opening_3d)
+menu_bright_spots.add_separator()
+menu_bright_spots.add(action_area_opening_2d)
+menu_bright_spots.add(action_area_opening_3d)
+menu_bright_spots.add_separator()
+menu_bright_spots.add(action_remove_small_holes_2d)
+menu_bright_spots.add(action_remove_small_holes_3d)
