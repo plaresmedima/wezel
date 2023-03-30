@@ -134,15 +134,16 @@ def new_patient(app):
 
 def split_series(app): 
     series = app.database().series()
-    sel = app.selected('Series')        
-    cancel, sel = app.dialog.input(
-        {"label":"Split series..", "type":"select record", "options": series, 'default': 0 if sel==[] else sel[0]},
+    sel = app.selected('Series')  
+    sel = series[0] if sel==[] else sel[0]      
+    cancel, f = app.dialog.input(
+        {"label":"Split series..", "type":"select record", "options": series, 'default': sel},
         {"label":"Split by which DICOM keyword?", "type":"string", "value": "ImageType"},
         title = "Input for series splitting")
     if cancel:
         return
     try:
-        split = sel[0].split_by(sel[1]['value'])
+        split = f[0].split_by(f[1]['value'])
     except Exception as e:
         app.dialog.information(e)
     else:

@@ -490,7 +490,10 @@ class MenuBar(QMenuBar):
         return menu
 
     def setupUI(self, app):
-        super().__init__()
+        try:
+            super().__init__()
+        except:
+            return
         for menu in self._menus:
             menu.setupUI(app)
             self.addMenu(menu)
@@ -516,7 +519,11 @@ class Menu(QMenu):
         self._title = title
 
     def setupUI(self, app):
-        super().__init__()
+        try:
+            super().__init__()
+        except:
+            # Do nothing if the object is already set up
+            return
         self.setTitle(self._title)
         for item in self._items:
             if isinstance(item, Action):
@@ -583,7 +590,10 @@ class Action(QAction):
         self._text = text
         
     def setupUI(self, app):
-        super().__init__()
+        try:
+            super().__init__()
+        except:
+            return
         self._app = app
         self.triggered.connect(self._run)
         self.setText(self._text)
@@ -598,7 +608,11 @@ class Action(QAction):
         if self._on_clicked is not None:
             try:
                 self._on_clicked(self._app)
+            except ValueError as e:
+                # If the user has selected a wrong value, inform them
+                self._app.dialog.information(str(e))
             except:
+                # Any other error - report as bug
                 self._app.dialog.error()
                 self._app.refresh()
         self._app.status.hide()

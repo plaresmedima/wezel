@@ -72,16 +72,14 @@ def _function_of_one_series(app):
 
 
 def _function_of_two_series(app):
-    selected = app.selected('Series')
-    if selected == []:
-        return
-    seriesList = selected[0].parent().parent().series()
-    value1 = seriesList.index(selected[0])
-    try:
-        value2 = seriesList.index(selected[1])
-    except:
-        value2 = value1
-    seriesLabels = [s.label() for s in seriesList]
+    series = app.database().series()
+    sel = app.selected('Series')
+    if len(sel) == 0:
+        sel = 2*[series[0]]
+    elif len(sel) == 1:
+        sel = 2*[sel[0]]
+    else:
+        sel = sel[:2]
     operation = [
         'series 1 + series 2', 
         'series 1 - series 2',
@@ -91,33 +89,48 @@ def _function_of_two_series(app):
         'average(series 1, series 2)',
         ]
     cancel, f = app.dialog.input(
-        {"label":"series 1", "type":"dropdownlist", "list": seriesLabels, 'value':value1},
-        {"label":"series 2", "type":"dropdownlist", "list": seriesLabels, 'value':value2},
+        {"label":"series 1", "type":"select record", "options": series, 'default':sel[0]},
+        {"label":"series 2", "type":"select record", "options": series, 'default':sel[1]},
         {"label":"Operation: ", "type":"dropdownlist", "list": operation, 'value':1},
         title = "Please select factors and operation")
     if cancel:
         return
-    series1 = seriesList[f[0]["value"]]
-    series2 = seriesList[f[1]["value"]]
-    operation = operation[f[2]["value"]]
-    result = scipy.image_calculator(series1, series2, operation)
+    result = scipy.image_calculator(f[0], f[1], operation[f[2]["value"]])
+    app.display(result)
+    app.refresh()
+
+
+def _function_of_n_series(app):
+    series = app.database().series()
+    sel = app.selected('Series')
+    operation = [
+        'sum', 
+        'mean',
+        ]
+    cancel, f = app.dialog.input(
+        {"label":"series", "type":"select records", "options": series, 'default':sel},
+        {"label":"Operation: ", "type":"dropdownlist", "list": operation, 'value':1},
+        title = "Please select factors and operation")
+    if cancel:
+        return
+    result = scipy.n_images_calculator(f[0], operation[f[1]["value"]])
     app.display(result)
     app.refresh()
         
 
 def _overlay_on(app):
-    for series in app.selected('Series'):
-        seriesList = series.parent().parent().series()
-        seriesLabels = [s.instance().SeriesDescription for s in seriesList]
-        cancel, f = app.dialog.input(
-            {"label":"Overlay on which series?", "type":"dropdownlist", "list": seriesLabels, 'value':0}, 
-            title = "Please select underlay series")
-        if cancel:
-            return
-        underlay = seriesList[f[0]["value"]]
-        mapped = scipy.map_to(series, underlay)
+    series = app.database().series()
+    sel = app.selected('Series')
+    cancel, f = app.dialog.input(
+        {"label":"Overlay series..", "type":"select records", "options": series, 'default':sel},
+        {"label":"On series..", "type":"select record", "options": series, 'default':sel}, 
+        title = "Overlay series")
+    if cancel:
+        return
+    for series in f[0]:
+        mapped = scipy.map_to(series, f[1])
         app.display(mapped)
-    app.refresh()
+        app.refresh()
 
 
 def _resample_3d(app):
@@ -926,7 +939,9 @@ action_roi_curve = Action('ROI curve', on_clicked=_roi_curve, is_clickable=_if_a
 action_roi_statistics = Action('ROI statistics', on_clicked=_roi_statistics, is_clickable=_if_a_database_is_open)
 
 action_function_of_one_series = Action('y = f(series)', on_clicked=_function_of_one_series, is_clickable=_if_a_series_is_selected)
-action_function_of_two_series = Action('y = f(series 1, series 2)', on_clicked=_function_of_two_series, is_clickable=_if_a_series_is_selected)
+action_function_of_two_series = Action('y = f(series 1, series 2)', on_clicked=_function_of_two_series, is_clickable=_if_a_database_is_open)
+action_function_of_n_series = Action('y = f(series 1, ..., series n)', on_clicked=_function_of_n_series, is_clickable=_if_a_database_is_open)
+
 action_fourier_shift = Action('Shift (2D)', on_clicked=_fourier_shift, is_clickable=_if_a_series_is_selected)
 action_distance_transform_edit_3d = Action('Distance transform (3D)', on_clicked=_distance_transform_edit_3d, is_clickable=_if_a_series_is_selected)
 action_binary_fill_holes = Action('Fill holes', on_clicked=_binary_fill_holes, is_clickable=_if_a_series_is_selected)
@@ -934,7 +949,7 @@ action_label_2d = Action('Label clusters (2D)', on_clicked=_label_2d, is_clickab
 action_label_3d = Action('Label clusters (3D)', on_clicked=_label_3d, is_clickable=_if_a_series_is_selected)
 action_extract_largest_cluster_3d = Action('Extract largest cluster (3D)', on_clicked=_extract_largest_cluster_3d, is_clickable=_if_a_series_is_selected)
 
-action_overlay_on = Action('Overlay on..', on_clicked=_overlay_on, is_clickable=_if_a_series_is_selected)
+action_overlay_on = Action('Overlay on..', on_clicked=_overlay_on, is_clickable=_if_a_database_is_open)
 action_zoom = Action('Resample (2D)', on_clicked=_zoom, is_clickable=_if_a_series_is_selected)
 action_resample_3d = Action('Resample (3D)', on_clicked=_resample_3d, is_clickable=_if_a_series_is_selected)
 action_resample_3d_isotropic = Action('Resample isotropic (3D)', on_clicked=_resample_3d_isotropic, is_clickable=_if_a_series_is_selected)
@@ -965,6 +980,7 @@ menu_roi.add(action_roi_statistics)
 menu_edit = Menu('Edit')
 menu_edit.add(action_function_of_one_series)
 menu_edit.add(action_function_of_two_series)
+menu_edit.add(action_function_of_n_series)
 menu_edit.add(action_fourier_shift)
 menu_edit.add(action_distance_transform_edit_3d)
 menu_edit.add(action_binary_fill_holes)

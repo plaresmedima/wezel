@@ -20,6 +20,13 @@ def calculate_maximum_intensity_projection(app):
     app.refresh()
 
 
+def calculate_euclidian_norm_projection(app):
+    for series in app.selected('Series'):
+        new_series = numpy.norm_projection(series)
+        app.display(new_series)
+    app.refresh()
+
+
 def calculate_absolute_threshold(app):
     # Get user input
     cancel, f = app.dialog.input(
@@ -70,6 +77,7 @@ def calculate_relative_threshold(app):
 
 action_mean_intensity_projection = Action('Mean Intensity Projection', on_clicked=calculate_mean_intensity_projection, is_clickable=is_series_selected)
 action_maximum_intensity_projection = Action('Maximum Intensity Projection', on_clicked=calculate_maximum_intensity_projection, is_clickable=is_series_selected)
+action_euclidian_norm_projection = Action('Euclidian Norm Projection', on_clicked=calculate_euclidian_norm_projection, is_clickable=is_series_selected)
 action_absolute_threshold = Action('Thresholding (absolute values)', on_clicked=calculate_absolute_threshold, is_clickable=is_series_selected)
 action_relative_threshold = Action('Thresholding (relative values)', on_clicked=calculate_relative_threshold, is_clickable=is_series_selected)
 
@@ -77,6 +85,13 @@ action_relative_threshold = Action('Thresholding (relative values)', on_clicked=
 menu_all = Menu('numpy')
 menu_all.add(action_maximum_intensity_projection)
 menu_all.add(action_mean_intensity_projection)
+menu_all.add(action_euclidian_norm_projection)
 menu_all.add(action_absolute_threshold)
 menu_all.add(action_relative_threshold)
+
+
+menu_project = Menu('Project on slices..')
+menu_project.add(action_maximum_intensity_projection)
+menu_project.add(action_mean_intensity_projection)
+menu_project.add(action_euclidian_norm_projection)
 
