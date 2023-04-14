@@ -34,6 +34,9 @@ if __name__ == "__main__":
     app.add_menu(measure.menu)
     app.add_menu(wezel.menubar.about.menu)
 
-    app.add_action(pyvista.action_show_mask_surface, menu='View', position=5)
+    app.add_separator(menu='View', position=5)
+    app.add_action(pyvista.action_show_mask_surface, menu='View', position=6)
+    app.add_action(pyvista.action_show_mask_surfaces, menu='View', position=7)
+    app.add_action(pyvista.action_show_mask_surfaces_with_reference, menu='View', position=8)
 
     app.show()

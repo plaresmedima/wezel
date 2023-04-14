@@ -84,6 +84,12 @@ class Wezel:
                 mbar_menu.add(action, position=position)
                 return
 
+    def add_separator(self, menu='File', position=None):
+        for mbar_menu in self.menubar.menus():
+            if mbar_menu.title() == menu:
+                mbar_menu.add_separator(position=position)
+                return
+
 
 
 def app(**kwargs):
