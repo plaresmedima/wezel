@@ -556,9 +556,9 @@ class Menu(QMenu):
         self.add(menu)
         return menu
 
-    def add_separator(self):
+    def add_separator(self, **kwargs):
         sep = Separator()
-        self.add(sep)
+        self.add(sep, **kwargs)
 
     def enable(self):
         for item in self._items:
@@ -608,9 +608,9 @@ class Action(QAction):
         if self._on_clicked is not None:
             try:
                 self._on_clicked(self._app)
-            except ValueError as e:
-                # If the user has selected a wrong value, inform them
-                self._app.dialog.information(str(e))
+            # except ValueError as e:
+            #     # If the user has selected a wrong value, inform them
+            #     self._app.dialog.information(str(e))
             except:
                 # Any other error - report as bug
                 self._app.dialog.error()

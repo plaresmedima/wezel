@@ -266,7 +266,10 @@ action_import_gif = Action('Import GIF file', on_clicked=import_gif, is_clickabl
 
 
 menu = Menu('File')
-menu.add(action_new_database)
+# Commented out for now
+# Needs testing and debugging
+# In current form risks deleting data
+# menu.add(action_new_database) 
 menu.add(action_open_database)
 menu.add(action_read_database)
 menu.add(action_save_database)

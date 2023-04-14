@@ -114,6 +114,34 @@ def _coregister_translation_3d(app):
     app.refresh()
 
 
+def _coregister_rigid_3d(app):
+    series = app.database().series()
+    sel = app.selected('Series')
+    cancel, f = app.dialog.input(
+        {"label":"Moving series", "type":"select record", "options":series, 'default':sel},
+        {"label":"Fixed series", "type":"select record", "options":series, 'default':sel},
+        title = "3D coregistration with translation & rotation")
+    if cancel:
+        return
+    coregistered = dipy.coregister_rigid_3d(f[0],f[1])
+    app.display(coregistered)
+    app.refresh()
+
+
+def _coregister_affine_3d(app):
+    series = app.database().series()
+    sel = app.selected('Series')
+    cancel, f = app.dialog.input(
+        {"label":"Moving series", "type":"select record", "options":series, 'default':sel},
+        {"label":"Fixed series", "type":"select record", "options":series, 'default':sel},
+        title = "3D coregistration with affine transformation")
+    if cancel:
+        return
+    coregistered = dipy.coregister_affine_3d(f[0],f[1])
+    app.display(coregistered)
+    app.refresh()
+
+
 def coregister_deformable_3d_to_3d(app):
     series = app.database().series()
     sel = app.selected('Series')
@@ -142,9 +170,9 @@ action_coregister_translation_3d = Action('Coregister (Translation - 3D)', on_cl
 action_align_moments_of_inertia_2d = Action('Align moments of inertia (2D)', on_clicked=_never, is_clickable=_never)
 action_align_moments_of_inertia_3d = Action('Align moments of inertia (3D)', on_clicked=_never, is_clickable=_never)
 action_coregister_rigid_2d = Action('Coregister (Rigid - 2D)', on_clicked=_never, is_clickable=_never)
-action_coregister_rigid_3d = Action('Coregister (Rigid - 3D)', on_clicked=_never, is_clickable=_never)
+action_coregister_rigid_3d = Action('Coregister (Rigid - 3D)', on_clicked=_coregister_rigid_3d, is_clickable=_if_a_database_is_open)
 action_coregister_affine_2d = Action('Coregister (Affine - 2D)', on_clicked=_never, is_clickable=_never)
-action_coregister_affine_3d = Action('Coregister (Affine - 3D)', on_clicked=_never, is_clickable=_never)
+action_coregister_affine_3d = Action('Coregister (Affine - 3D)', on_clicked=_coregister_affine_3d, is_clickable=_if_a_database_is_open)
 action_coregister_deformable_2d_to_2d = Action('Coregister (Deformable - 2D)', on_clicked=coregister_deformable_2d_to_2d, is_clickable=_if_a_database_is_open)
 action_coregister_deformable_3d_to_3d = Action('Coregister (Deformable - 3D)', on_clicked=coregister_deformable_3d_to_3d, is_clickable=_if_a_database_is_open)
 action_warp = Action('Warp', on_clicked=warp, is_clickable=_if_a_database_is_open)
