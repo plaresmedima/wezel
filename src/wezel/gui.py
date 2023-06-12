@@ -327,19 +327,19 @@ class Main(QMainWindow):
         widget = activeWindow.widget()
         if generation=='Instances':
             if hasattr(widget, 'instance'):
-                return [widget.instance()]
+                return [widget.instance]
         elif generation=='Series':
             if hasattr(widget, 'series'):
-                return [widget.series()]
+                return [widget.series] # bug fix widget.series() to widget.series (idem for others)
         elif generation=='Studies':
             if hasattr(widget, 'study'):
-                return [widget.study()]
+                return [widget.study]
         elif generation=='Patients':
             if hasattr(widget, 'patient'):
-                return [widget.patient()]
+                return [widget.patient]
         elif generation=='Databases':
             if hasattr(widget, 'database'):
-                return [widget.database()]
+                return [widget.database]
         return []
         
  

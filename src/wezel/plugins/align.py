@@ -4,6 +4,7 @@ from wezel.plugins import (
     elastix,
     skimage,
     scipy,
+    vreg,
 )
 
 menu = Menu('Align')
@@ -12,3 +13,4 @@ menu.add_separator()
 menu.add(elastix.menu)
 menu.add(skimage.menu_coreg)
 menu.add(dipy.menu_coreg)
+menu.add(vreg.menu_coreg)

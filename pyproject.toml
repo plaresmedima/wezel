@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "wezel"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
   "PySide2",
   "dbdicom",
@@ -45,9 +45,9 @@ dependencies = [
 description = "Prototyping medical imaging applications"
 readme = "README.md"
 authors = [
+  { name = "Steven Sourbron", email = "s.sourbron@sheffield.ac.uk" },
   { name = "Steve Shillitoe", email = "s.shillitoe@sheffield.ac.uk" },
   { name = "Joao Almeida e Sousa", email = "j.g.sousa@sheffield.ac.uk" }, 
-  { name = "Steven Sourbron", email = "s.sourbron@sheffield.ac.uk" }
   ]
 license = { file = "LICENSE" }
 classifiers = [

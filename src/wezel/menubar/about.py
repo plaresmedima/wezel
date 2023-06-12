@@ -11,7 +11,7 @@ def about_fugue(app):
 
 
 
-action_about_wezel = Action('Wezel', on_clicked=about_wezel, icon=icons.animal_dog)
+action_about_wezel = Action('Wezel', on_clicked=about_wezel, icon=icons.wezel_icon_transparent)
 action_about_fugue = Action('Fugue icons', on_clicked=about_fugue)
 
 

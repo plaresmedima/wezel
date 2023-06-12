@@ -66,6 +66,8 @@ __all__ = [
     'wand',
     'wand_hat',
     'wezel', 
+    'wezel_icon',
+    'wezel_icon_transparent',
 ]
 
 # filepaths need to be identified with importlib_resources
@@ -92,6 +94,8 @@ f = importlib_resources.files('wezel.icons.my_icons')
 favicon = str(f.joinpath('favicon.ico'))
 slider_icon = str(f.joinpath('slider_icon.png'))
 question_mark = str(f.joinpath('question-mark.png'))
+wezel_icon = str(f.joinpath('wezel-icon.png'))
+wezel_icon_transparent = str(f.joinpath('wezel-icon-transparent.png'))
 
 f = importlib_resources.files('wezel.icons.fugue_icons')
 
