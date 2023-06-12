@@ -157,12 +157,13 @@ class SurfaceDisplay(MainWidget):
         array = _zeropad(arr)
 
         ## Smooth surface
-        array = ndi.gaussian_filter(array, 0.5)
+        #array = ndi.gaussian_filter(array, 0.5)
 
         series.status.message('Displaying surface...')
 
         # Extracting surface
         surf = self.grid.contour([0.5], array.flatten(order="F"), method='marching_cubes')
+        #surf = self.grid.contour([0.0], array.flatten(order="F"), method='marching_cubes')
         if triangulate:
             surf = surf.reconstruct_surface()
 
@@ -240,10 +241,11 @@ def _show_mask_surfaces(app):
     cancel, f = app.dialog.input(
         {'label':'Base surface to display', 'type':'select record', 'options':all, 'default':sel},
         {'label':'Other surface(s)', 'type':'select records', 'options':all, 'default':sel},
+        {'label':'Triangulate surface?', 'type':'dropdownlist', 'list':['Yes','No'], 'value':1},
     )
     if cancel:
         return
-    viewer = SurfaceDisplay([f[0]] + f[1])
+    viewer = SurfaceDisplay([f[0]] + f[1], triangulate=f[2]['value']==0)
     app.addWidget(viewer, title=f[0].label())
 
 
@@ -253,10 +255,11 @@ def _show_mask_surfaces_with_reference(app):
     cancel, f = app.dialog.input(
         {'label':'Reference surface', 'type':'select record', 'options':all, 'default':sel},
         {'label':'Surface(s) to display', 'type':'select records', 'options':all, 'default':sel},
+        {'label':'Triangulate surface?', 'type':'dropdownlist', 'list':['Yes','No'], 'value':1},
     )
     if cancel:
         return
-    viewer = SurfaceDisplay(f[1], reference=f[0])
+    viewer = SurfaceDisplay(f[1], reference=f[0], triangulate=f[2]['value']==0)
     app.addWidget(viewer, title=f[1][0].label())
 
 

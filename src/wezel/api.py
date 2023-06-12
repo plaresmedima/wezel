@@ -55,7 +55,8 @@ class Wezel:
     def __init__(self, project=None):
         self.log = logger()
         self.QApp = QApplication(sys.argv)
-        self.QApp.setWindowIcon(QIcon(wezel.icons.animal_dog))
+        #self.QApp.setWindowIcon(QIcon(wezel.icons.animal_dog))
+        self.QApp.setWindowIcon(QIcon(wezel.icons.wezel_icon_transparent))
         self.QApp.setStyleSheet(STYLESHEET)
         self.menubar = wezel.gui.MenuBar(
             wezel.menubar.folder.menu,
