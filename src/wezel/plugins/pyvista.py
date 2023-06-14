@@ -56,11 +56,13 @@ class SurfaceDisplay(MainWidget):
         layout.addWidget(self.plotter)
         self.setLayout(layout)
 
+    def series(self):
+        return self._series
 
     def setSeries(self, series, color=0, opacity=1.0, triangulate=False):
 
         # Save for reuse
-        self.series = series
+        self._series = series
         if series is None:
             return
 
@@ -84,7 +86,7 @@ class SurfaceDisplay(MainWidget):
         # If there are multiple volumes, show only the first one
         arr, _ = series.array('SliceLocation', pixels_first=True, first_volume=True)
 
-        series.status.message('Preprocessing mask...')
+        series.message('Preprocessing mask...')
 
         # Scale in the range [0,1] so it can be treated as mask
         max = np.amax(arr)
@@ -138,10 +140,10 @@ class SurfaceDisplay(MainWidget):
 
         if series is None:
             return
-        if self.series is None:
+        if self._series is None:
             return
         
-        arr, _ = scipy.mask_array(series, on=self.series)
+        arr, _ = scipy.mask_array(series, on=self._series)
         if isinstance(arr, list):
             msg = 'Cannot display reference as a single volume \n'
             msg += 'This series contains multiple slice groups.'
