@@ -27,8 +27,9 @@ class UserInput(QDialog):
                 {"type":"string", "label":"Name of the field", "value":"My string"}
                 {"type":"dropdownlist", "label":"Name of the field", "list":["item 1",...,"item n" ], "value":2}
                 {"type":"listview", "label":"Name of the field", "list":["item 1",...,"item n"], "value": [0,3]}
-                {"type":"select record", "label":"Name of the field", "options":["item 1",...,"item n" ], default":item 1} # Note: default can be a list
-                {"type":"select records", "label":"Name of the field", "options":["item 1",...,"item n"], "default": [item 1, item 3]}
+                {"type":"select record", "label":"Name of the field", "options":[record 1,..., record n], default":record 1} 
+                {"type":"select records", "label":"Name of the field", "options":[record 1,..., record n], "default": [record 1, record 3]}
+                {"type":"select optional record", "label":"Name of the field", "options":[record 1,..., record n], default":None} 
             
             Widgets are created in the same order on the dialog they occupy in the dictionary; ie., 
             the first dictionary item is uppermost input widget on the dialog 
@@ -78,7 +79,6 @@ class UserInput(QDialog):
                 widget.setMaximum(float(field['maximum']))
                 widget.setValue(float(field['value']))
                 
-
             elif field['type'] == "string":
                 widget = QLineEdit()
                 widget.setText(str(field['value']))
@@ -97,7 +97,22 @@ class UserInput(QDialog):
                 widget.addItems([v.label() for v in field["options"]])
                 if isinstance(field['default'], list):
                     field['default'] = None if field['default']==[] else field['default'][0]
-                    #field['default'] = field["options"][0] if field['default']==[] else field['default'][0]
+                if field['default'] is None:
+                    idx = 0
+                else:
+                    try:
+                        idx = field["options"].index(field['default'])
+                    except:
+                        msg = 'Default value is not in the list of options provided'
+                        raise ValueError(msg)
+                widget.setCurrentIndex(idx)
+
+            elif field['type'] == "select optional record":
+                widget = QComboBox()
+                widget.addItems(['None'] + [v.label() for v in field["options"]])
+                field['options'] = [None] + field['options']
+                if isinstance(field['default'], list):
+                    field['default'] = None if field['default']==[] else field['default'][0]
                 if field['default'] is None:
                     idx = 0
                 else:
@@ -164,6 +179,7 @@ class UserInput(QDialog):
             "listview", 
             "select record", 
             "select records",
+            "select optional record",
         )
     
         # set default values for items that are not provided by the user
@@ -189,6 +205,10 @@ class UserInput(QDialog):
             elif field["type"] == "select record":
                 if "default" not in field: 
                     field["default"] = field['options'][0]
+
+            elif field["type"] == "select optional record":
+                if "default" not in field: 
+                    field["default"] = None
 
             elif field["type"] == "string":
                 if "value" not in field: 
@@ -247,6 +267,10 @@ class UserInput(QDialog):
                 output.append(field)
 
             elif field["type"] == "select record":
+                record = field["options"][widget.currentIndex()]
+                output.append(record)
+
+            elif field["type"] == "select optional record":
                 record = field["options"][widget.currentIndex()]
                 output.append(record)
 

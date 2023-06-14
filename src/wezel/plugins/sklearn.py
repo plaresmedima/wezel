@@ -22,7 +22,7 @@ def calculate_k_means(app):
         {"label":"Additional features (optional)", "type":"listview", "list": series_labels, 'value':features_index},
         {"label":"Mask", "type":"dropdownlist", "list": ['None'] + series_labels, 'value':0},
         {"label":"Number of clusters", "type":"integer", 'value':2, 'minimum':2}, 
-        {"label":"Save clusters in multiple series?", "type":"dropdownlist", "list": ['No', 'Yes'], 'value':1},
+        {"label":"Save clusters in multiple series?", "type":"dropdownlist", "list": ['No', 'Yes'], 'value':0},
         title = "Please select input for K-Means clustering")
     if cancel:
         return
