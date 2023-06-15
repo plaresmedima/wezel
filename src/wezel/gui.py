@@ -11,6 +11,7 @@ from PySide2.QtGui import QIcon
 
 import dbdicom as db
 import wezel
+import sys
 
 
 # Examples of style sheets
@@ -213,6 +214,7 @@ class Main(QMainWindow):
             dialog = self.dialog)
         self.display(folder)
         self.status.hide()
+
 
     def close(self):
         """Closes the application."""
@@ -498,6 +500,11 @@ class MenuBar(QMenuBar):
             menu.setupUI(app)
             self.addMenu(menu)
         self.enable()
+        
+        # On Mac - use toolbar on window to resolve installer issues
+        if sys.platform == 'darwin':
+            self.setNativeMenuBar(False)
+            self.show()
 
     def enable(self):
         for menu in self._menus:
