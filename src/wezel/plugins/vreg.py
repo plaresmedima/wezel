@@ -48,19 +48,28 @@ def _rigid(app):
         {"label":"Static series", "type":"select record", "options": series, 'default':sel},
         {"label":"Target region", "type":"select optional record", "options": series},
         {"label":"Apply transformation to:", "type":"select records", "options": series, 'default':[]},
+        {"label":"Apply passive transformation?", "type":"dropdownlist", 'list':['Yes', 'No'], 'value':1},
         {"label":"Tolerance (smaller = slower but more accurate)", "type":"float", 'value':0.1, 'minimum':0.001}, 
         {"label":"Cost function", "type":"dropdownlist", 'list':metric, 'value':1}, 
         title = "Please select coregistration parameters (rigid transformation)")
     if cancel:
         return
-    params = vreg.find_rigid_transformation(f[0], f[1], tolerance=f[4]["value"], metric=metric[f[5]["value"]], region=f[2])
+    params = vreg.find_rigid_transformation(f[0], f[1], 
+            tolerance=f[5]["value"], 
+            metric=metric[f[6]["value"]], 
+            region=f[2])
 
     # Save results as new dicom series
     f[0].message('Applying rigid transformation..')
     to_move = f[3] if f[0] in f[3] else [f[0]] + f[3]
     for series in to_move:
         try:
-            series_moved = vreg.apply_rigid_transformation(series, params, target=f[1])
+            if f[4]['value'] == 1:
+                series_moved = vreg.apply_rigid_transformation(
+                    series, params, target=f[1])
+            else:
+                series_moved = vreg.apply_passive_rigid_transformation(
+                    series, params)
             app.display(series_moved)
         except ValueError:
             msg = 'Series ' + series.instance().SeriesDescription + ' cannot be moved. \n'
@@ -115,7 +124,11 @@ def _sbs_rigid(app):
     if cancel:
         return
     
-    params = vreg.find_sbs_rigid_transformation(f[0], f[1], tolerance=f[5]["value"], metric=metric[f[6]["value"]], resolutions=[1], region=f[2])
+    params = vreg.find_sbs_rigid_transformation(f[0], f[1], 
+            tolerance=f[5]["value"], 
+            metric=metric[f[6]["value"]], 
+            resolutions=[1], 
+            region=f[2])
 
     # Save results as new dicom series
     f[0].message('Applying slice-by-slice translation..')
