@@ -5,7 +5,7 @@ import pyvista as pv
 from pyvistaqt import QtInteractor
 from PySide2.QtWidgets import QVBoxLayout
 from wezel.gui import Action, MainWidget
-from dbdicom.wrappers import scipy
+from dbdicom.extensions import scipy
 
 
 class SurfaceDisplay(MainWidget):

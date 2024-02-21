@@ -1,5 +1,5 @@
 import numpy as np
-from dbdicom.wrappers import scipy
+from dbdicom.extensions import scipy
 
 from wezel.displays import TableDisplay, PlotDisplay
 from wezel.gui import Action, Menu

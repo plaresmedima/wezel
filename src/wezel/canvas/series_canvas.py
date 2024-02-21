@@ -2,7 +2,7 @@ import timeit
 import random
 import numpy as np
 
-from dbdicom.wrappers import scipy
+from dbdicom.extensions import scipy
 
 from wezel import widgets, canvas
 from wezel.canvas.utils import colormap_to_LUT

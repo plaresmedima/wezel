@@ -1,4 +1,4 @@
-from dbdicom.wrappers import sklearn
+from dbdicom.extensions import sklearn
 from wezel.gui import Action, Menu
 
 

@@ -1,4 +1,4 @@
-from dbdicom.wrappers import dipy
+from dbdicom.extensions import dipy
 from wezel.gui import Action, Menu
 
 

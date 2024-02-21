@@ -1,4 +1,4 @@
-from dbdicom.wrappers import vreg
+from dbdicom.extensions import vreg
 from wezel.gui import Action, Menu
 
 
