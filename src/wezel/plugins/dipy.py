@@ -80,7 +80,49 @@ def _align_center_of_mass_3d(app):
     app.refresh()
 
 
-def coregister_deformable_2d_to_2d(app):
+def _coregister_translation_2d(app):
+    series = app.database().series()
+    sel = app.selected('Series')
+    cancel, f = app.dialog.input(
+        {"label":"Moving series", "type":"select record", "options":series, 'default':sel},
+        {"label":"Fixed series", "type":"select record", "options":series, 'default':sel},
+        title = "2D coregistration with translation")
+    if cancel:
+        return
+    coregistered = dipy.coregister_translation_2d(f[0],f[1])
+    app.display(coregistered)
+    app.refresh()
+
+
+def _coregister_rigid_2d(app):
+    series = app.database().series()
+    sel = app.selected('Series')
+    cancel, f = app.dialog.input(
+        {"label":"Moving series", "type":"select record", "options":series, 'default':sel},
+        {"label":"Fixed series", "type":"select record", "options":series, 'default':sel},
+        title = "2D coregistration with rigid transform")
+    if cancel:
+        return
+    coregistered = dipy.coregister_rigid_2d(f[0],f[1])
+    app.display(coregistered)
+    app.refresh()
+
+
+def _coregister_affine_2d(app):
+    series = app.database().series()
+    sel = app.selected('Series')
+    cancel, f = app.dialog.input(
+        {"label":"Moving series", "type":"select record", "options":series, 'default':sel},
+        {"label":"Fixed series", "type":"select record", "options":series, 'default':sel},
+        title = "2D coregistration with affine transform")
+    if cancel:
+        return
+    coregistered = dipy.coregister_affine_2d(f[0],f[1])
+    app.display(coregistered)
+    app.refresh()
+
+
+def coregister_deformable_2d(app):
     series = app.database().series()
     sel = app.selected('Series')
     metric = ["Cross-Correlation", 'Expectation-Maximization', 'Sum of Squared Differences']
@@ -91,7 +133,7 @@ def coregister_deformable_2d_to_2d(app):
         title = "Please select 2D to 2D coregistration settings")
     if cancel:
         return
-    coregistered, deformation = dipy.coregister_2d_to_2d(f[0], f[1],
+    coregistered, deformation = dipy.coregister_deformable_2d(f[0], f[1],
         transformation = 'Symmetric Diffeomorphic',
         metric = metric[f[2]["value"]],
     )
@@ -142,7 +184,7 @@ def _coregister_affine_3d(app):
     app.refresh()
 
 
-def coregister_deformable_3d_to_3d(app):
+def coregister_deformable_3d(app):
     series = app.database().series()
     sel = app.selected('Series')
     metric = ["Cross-Correlation", 'Expectation-Maximization', 'Sum of Squared Differences']
@@ -153,7 +195,7 @@ def coregister_deformable_3d_to_3d(app):
         title = "Please select 3D to 3D coregistration settings")
     if cancel:
         return
-    coregistered, deformation = dipy.coregister_3d_to_3d(f[0], f[1],
+    coregistered, deformation = dipy.coregister_deformable_3d(f[0], f[1],
         transformation = 'Symmetric Diffeomorphic',
         metric = metric[f[2]["value"]])
     app.display(coregistered)
@@ -166,15 +208,16 @@ action_median_otsu = Action('Median Otsu segmentation', on_clicked=median_otsu, 
 
 # Coregistration
 action_align_center_of_mass_3d = Action('Align center of mass (3D)', on_clicked=_align_center_of_mass_3d, is_clickable=_if_a_database_is_open)
-action_coregister_translation_3d = Action('Coregister (Translation - 3D)', on_clicked=_coregister_translation_3d, is_clickable=_if_a_database_is_open)
 action_align_moments_of_inertia_2d = Action('Align moments of inertia (2D)', on_clicked=_never, is_clickable=_never)
 action_align_moments_of_inertia_3d = Action('Align moments of inertia (3D)', on_clicked=_never, is_clickable=_never)
-action_coregister_rigid_2d = Action('Coregister (Rigid - 2D)', on_clicked=_never, is_clickable=_never)
+action_coregister_translation_2d = Action('Coregister (Translation - 2D)', on_clicked=_coregister_translation_2d, is_clickable=_if_a_database_is_open)
+action_coregister_translation_3d = Action('Coregister (Translation - 3D)', on_clicked=_coregister_translation_3d, is_clickable=_if_a_database_is_open)
+action_coregister_rigid_2d = Action('Coregister (Rigid - 2D)', on_clicked=_coregister_rigid_2d, is_clickable=_if_a_database_is_open)
 action_coregister_rigid_3d = Action('Coregister (Rigid - 3D)', on_clicked=_coregister_rigid_3d, is_clickable=_if_a_database_is_open)
-action_coregister_affine_2d = Action('Coregister (Affine - 2D)', on_clicked=_never, is_clickable=_never)
+action_coregister_affine_2d = Action('Coregister (Affine - 2D)', on_clicked=_coregister_affine_2d, is_clickable=_if_a_database_is_open)
 action_coregister_affine_3d = Action('Coregister (Affine - 3D)', on_clicked=_coregister_affine_3d, is_clickable=_if_a_database_is_open)
-action_coregister_deformable_2d_to_2d = Action('Coregister (Deformable - 2D)', on_clicked=coregister_deformable_2d_to_2d, is_clickable=_if_a_database_is_open)
-action_coregister_deformable_3d_to_3d = Action('Coregister (Deformable - 3D)', on_clicked=coregister_deformable_3d_to_3d, is_clickable=_if_a_database_is_open)
+action_coregister_deformable_2d = Action('Coregister (Deformable - 2D)', on_clicked=coregister_deformable_2d, is_clickable=_if_a_database_is_open)
+action_coregister_deformable_3d = Action('Coregister (Deformable - 3D)', on_clicked=coregister_deformable_3d, is_clickable=_if_a_database_is_open)
 action_warp = Action('Warp', on_clicked=warp, is_clickable=_if_a_database_is_open)
 action_invert_deformation = Action('Invert deformation field', on_clicked=_invert_deformation_field, is_clickable=_if_a_database_is_open)
 
@@ -193,8 +236,8 @@ menu_all.add_separator()
 menu_all.add(action_coregister_affine_2d)
 menu_all.add(action_coregister_affine_3d)
 menu_all.add_separator()
-menu_all.add(action_coregister_deformable_2d_to_2d)
-menu_all.add(action_coregister_deformable_3d_to_3d)
+menu_all.add(action_coregister_deformable_2d)
+menu_all.add(action_coregister_deformable_3d)
 menu_all.add_separator()
 menu_all.add(action_warp)
 menu_all.add(action_invert_deformation)
@@ -203,6 +246,7 @@ menu_all.add(action_invert_deformation)
 
 menu_coreg = Menu('Coregister (dipy)')
 menu_coreg.add(action_align_center_of_mass_3d)
+menu_coreg.add(action_coregister_translation_2d)
 menu_coreg.add(action_coregister_translation_3d)
 menu_coreg.add_separator()
 menu_coreg.add(action_align_moments_of_inertia_2d)
@@ -213,8 +257,8 @@ menu_coreg.add_separator()
 menu_coreg.add(action_coregister_affine_2d)
 menu_coreg.add(action_coregister_affine_3d)
 menu_coreg.add_separator()
-menu_coreg.add(action_coregister_deformable_2d_to_2d)
-menu_coreg.add(action_coregister_deformable_3d_to_3d)
+menu_coreg.add(action_coregister_deformable_2d)
+menu_coreg.add(action_coregister_deformable_3d)
 menu_coreg.add_separator()
 menu_coreg.add(action_warp)
 menu_coreg.add(action_invert_deformation)

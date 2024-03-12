@@ -1009,8 +1009,6 @@ def _gaussian_filter_3d(app):
 
 
 
-
-
 action_roi_curve = Action('ROI curve', on_clicked=_roi_curve, is_clickable=_if_a_database_is_open)
 action_roi_statistics = Action('ROI statistics', on_clicked=_roi_statistics, is_clickable=_if_a_database_is_open)
 

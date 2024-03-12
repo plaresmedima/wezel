@@ -49,7 +49,7 @@ authors = [
   { name = "Steve Shillitoe", email = "s.shillitoe@sheffield.ac.uk" },
   { name = "Joao Almeida e Sousa", email = "j.g.sousa@sheffield.ac.uk" }, 
   ]
-license = { file = "LICENSE" }
+#license = "Apache-2.0"
 classifiers = [
   # How mature is this project? Common values are
   #   3 - Alpha

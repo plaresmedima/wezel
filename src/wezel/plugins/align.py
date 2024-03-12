@@ -8,7 +8,8 @@ from wezel.plugins import (
 )
 
 menu = Menu('Align')
-menu.add(scipy.action_overlay_on)
+#menu.add(scipy.action_overlay_on)
+menu.add(vreg.action_overlay_on)
 menu.add_separator()
 menu.add(vreg.action_translation)
 menu.add(vreg.action_sbs_translation)
