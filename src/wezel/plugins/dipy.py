@@ -66,6 +66,20 @@ def warp(app):
     app.refresh()
 
 
+def _align_center_of_mass_2d(app):
+    series = app.database().series()
+    sel = app.selected('Series')
+    cancel, f = app.dialog.input(
+        {"label":"Moving image", "type":"select record", "options":series, 'default':sel},
+        {"label":"Fixed image", "type":"select record", "options":series, 'default':sel},
+        title = "Align center of mass (2D)")
+    if cancel:
+        return
+    moved = dipy.align_center_of_mass_2d(f[0], f[1])
+    app.display(moved)
+    app.refresh()
+
+
 def _align_center_of_mass_3d(app):
     series = app.database().series()
     sel = app.selected('Series')
@@ -207,6 +221,7 @@ def coregister_deformable_3d(app):
 action_median_otsu = Action('Median Otsu segmentation', on_clicked=median_otsu, is_clickable=_if_a_series_is_selected)
 
 # Coregistration
+action_align_center_of_mass_2d = Action('Align center of mass (2D)', on_clicked=_align_center_of_mass_2d, is_clickable=_if_a_database_is_open)
 action_align_center_of_mass_3d = Action('Align center of mass (3D)', on_clicked=_align_center_of_mass_3d, is_clickable=_if_a_database_is_open)
 action_align_moments_of_inertia_2d = Action('Align moments of inertia (2D)', on_clicked=_never, is_clickable=_never)
 action_align_moments_of_inertia_3d = Action('Align moments of inertia (3D)', on_clicked=_never, is_clickable=_never)
@@ -225,7 +240,9 @@ action_invert_deformation = Action('Invert deformation field', on_clicked=_inver
 menu_all = Menu('dipy')
 menu_all.add(action_median_otsu)
 menu_all.add_separator()
+menu_all.add(action_align_center_of_mass_2d)
 menu_all.add(action_align_center_of_mass_3d)
+menu_all.add(action_coregister_translation_2d)
 menu_all.add(action_coregister_translation_3d)
 menu_all.add_separator()
 menu_all.add(action_align_moments_of_inertia_2d)
@@ -245,12 +262,15 @@ menu_all.add(action_invert_deformation)
 
 
 menu_coreg = Menu('Coregister (dipy)')
+menu_coreg.add(action_align_center_of_mass_2d)
 menu_coreg.add(action_align_center_of_mass_3d)
-menu_coreg.add(action_coregister_translation_2d)
-menu_coreg.add(action_coregister_translation_3d)
 menu_coreg.add_separator()
 menu_coreg.add(action_align_moments_of_inertia_2d)
 menu_coreg.add(action_align_moments_of_inertia_3d)
+menu_coreg.add_separator()
+menu_coreg.add(action_coregister_translation_2d)
+menu_coreg.add(action_coregister_translation_3d)
+menu_coreg.add_separator()
 menu_coreg.add(action_coregister_rigid_2d)
 menu_coreg.add(action_coregister_rigid_3d)
 menu_coreg.add_separator()
