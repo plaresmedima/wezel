@@ -1,4 +1,4 @@
-from dbdicom.wrappers import elastix
+from dbdicom.extensions import elastix
 from wezel.gui import Action, Menu
 
 

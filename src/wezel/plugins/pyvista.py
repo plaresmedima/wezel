@@ -5,7 +5,7 @@ import pyvista as pv
 from pyvistaqt import QtInteractor
 from PySide2.QtWidgets import QVBoxLayout
 from wezel.gui import Action, MainWidget
-from dbdicom.wrappers import scipy
+from dbdicom.extensions import vreg
 
 
 class SurfaceDisplay(MainWidget):
@@ -103,7 +103,8 @@ class SurfaceDisplay(MainWidget):
         series.status.message('Displaying surface...')
 
         # Extracting surface
-        self.grid = pv.UniformGrid(dimensions=array.shape, spacing=spacing)
+        #self.grid = pv.ImageData(dimensions=array.shape, spacing=spacing)
+        self.grid = pv.ImageData(dimensions=array.shape, spacing=spacing)
         surf = self.grid.contour([0.5], array.flatten(order="F"), method='marching_cubes')
         if triangulate:
             surf = surf.reconstruct_surface()
@@ -143,7 +144,7 @@ class SurfaceDisplay(MainWidget):
         if self._series is None:
             return
         
-        arr, _ = scipy.mask_array(series, on=self._series)
+        arr, _ = vreg.mask_array(series, on=self._series)
         if isinstance(arr, list):
             msg = 'Cannot display reference as a single volume \n'
             msg += 'This series contains multiple slice groups.'
