@@ -1,6 +1,10 @@
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
 from dbdicom.extensions import vreg
 from wezel.gui import Action, Menu
-from wezel.displays import TableDisplay
+from wezel.displays import TableDisplay, MatplotLibDisplay
 
 
 def _if_a_series_is_selected(app):
@@ -252,8 +256,25 @@ def _roi_statistics(app):
     app.status.hide()
 
 
+def _roi_histogram(app):
+    all_series = app.database().series()
+    cancel, f = app.dialog.input(
+        {'label':"Region(s) of interest", "type":"select record", "options": all_series},
+        {'label':"Series", "type":"select record", "options": all_series},
+        {'label':'Number of bins', 'type': 'integer', 'value': 20},
+        title = "Please select input for ROI histogram")
+    if cancel:
+        return
+    data = vreg.mask_values(f[0], f[1]) 
+    fig, ax = plt.subplots(1,1,figsize=(5,5))
+    ax.hist(data, bins=f[2]['value'])
+    app.addWidget(MatplotLibDisplay(fig), 'ROI histogram')
+    app.status.hide()
+
+
 action_overlay_on = Action('Overlay on..', on_clicked=_overlay_on, is_clickable=_if_a_database_is_open)
 action_roi_statistics = Action('ROI statistics', on_clicked=_roi_statistics, is_clickable=_if_a_database_is_open)
+action_roi_histogram = Action('ROI histogram', on_clicked=_roi_histogram, is_clickable=_if_a_database_is_open)
 
 action_translation = Action('Translation', on_clicked=_translation, is_clickable=_if_a_database_is_open)
 action_rigid = Action('Rigid transformation', on_clicked=_rigid, is_clickable=_if_a_database_is_open)
@@ -265,9 +286,12 @@ action_sbs_rigid = Action('Slice-by-slice rigid transformation', on_clicked=_sbs
 action_sbs_rigid_around_com_sos = Action('Slice-by-slice rigid around center of mass (cost = sum of squares)', on_clicked=_sbs_rigid_around_com_sos, is_clickable=_if_a_database_is_open)
 
 
+menu_meas = Menu('Measure (vreg)')
+menu_meas.add(action_roi_statistics)
+menu_meas.add(action_roi_histogram)
+
 menu_coreg = Menu('Coregister (vreg)')
 menu_coreg.add(action_overlay_on)
-menu_coreg.add(action_roi_statistics)
 menu_coreg.add_separator()
 menu_coreg.add(action_translation)
 

@@ -37,6 +37,9 @@ def _roi_curve(app):
     app.status.hide()
 
 
+
+
+
 def _roi_statistics(app):
     all_series = app.database().series()
     cancel, f = app.dialog.input(
@@ -58,6 +61,8 @@ def _function_of_one_series(app):
         'exp(- series)',
         'exp(+ series)',
         'integer(series)',
+        'abs(series)',
+        'a * series',
         ]
     cancel, f = app.dialog.input(
         {"label":"Operation: ", "type":"dropdownlist", "list": operation, 'value':0},
@@ -65,8 +70,17 @@ def _function_of_one_series(app):
     if cancel:
         return
     operation = operation[f[0]["value"]]
+    if operation == 'a * series':
+        cancel, g = app.dialog.input(
+            {"label":"Value of scale factor a: ", "type":"float", 'value':1.0},
+            title = "Please provide the scale factor")
+        if cancel:
+            return  
+        param = g[0]["value"]  
+    else:
+        param = None
     for series in app.selected('Series'):
-        result = scipy.series_calculator(series, operation)
+        result = scipy.series_calculator(series, operation, param=param)
         app.display(result)
     app.refresh()
 
