@@ -221,9 +221,11 @@ class UserInput(QDialog):
                     field["minimum"] = -2147483648
                 if "maximum" not in field: 
                     field["maximum"] = +2147483647
-                if field["value"] < field["minimum"]: 
+                if field["value"] is None:
                     field["value"] = field["minimum"]
-                if field["value"] > field["maximum"]: 
+                elif field["value"] < field["minimum"]: 
+                    field["value"] = field["minimum"]
+                elif field["value"] > field["maximum"]: 
                     field["value"] = field["maximum"]
 
             elif field["type"] == "float":
@@ -232,10 +234,12 @@ class UserInput(QDialog):
                 if "minimum" not in field: 
                     field["minimum"] = -1.0e+18
                 if "maximum" not in field: 
-                    field["maximum"] = +1.0e+18          
-                if field["value"] < field["minimum"]: 
+                    field["maximum"] = +1.0e+18   
+                if field['value'] is None:
+                    field["value"] = field["minimum"]   
+                elif field["value"] < field["minimum"]: 
                     field["value"] = field["minimum"]
-                if field["value"] > field["maximum"]: 
+                elif field["value"] > field["maximum"]: 
                     field["value"] = field["maximum"]
 
         return fields

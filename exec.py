@@ -15,7 +15,7 @@
 # pip install -e C:\Users\steve\Dropbox\Software\QIB-Sheffield\dbdicom
 # pip install -e C:\Users\steve\Dropbox\Software\QIB-Sheffield\wezel
 # pip install -e C:\Users\steve\Dropbox\Software\QIB-Sheffield\mdreg
-# pip install -e C:\Users\steve\Dropbox\Software\QIB-Sheffield\ukat
+# pip install -e C:\Users\steve\Dropbox\Software\dcmri
 
 
 # to build an executable:
@@ -38,6 +38,7 @@ from wezel.plugins import (
     transform,
     segment,
     align,
+    dcmri,
 )
 
 
@@ -50,6 +51,7 @@ if __name__ == "__main__":
     app.add_menu(align.menu)
     app.add_menu(transform.menu)
     app.add_menu(measure.menu)
+    app.add_menu(dcmri.menu)
     app.add_menu(wezel.menubar.about.menu)
 
     app.add_separator(menu='View', position=5)
