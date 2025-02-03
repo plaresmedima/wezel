@@ -54,8 +54,8 @@ class Wezel:
 
     def __init__(self, project=None):
         self.log = logger()
+        self.log.info('Launching Wezel!')
         self.QApp = QApplication(sys.argv)
-        #self.QApp.setWindowIcon(QIcon(wezel.icons.animal_dog))
         self.QApp.setWindowIcon(QIcon(wezel.icons.wezel_icon_transparent))
         self.QApp.setStyleSheet(STYLESHEET)
         self.menubar = wezel.gui.MenuBar(
@@ -65,30 +65,57 @@ class Wezel:
         )
         self._project = project
 
-    def show(self):    
-        self.log.info('Launching Wezel!')
+        # Added
         self.main = wezel.gui.Main(self, project=self._project)
         self.menubar.setupUI(self.main)
         self.main.setMenuBar(self.menubar)
+        self.main.setEnabled(False)
         self.main.show()
+
+    def use(self):    
+        # self.main = wezel.gui.Main(self, project=self._project)
+        # self.menubar.setupUI(self.main)
+        # self.main.setMenuBar(self.menubar)
+        # self.main.show()
+        self.main.setEnabled(True)
         self.QApp.exec_()
 
     def open(self, path):
         self.main.open(path)
+        return self
+
+    def display(self, series=None):
+        if series is not None:
+            s = self.main.database().series(SeriesDescription=series)
+            if s==[]:
+                raise ValueError(
+                    "Cannot display series " + str(series) + ". It does not "
+                    "exist in the current database.")
+            self.main.display(s)
+        return self
 
     def add_menu(self, menu, position=None):
+        # Needs update in iBEAt
+        if isinstance(menu, str): 
+            menu = wezel.gui.Menu('TRISTAN')
         self.menubar.add(menu, position=position)
+        # Added 
+        self.menubar.setupUI(self.main)
 
     def add_action(self, action, menu='File', position=None):
         for mbar_menu in self.menubar.menus():
             if mbar_menu.title() == menu:
                 mbar_menu.add(action, position=position)
+                # Added
+                mbar_menu.setupUI(self.main)
                 return
 
     def add_separator(self, menu='File', position=None):
         for mbar_menu in self.menubar.menus():
             if mbar_menu.title() == menu:
                 mbar_menu.add_separator(position=position)
+                # Added
+                mbar_menu.setupUI(self.main)
                 return
 
 
@@ -123,7 +150,8 @@ def app(**kwargs):
     except:
         pass
 
-    return Wezel(**kwargs)
+    wzl = Wezel(**kwargs)
+    return wzl
 
 
 def logger():

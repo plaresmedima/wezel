@@ -65,26 +65,30 @@ class SurfaceDisplay(MainWidget):
         self._series = series
         if series is None:
             return
+        
+        # Get array sorted by slice location
+        # If there are multiple volumes, show only the first one
+        #arr, _ = series.array('SliceLocation', pixels_first=True, first_volume=True)
+        dims = ['SliceLocation', 'InstanceNumber']
+        arr, vals = series.pixel_values(dims, return_vals=['affine_matrix'])
+        arr = arr[:,:,:,0]
+        affine = vals['affine_matrix'][0,0]
 
-        # Get affine matrix
-        affine = series.affine_matrix()
-        if isinstance(affine, list):
-            msg = 'Cannot display this as a single volume \n'
-            msg += 'This series contains multiple slice groups.'
-            series.dialog.information(msg)
-            return
-        else:
-            affine = affine[0]
+        # # Get affine matrix
+        # affine = series.affine_matrix()
+        # if isinstance(affine, list):
+        #     msg = 'Cannot display this as a single volume \n'
+        #     msg += 'This series contains multiple slice groups.'
+        #     series.dialog.information(msg)
+        #     return
+        # else:
+        #     affine = affine[0]
 
         # Get geometry
         column_spacing = np.linalg.norm(affine[:3, 0])
         row_spacing = np.linalg.norm(affine[:3, 1])
         slice_spacing = np.linalg.norm(affine[:3, 2])
         spacing = (column_spacing, row_spacing, slice_spacing)  # mm
-
-        # Get array sorted by slice location
-        # If there are multiple volumes, show only the first one
-        arr, _ = series.array('SliceLocation', pixels_first=True, first_volume=True)
 
         series.message('Preprocessing mask...')
 
