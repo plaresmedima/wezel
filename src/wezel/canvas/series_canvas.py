@@ -312,7 +312,7 @@ class SeriesCanvasModel:
                     'name': series.instance().SeriesDescription, 
                     'color': self.newColor()}
                 # Create overlay
-                #region, images = scipy.mask_array(series, on=self._series)
+                # REPLACE USING vreg package
                 region, images = vreg.mask_array(series, on=self._series)
                 _add_slice_groups_to(newRegion, region, images)
             except:

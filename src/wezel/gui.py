@@ -492,10 +492,12 @@ class MenuBar(QMenuBar):
         return menu
 
     def setupUI(self, app):
+        
         try:
             super().__init__()
         except:
-            return
+            pass
+            #return
         for menu in self._menus:
             menu.setupUI(app)
             self.addMenu(menu)
@@ -529,8 +531,8 @@ class Menu(QMenu):
         try:
             super().__init__()
         except:
-            # Do nothing if the object is already set up
-            return
+            pass # Do nothing if the object is already set up
+        
         self.setTitle(self._title)
         for item in self._items:
             if isinstance(item, Action):
@@ -600,8 +602,13 @@ class Action(QAction):
         try:
             super().__init__()
         except:
-            return
+            pass
+            #return
         self._app = app
+        try:
+            self.triggered.disconnect()
+        except RuntimeError:
+            pass # no slots were connected
         self.triggered.connect(self._run)
         self.setText(self._text)
         if self._icon is not None: 

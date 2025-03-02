@@ -1,8 +1,10 @@
-
 from PySide2.QtWidgets import QVBoxLayout
 
 import wezel
 from wezel import widgets, canvas
+
+
+ATTR = ['SOPInstanceUID', 'WindowCenter', 'WindowWidth', 'colormap']
 
 
 class SeriesDisplay(wezel.gui.MainWidget):
@@ -12,6 +14,7 @@ class SeriesDisplay(wezel.gui.MainWidget):
 
         self.setupUI()
         self.setSeries(series)
+        
 
     def setupUI(self):
 
@@ -46,7 +49,6 @@ class SeriesDisplay(wezel.gui.MainWidget):
         self.toolBar.setWidget(self.canvas)
 
     def setActive(self, active):
-        #super().setActive(active)
         if not active:
             self.canvas.saveMask()
 
@@ -69,36 +71,23 @@ class SeriesDisplay(wezel.gui.MainWidget):
         image = self.sliders.image
         if image is None:
             return
-        image.read()
-        array = image.array()
+        
+        array, vals = image.pixel_values(return_vals=ATTR)
         if array is None:
-            self.setError('Series ' + series.label() + ' does not contain images. \n\n Nothing to show here..')
-            image.clear()
+            self.setError("Series ' + series.label() + ' does not contain "
+                          "images. \n\n Nothing to show here..")
             return
-        self.canvas.setArray(
-            array,
-            image.SOPInstanceUID, 
-            image.WindowCenter, 
-            image.WindowWidth, 
-            image.colormap,
-        )
-        image.clear()
+        self.canvas.setArray(array, *tuple(vals.values()))
+        self.canvas.fitItem() # added 
 
     def slidersChanged(self):
         image = self.sliders.image
         if image is None:
             self.canvas.setBlank()
             return
-        image.read()
-        self.canvas.changeArray(
-            image.array(), 
-            image.SOPInstanceUID, 
-            image.WindowCenter, 
-            image.WindowWidth, 
-            image.colormap,
-        )
-        image.clear()
-        
+        array, vals = image.pixel_values(return_vals=ATTR)
+        self.canvas.changeArray(array, *tuple(vals.values()))
+ 
     def arrowKeyPress(self, key):
         image_before = self.sliders.image
         self.sliders.move(key=key)
@@ -106,12 +95,5 @@ class SeriesDisplay(wezel.gui.MainWidget):
         if image_after != image_before:
             if image_after is None:
                 return
-            image_after.read()
-            self.canvas.changeArray(
-                image_after.array(), 
-                image_after.SOPInstanceUID, 
-                image_after.WindowCenter, 
-                image_after.WindowWidth, 
-                image_after.colormap,
-            )
-            image_after.clear()
+            array, vals = image_after.pixel_values(return_vals=ATTR)
+            self.canvas.changeArray(array, *tuple(vals.values()))            

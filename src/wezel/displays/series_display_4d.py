@@ -97,40 +97,47 @@ class SeriesDisplay4D(wezel.gui.MainWidget):
             self.setError('Series ' + series.label() + ' is empty. \n\n Nothing to show here..')
             return
         self.canvas._model._series = series
-        array, header = series.array(sortby, pixels_first=True)
+        #array, header = series.array(sortby, pixels_first=True)
+        vals = ['SOPInstanceUID', 'WindowCenter', 'WindowWidth', 'colormap']
+        array, coords, variables = series.pixel_values(sortby, return_coords=True, return_vals=vals)
 
-        if array is None:
+        if array.size == 0:
             self.setError('Series ' + series.label() + ' does not have images. \n\n Nothing to show here..')
             return
+        
         series.status.hide()
         #self.series = series
-        self.array = array[...,0].reshape(array.shape[:4])
+        self.array = array
         self.zlabel = sortby[0]
         self.tlabel = sortby[1]
         # create index arrays
-        # Unnecessary read of all files
-        d = self.array.shape
-        self.zcoords = np.empty((d[2],d[3]), dtype=np.float32)
-        self.tcoords = np.empty((d[2],d[3]), dtype=np.float32)
-        self.uid = np.empty((d[2],d[3]), dtype=object)
-        self.center = np.empty((d[2],d[3]))
-        self.width = np.empty((d[2],d[3]))
-        self.colormap = np.empty((d[2],d[3]), dtype=object)
+        self.zcoords = coords[sortby[0]]
+        self.tcoords = coords[sortby[1]]
+        self.uid = variables[vals[0]]
+        self.center = variables[vals[1]]
+        self.width = variables[vals[2]]
+        self.colormap = variables[vals[3]]
+        # d = self.array.shape
+        # self.zcoords = np.empty((d[2],d[3]), dtype=np.float32)
+        # self.tcoords = np.empty((d[2],d[3]), dtype=np.float32)
+        # self.uid = np.empty((d[2],d[3]), dtype=object)
+        # self.center = np.empty((d[2],d[3]))
+        # self.width = np.empty((d[2],d[3]))
+        # self.colormap = np.empty((d[2],d[3]), dtype=object)
 
-        variables = sortby + ['SOPInstanceUID', 'WindowCenter', 'WindowWidth', 'colormap']
-        cnt = 0
-        total = d[2]*d[3]
-        for z in range(d[2]):
-            for t in range(d[3]):
-                cnt += 1
-                series.status.progress(cnt, total, 'Reading image properties..')
-                values = header[z,t,0][variables]
-                self.zcoords[z,t] = values[0]
-                self.tcoords[z,t] = values[1]
-                self.uid[z,t] = values[2]
-                self.center[z,t] = values[3]
-                self.width[z,t] = values[4]
-                self.colormap[z,t] = values[5]
+        #variables = sortby + ['SOPInstanceUID', 'WindowCenter', 'WindowWidth', 'colormap']
+        # cnt = 0
+        # total = d[2]*d[3]
+        # for z in range(d[2]):
+        #     for t in range(d[3]):
+        #         cnt += 1
+        #         #values = header[z,t,0][variables]
+        #         self.zcoords[z,t] = coords[sortby[0]][z,t]
+        #         self.tcoords[z,t] = coords[sortby[1]][z,t]
+        #         self.uid[z,t] = variables[0][z,t]
+        #         self.center[z,t] = variables[1][z,t]
+        #         self.width[z,t] = variables[2][z,t]
+        #         self.colormap[z,t] = variables[3][z,t]
         series.status.hide()
         if xoffset:
             self.tcoords -= np.amin(self.tcoords)
